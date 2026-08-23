@@ -27,13 +27,9 @@ export default defineConfig({
           { src: '/images/logo.png', sizes: '512x512', type: 'image/png' }
         ],
       },
-      // Use injectManifest strategy with the custom service worker in src to avoid Windows path import issues when building in Linux.
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
-      injectManifest: {
-        swSrc: 'custom-sw.js',
-        globPatterns: ['**/*.{js,css,html,png,svg}'],
+      // Use generateSW strategy (default). Let VitePWA generate the service worker automatically in CI.
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       },
       devOptions: {
         enabled: true,
@@ -42,7 +38,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(process.cwd(), 'src'),
     },
     dedupe: ['react', 'react-dom'],
   },
