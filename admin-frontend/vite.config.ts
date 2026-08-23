@@ -30,6 +30,24 @@ export default defineConfig({
       // Use generateSW strategy (default). Let VitePWA generate the service worker automatically in CI.
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Ensure API routes are never cached by the service worker
+        runtimeCaching: [
+          {
+            urlPattern: /^\/api\//,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'api-no-cache',
+            },
+          },
+          {
+            urlPattern: /\/assets\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-assets',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: true,
