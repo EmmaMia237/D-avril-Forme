@@ -1,24 +1,12 @@
-// Custom service worker for admin-frontend
+import { precacheAndRoute } from 'workbox-precaching';
+
+// Custom service worker for admin-frontend (injectManifest)
 // Uses the injected __WB_MANIFEST (array of {url, revision}) provided by vite-plugin-pwa in injectManifest mode.
-// This SW implements a safe, minimal precache for app shell/static assets and a network-only policy for /api/ requests.
+
+// Precache and route using workbox
+precacheAndRoute(self.__WB_MANIFEST || []);
 
 const CACHE_NAME = 'df-admin-appshell-v1';
-
-// The build process (vite-plugin-pwa injectManifest) will replace self.__WB_MANIFEST with an array of files to precache.
-const PRECACHE_URLS = (self.__WB_MANIFEST || []).map((e) => e.url).filter(Boolean);
-
-self.addEventListener('install', (event) => {
-  // Precache app shell assets
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Ensure index.html and manifest are included as fallbacks
-      const toCache = Array.from(new Set([...PRECACHE_URLS, '/', '/index.html', '/manifest.webmanifest']));
-      return cache.addAll(toCache).catch((err) => {
-        console.warn('SW precache failed for some resources', err);
-      });
-    }).then(() => self.skipWaiting())
-  );
-});
 
 self.addEventListener('activate', (event) => {
   // Cleanup old caches if any
@@ -49,10 +37,10 @@ self.addEventListener('fetch', (event) => {
   // Don't cache POST/PUT/DELETE etc
   if (req.method !== 'GET') return;
 
-  // Navigation requests: serve cached index.html (app shell) fallback to network
+  // Navigation requests: try network first, fallback to precached index.html
   if (req.mode === 'navigate') {
     event.respondWith(
-      caches.match('/index.html').then((cached) => cached || fetch(req))
+      fetch(req).catch(() => caches.match('/index.html'))
     );
     return;
   }
