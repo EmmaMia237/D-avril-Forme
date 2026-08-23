@@ -409,3 +409,5 @@ npm install mongodb jsonwebtoken bcryptjs stripe
 - Admin accounts are not registered in-app; use ADMIN_EMAIL and ADMIN_PASS from environment.
 - JWT_SECRET must be set to a secure random string in production.
 - Stripe keys and MongoDB credentials must be kept out of source control. Use .env or a secrets manager.
+#   D - a v r i l - F o r m e  
+ 
