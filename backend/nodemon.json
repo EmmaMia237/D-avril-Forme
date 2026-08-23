@@ -1,0 +1,20 @@
+{
+  "watch": ["server.js", "routes", "models"],
+  "ext": "js,json",
+  "ignore": [
+    "uploads/*",
+    "public/uploads/*",
+    "data/*",
+    "logs/*",
+    ".git/*",
+    "node_modules/*",
+    "admin-frontend/**",
+    "frontend/**",
+    "public/**",
+    "build/**",
+    "dist/**",
+    "*.log",
+    ".env",
+    "tmp/**"
+  ]
+}

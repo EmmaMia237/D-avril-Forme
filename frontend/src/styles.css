@@ -1,0 +1,288 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-nude: var(--nude);
+  --color-nude-deep: var(--nude-deep);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-light: var(--primary-light);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+:root {
+  --radius: 0.5rem;
+  /* Avril Forme brand system - updated palette */
+  --background: #FAF6F0; /* Linen / Off-White (page background) */
+  --foreground: #1E1D1B; /* Deep Ink Black (primary text & headings) */
+  --card: #FFFFFF; /* Pure White (cards, product mockups) */
+  --card-foreground: #1E1D1B;
+  --popover: #FFFFFF;
+  --popover-foreground: #1E1D1B;
+  --primary: #3A3A3D; /* Charcoal Grey / Soft Black (primary UI) */
+  --primary-deep: #2B2B2D; /* Deeper charcoal used for strong primary surfaces (e.g., footer background) */
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4ECE1; /* Warm Cream / Nude */
+  --secondary-foreground: #1E1D1B;
+  --nude: #F4ECE1;
+  --nude-deep: #C49A6C;
+  --muted: #E8C5B2; /* Dusty Rose for muted accents */
+  --muted-foreground: #708063; /* Earthy Olive for contrast */
+  --accent: #C85A32; /* Warm Terracotta */
+  --accent-foreground: #FFFFFF;
+  --accent-2: #A28647; /* Muted Mustard */
+  --accent-3: #708063; /* Earthy Olive */
+  --accent-4: #E8C5B2; /* Dusty Rose */
+  --wood: #C49A6C; /* Natural Wood / Tan */
+  --destructive: #C85A32;
+  --destructive-foreground: #FFFFFF;
+  --border: #EDE7E0;
+  --input: #FFFFFF;
+  --ring: #3A3A3D;
+  --chart-1: #3A3A3D;
+  --chart-2: #C85A32;
+  --chart-3: #A28647;
+  --chart-4: #708063;
+  --chart-5: #E8C5B2;
+  --sidebar: #3A3A3D;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #C85A32;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #A28647;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #EDE7E0;
+  --sidebar-ring: #C85A32;
+  --gradient-hero: linear-gradient(135deg,#3A3A3D 0%,#C85A32 45%,#F4ECE1 100%);
+  --gradient-maroon: linear-gradient(120deg,#3A3A3D,#A28647);
+  --shadow-soft: 0 12px 32px -18px rgba(0,0,0,0.08);
+  --shadow-lift: 0 24px 48px -24px rgba(0,0,0,0.12);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Karla", system-ui, sans-serif;
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Ensure pointer cursor for interactive elements */
+  button, a, [role="button"], input[type="button"], input[type="submit"] {
+    cursor: pointer;
+  }
+
+  /* Global hover state uniformity for interactive elements */
+  a:not([class]),
+  [role="link"] {
+    transition: color 0.2s ease;
+  }
+   
+  a:not([class]):hover,
+  [role="link"]:hover {
+    color: var(--accent);
+  }
+
+  /* Product cards and similar interactive areas get accent color on hover */
+  .group:hover {
+    --tw-shadow: var(--shadow-lift);
+  }
+}
+
+@utility text-balance-tight {
+  text-wrap: balance;
+}
+
+/* Hero Section Animations */
+@layer components {
+  .hero-section {
+    @apply relative overflow-hidden;
+    animation: slideInUp 0.8s ease-out;
+  }
+
+  .hero-content {
+    animation: fadeInLeft 0.8s ease-out 0.1s both;
+  }
+
+  .hero-image {
+    animation: fadeInRight 0.8s ease-out 0.2s both;
+  }
+
+  .hero-text-highlight {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite, fadeIn 1s ease-out both;
+  }
+
+  .micro-fade-in {
+    animation: fadeIn 0.6s ease-out both;
+  }
+
+  .product-card-animated {
+    animation: fadeIn 0.5s ease-out both, slideInUp 0.5s ease-out both;
+  }
+
+  .trust-item {
+    animation: fadeIn 0.5s ease-out both;
+  }
+}
+
+/* Keyframe animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
