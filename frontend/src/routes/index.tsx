@@ -291,6 +291,13 @@ function HomePage() {
                   return (p.category && (p.category === catName || p.category === cat.slug));
                 }).length;
 
+                // Pick a representative product image for the category when available
+                const representative = productsList.find((p) => {
+                  const catName = (cat.name || '').toString();
+                  return (p.category && (p.category === catName || p.category === cat.slug));
+                });
+                const imgSrc = (representative && ((representative.images && representative.images[0]?.url) || representative.image || representative.previewPaths && representative.previewPaths[0])) || cat.image || heroImage;
+
                 return (
                   <Link
                     key={cat.slug}
@@ -300,8 +307,8 @@ function HomePage() {
                   >
                     <div className="aspect-4/3 overflow-hidden bg-nude">
                       <img
-                        src={cat.image || heroImage}
-                        alt={`${cat.name} printing mockup`}
+                        src={imgSrc}
+                        alt={`${cat.name} printing mockup` }
                         loading="lazy"
                         width={800}
                         height={800}
