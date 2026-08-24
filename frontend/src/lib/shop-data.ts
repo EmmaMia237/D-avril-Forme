@@ -1,8 +1,13 @@
-import apparel from "@/assets/cat-apparel.jpg";
-import drinkware from "@/assets/cat-drinkware.jpg";
-import cases from "@/assets/cat-cases.jpg";
-import stationery from "@/assets/cat-stationery.jpg";
-import corporate from "@/assets/cat-corporate.jpg";
+// Asset fallbacks: prefer public images added by the admin/user, otherwise fall back to a hosted placeholder
+const printing = '/images/printing-image.png';
+const hero = '/images/hero-image.png';
+const placeholder = 'https://via.placeholder.com/800x600?text=Product';
+
+const apparel = printing;
+const drinkware = printing;
+const cases = printing;
+const stationery = printing;
+const corporate = printing;
 
 export const categoryImages = { apparel, drinkware, cases, stationery, corporate };
 

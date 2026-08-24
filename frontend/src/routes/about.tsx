@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Droplets, Leaf, Palette, Instagram, MessageCircle } from "lucide-react";
 
 import { StoreLayout } from "@/components/store-layout";
-import printProcess from "@/assets/print-process.jpg";
-import heroImage from "@/assets/hero-merch.jpg";
+const printProcess = '/images/printing-image.png';
+const heroImage = '/images/hero-image.png';
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/about")({

@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { categories as fallbackCategories } from "@/lib/shop-data";
-import heroImage from "@/assets/hero-merch.jpg";
+const heroImage = '/images/hero-image.png';
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 
