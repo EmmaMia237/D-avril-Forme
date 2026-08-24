@@ -241,7 +241,7 @@ function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="hero-image relative flex items-center justify-center">
+          <div className="hero-image relative flex items-center justify-center order-first lg:order-none">
             {/* Render a single floating hero image from public/images/hero-image.png. z-10 ensures it overlays any background/mockup elements. */}
             <img
               src={heroSrc}
