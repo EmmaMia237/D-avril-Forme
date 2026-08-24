@@ -213,6 +213,19 @@
     animation: fadeInRight 0.8s ease-out 0.2s both;
   }
 
+  /* Floating image animation for hero PNGs with transparent backgrounds */
+  .floating-image {
+    animation: floatY 6s ease-in-out infinite;
+    will-change: transform;
+    mix-blend-mode: multiply;
+  }
+
+  @keyframes floatY {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-18px); }
+    100% { transform: translateY(0px); }
+  }
+
   .hero-text-highlight {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
     background-size: 200% 200%;

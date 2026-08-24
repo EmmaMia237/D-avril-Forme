@@ -39,6 +39,7 @@ const trust = [
 function HomePage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
+  const [heroSrc, setHeroSrc] = useState<string>(heroImage);
 
   useEffect(() => {
     let active = true;
@@ -53,6 +54,16 @@ function HomePage() {
       }
     }
     load();
+
+    // Try to prefer a public hero image if available (admin may have uploaded new hero-image.png)
+    (async function pickHero() {
+      try {
+        const r = await fetch('/images/hero-image.png', { method: 'HEAD' });
+        if (r && r.ok) setHeroSrc('/images/hero-image.png');
+      } catch (err) {
+        // keep fallback heroImage import
+      }
+    })();
 
     // Listen for realtime product events and update local list
     function onCreated(e: any) {
@@ -229,13 +240,13 @@ function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="hero-image relative">
+          <div className="hero-image relative flex items-center justify-center">
             <img
-              src={heroImage}
+              src={heroSrc}
               alt="Custom printed t-shirt, mug, phone case and notebook set in maroon and cream"
               width={1600}
               height={1200}
-              className="w-full rounded-lg object-cover shadow-[var(--shadow-lift)] transition-transform duration-500 hover:scale-105"
+              className="w-full max-w-[700px] rounded-lg object-contain shadow-[var(--shadow-lift)] transition-transform duration-700 floating-image"
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Droplets, Leaf, Palette, Instagram, MessageCircle } from "lucide-react"
 import { StoreLayout } from "@/components/store-layout";
 import printProcess from "@/assets/print-process.jpg";
 import heroImage from "@/assets/hero-merch.jpg";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -43,6 +44,27 @@ const pillars = [
 ];
 
 function AboutPage() {
+  const [aboutImg, setAboutImg] = useState<string>(printProcess);
+  const [videoSrc, setVideoSrc] = useState<string>('/images/TUTORIAL MP4.mp4');
+
+  useEffect(() => {
+    (async function pickAboutAssets(){
+      try {
+        const r = await fetch('/images/printing-image.png', { method: 'HEAD' });
+        if (r && r.ok) setAboutImg('/images/printing-image.png');
+      } catch (e) {
+        // keep fallback
+      }
+
+      try {
+        const v = await fetch('/images/tutorial.mp4', { method: 'HEAD' });
+        if (v && v.ok) setVideoSrc('/images/tutorial.mp4');
+      } catch (e) {
+        // fallback to existing TUTORIAL MP4
+      }
+    })();
+  }, []);
+
   return (
     <StoreLayout>
       <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
@@ -74,7 +96,7 @@ function AboutPage() {
             </div>
           </div>
           <img
-            src={printProcess}
+            src={aboutImg}
             alt="Studio operator pulling maroon ink across a screen print frame"
             loading="lazy"
             width={1408}
@@ -125,8 +147,8 @@ function AboutPage() {
         </p>
         <div className="relative mt-8 overflow-hidden rounded-lg bg-black">
           <video
-            src="/images/TUTORIAL MP4.mp4"
-            poster={heroImage}
+          src={videoSrc}
+          poster={aboutImg}
             controls
             className="h-auto w-full max-h-[500px] object-contain"
           />
