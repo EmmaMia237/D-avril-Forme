@@ -37,6 +37,13 @@ function DesignsPage() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  // delete & wipe confirmation dialogs
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [wipeDialogOpen, setWipeDialogOpen] = useState(false);
+  // undo hint for deletes
+  const [undoItem, setUndoItem] = useState<any>(null);
+  const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
 
   function normalizeThemeValue(value: string | null | undefined) {
    const v = String(value || '').trim();
@@ -295,12 +302,27 @@ function DesignsPage() {
     }
   }
 
-  async function deleteProduct(id: string) {
-    if (!confirm('Delete this product?')) return;
+  // request delete -> open dialog
+  function requestDeleteProduct(id: string) {
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  }
+
+  // perform delete after confirmation
+  async function performDeleteProduct() {
+    const id = deleteTargetId;
+    setDeleteDialogOpen(false);
+    setDeleteTargetId(null);
+    if (!id) return;
     try {
       const res = await apiFetch(`/api/admin/products/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) {
+        // keep an undo hint locally for a moment
+        setUndoItem({ type: 'product', id, payload: data?.product || null });
+        if (undoTimeout) window.clearTimeout(undoTimeout);
+        const tid = window.setTimeout(() => setUndoItem(null), 10000);
+        setUndoTimeout(tid);
         fetchProducts();
         toast.success('Deleted');
       } else {
@@ -377,21 +399,7 @@ function DesignsPage() {
         <div />
         <div className="flex gap-2">
         <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
-        <Button variant="destructive" onClick={async () => {
-          if (!confirm('WIPE ENTIRE CATALOG? This will permanently delete ALL products. This action is irreversible.')) return;
-          try {
-            const res = await apiFetch('/api/admin/wipe-all-products', { method: 'POST' });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok && data?.ok) {
-              toast.success(`Wiped ${data.deleted || 0} products`);
-              fetchProducts();
-            } else {
-              toast.error(data?.error || 'Failed to wipe products');
-            }
-          } catch (err) {
-            toast.error('Failed to wipe products');
-          }
-        }}>Wipe catalog</Button>
+                <Button variant="destructive" onClick={() => setWipeDialogOpen(true)}>Wipe catalog</Button>
         </div>
       </div>
 
@@ -456,7 +464,7 @@ function DesignsPage() {
                         <TableCell className="text-right">
                           <Button title="Edit" variant="ghost" size="sm" onClick={() => openEdit(p)} className="rounded p-1 hover:bg-nude/40"><Edit2 className="h-4 w-4" /></Button>
                           <Button title="Duplicate" variant="ghost" size="sm" onClick={() => duplicateProduct(p)} className="rounded p-1 hover:bg-nude/40"><Copy className="h-4 w-4" /></Button>
-                          <Button title="Delete" variant="ghost" size="sm" onClick={() => deleteProduct(String(p._id))} className="rounded p-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
+                          <Button title="Delete" variant="ghost" size="sm" onClick={() => requestDeleteProduct(String(p._id))} className="rounded p-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -467,6 +475,52 @@ function DesignsPage() {
           </div>
         </div>
       </Panel>
+
+      {/* Delete confirmation dialog for single product */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm delete</DialogTitle>
+            <DialogDescription>Delete this product? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex w-full justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={performDeleteProduct}>Delete</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wipe catalog confirmation dialog */}
+      <Dialog open={wipeDialogOpen} onOpenChange={setWipeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>WIPE ENTIRE CATALOG?</DialogTitle>
+            <DialogDescription>This will permanently delete ALL products. This action is irreversible.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex w-full justify-end gap-2">
+              <Button variant="outline" onClick={() => setWipeDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={async () => {
+                setWipeDialogOpen(false);
+                try {
+                  const res = await apiFetch('/api/admin/wipe-all-products', { method: 'POST' });
+                  const data = await res.json().catch(() => ({}));
+                  if (res.ok && data?.ok) {
+                    toast.success(`Wiped ${data.deleted || 0} products`);
+                    fetchProducts();
+                  } else {
+                    toast.error(data?.error || 'Failed to wipe products');
+                  }
+                } catch (err) {
+                  toast.error('Failed to wipe products');
+                }
+              }}>Wipe catalog</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openDialog} onOpenChange={(v) => setOpenDialog(v)}>
         <DialogContent className="max-h-[80vh] w-full overflow-y-auto">

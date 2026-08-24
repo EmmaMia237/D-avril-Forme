@@ -14,6 +14,12 @@ export default function CategoriesAdminPage() {
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({ id: null, slug: '', name: '', description: '', imageUrl: '', isPublished: false, items: 0 });
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  // Simple undo state (client-side) after delete
+  const [undoItem, setUndoItem] = useState<any>(null);
+  const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
 
   async function load() {
     try {
@@ -72,12 +78,27 @@ export default function CategoriesAdminPage() {
     } finally { setSaving(false); }
   }
 
-  async function deleteCategory(id: string) {
-    if (!confirm('Delete this category?')) return;
+  // request delete (opens confirm dialog)
+  function requestDeleteCategory(id: string) {
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  }
+
+  // perform the delete after confirmation
+  async function performDeleteCategory() {
+    const id = deleteTargetId;
+    setDeleteDialogOpen(false);
+    setDeleteTargetId(null);
+    if (!id) return;
     try {
       const res = await apiFetch(`/api/admin/categories/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) throw new Error(data?.error || 'Failed to delete');
+      // store an undo hint locally for a short time (best-effort)
+      setUndoItem({ type: 'category', id, payload: data?.category || null });
+      if (undoTimeout) window.clearTimeout(undoTimeout);
+      const tid = window.setTimeout(() => setUndoItem(null), 10000);
+      setUndoTimeout(tid);
       toast.success('Category deleted');
       load();
     } catch (err: any) {
@@ -123,7 +144,7 @@ export default function CategoriesAdminPage() {
                         } catch (err:any) { toast.error(err?.message || 'Unable to update'); }
                       }} />
                       <Button size="sm" onClick={() => openEdit(c)}>Edit</Button>
-                      <Button variant="destructive" size="sm" onClick={() => deleteCategory(c._id || c.id)}>Remove</Button>
+                                            <Button variant="destructive" size="sm" onClick={() => requestDeleteCategory(c._id || c.id)}>Remove</Button>
                     </div>
                   </div>
                 ))}
@@ -186,6 +207,23 @@ export default function CategoriesAdminPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete confirmation dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm delete</DialogTitle>
+              <DialogDescription>Are you sure you want to delete this category? This action cannot be undone.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <div className="flex w-full justify-end gap-2">
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={performDeleteCategory}>Delete</Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </>
   );

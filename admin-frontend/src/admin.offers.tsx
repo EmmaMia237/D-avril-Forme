@@ -22,6 +22,9 @@ export default function OffersAdminPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  // delete dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteOfferId, setDeleteOfferId] = useState<string | null>(null);
   const [form, setForm] = useState<any>({
     id: null,
     name: "",
@@ -107,8 +110,18 @@ export default function OffersAdminPage() {
     } finally { setSaving(false); }
   }
 
-  async function deleteOffer(id: string) {
-    if (!confirm('Remove this offer?')) return;
+  // request delete -> opens dialog
+  function requestDeleteOffer(id: string) {
+    setDeleteOfferId(id);
+    setDeleteDialogOpen(true);
+  }
+
+  // perform delete
+  async function performDeleteOffer() {
+    const id = deleteOfferId;
+    setDeleteDialogOpen(false);
+    setDeleteOfferId(null);
+    if (!id) return;
     try {
       const res = await apiFetch(`/api/admin/offers/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
@@ -144,7 +157,7 @@ export default function OffersAdminPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => openEdit(o)}>Edit</Button>
-                      <Button variant="destructive" size="sm" onClick={() => deleteOffer(o.id)}>Remove</Button>
+                      <Button variant="destructive" size="sm" onClick={() => requestDeleteOffer(o.id)}>Remove</Button>
                     </div>
                   </div>
                 ))}
@@ -245,6 +258,23 @@ export default function OffersAdminPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete confirmation dialog for offers */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm remove</DialogTitle>
+              <DialogDescription>Remove this offer? This action cannot be undone.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <div className="flex w-full justify-end gap-2">
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={performDeleteOffer}>Delete</Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </>
   );

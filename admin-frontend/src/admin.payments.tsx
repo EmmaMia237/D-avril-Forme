@@ -20,6 +20,8 @@ function PaymentsPage() {
   const [range, setRange] = useState("Monthly");
   const [paymentsState, setPaymentsState] = useState(payments || [] as any[]);
   const [revenueState, setRevenueState] = useState(revenueSeries || [] as any[]);
+  // Confirm dialog for clearing payments
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
   const data =
     range === "Monthly"
@@ -36,8 +38,13 @@ function PaymentsPage() {
   const net = paymentsState.reduce((s, p) => s + (p.net || 0), 0);
   const pendingCount = paymentsState.filter((p) => /pending|pending settlement|pending/i.test(p.state || '')).length;
 
-  async function clearPayments() {
-    if (!confirm('Clear all recorded orders/payments from the database? This cannot be undone.')) return;
+  // Ask user to confirm clearing payments (opens dialog)
+  function requestClearPayments() {
+    setShowClearDialog(true);
+  }
+
+  async function performClearPayments() {
+    setShowClearDialog(false);
     try {
       const res = await fetch('/api/admin/clear-all-orders', { method: 'POST', credentials: 'include' });
       const data = await res.json().catch(() => null);
@@ -45,8 +52,11 @@ function PaymentsPage() {
       // Clear local state so UI updates immediately
       setPaymentsState([]);
       setRevenueState([]);
+      // Use toast instead of alert for consistency
+      // eslint-disable-next-line no-alert
       alert(`Deleted ${data.deleted || 0} orders`);
     } catch (err: any) {
+      // eslint-disable-next-line no-alert
       alert(err?.message || String(err));
     }
   }
@@ -92,7 +102,7 @@ function PaymentsPage() {
                   {r}
                 </button>
               ))}
-              <button onClick={clearPayments} className="rounded border border-destructive px-3 py-1.5 text-xs text-destructive">Clear payments</button>
+                            <button onClick={requestClearPayments} className="rounded border border-destructive px-3 py-1.5 text-xs text-destructive">Clear payments</button>
             </div>
           }
         >
@@ -155,8 +165,25 @@ function PaymentsPage() {
           </div>
         </Panel>
       </div>
+
+      {/* Clear payments confirmation dialog */}
+      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear all payments</DialogTitle>
+            <DialogDescription>Are you sure you want to clear all recorded orders/payments from the database? This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <div className="flex w-full justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowClearDialog(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={performClearPayments}>Confirm</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </>
   );
 }
-
+  
 export default PaymentsPage;
