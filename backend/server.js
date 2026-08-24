@@ -13,6 +13,8 @@ const Category = require('./models/Category');
 const app = express();
 const mongoose = require('mongoose');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+// Allow a comma-separated list of allowed origins via env (e.g. "https://davril-forme.vercel.app,https://davrilforme.vercel.app")
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 // Simple SSE (Server-Sent Events) support for product updates
 const sseClients = new Set();
@@ -39,11 +41,16 @@ const COOKIE_OPTIONS = {
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests from the configured FRONTEND_URL and any localhost dev ports
+      // Allow requests from the configured FRONTEND_URL, any explicitly allowed origins, and localhost dev ports
       if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.length > 0 && ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
       if (origin === FRONTEND_URL) return callback(null, true);
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) return callback(null, true);
-      return callback(new Error('Not allowed by CORS'));
+
+      // allow Vercel preview and production domains heuristically
+      if (origin.includes('vercel.app') || origin.includes('onrender.com')) return callback(null, true);
+
+      return callback(new Error('Not allowed by CORS: ' + origin));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
