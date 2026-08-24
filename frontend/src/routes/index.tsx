@@ -276,32 +276,48 @@ function HomePage() {
             action={{ to: "/categories", label: "All categories" }}
           />
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {categoriesList.map((cat, index) => (
-              <Link
-                key={cat.slug}
-                to="/categories"
-                className="group micro-fade-in overflow-hidden rounded-lg border border-border bg-card transition-all duration-300 hover:border-accent hover:shadow-[var(--shadow-lift)]"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="aspect-4/3 overflow-hidden bg-nude">
-                  <img
-                    src={cat.image || heroImage}
-                    alt={`${cat.name} printing mockup`}
-                    loading="lazy"
-                    width={800}
-                    height={800}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">{cat.name}</h3>
-                  <p className="text-xs text-muted-foreground">{cat.blurb}</p>
-                  <p className="mt-2 text-[11px] tracking-wide text-accent uppercase">
-                    {cat.items} products
-                  </p>
-                </div>
-              </Link>
-            ))}
+            {categoriesList
+              .filter((cat) => {
+                // Only show categories that have at least one product in the live product list
+                const count = productsList.filter((p) => {
+                  const catName = (cat.name || '').toString();
+                  return (p.category && (p.category === catName || p.category === cat.slug));
+                }).length;
+                return count > 0;
+              })
+              .map((cat, index) => {
+                const count = productsList.filter((p) => {
+                  const catName = (cat.name || '').toString();
+                  return (p.category && (p.category === catName || p.category === cat.slug));
+                }).length;
+
+                return (
+                  <Link
+                    key={cat.slug}
+                    to={`/categories?category=${encodeURIComponent(cat.slug || cat.name)}`}
+                    className="group micro-fade-in overflow-hidden rounded-lg border border-border bg-card transition-all duration-300 hover:border-accent hover:shadow-[var(--shadow-lift)]"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="aspect-4/3 overflow-hidden bg-nude">
+                      <img
+                        src={cat.image || heroImage}
+                        alt={`${cat.name} printing mockup`}
+                        loading="lazy"
+                        width={800}
+                        height={800}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">{cat.name}</h3>
+                      <p className="text-xs text-muted-foreground">{cat.blurb}</p>
+                      <p className="mt-2 text-[11px] tracking-wide text-accent uppercase">
+                        {count} product{count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
           </div>
         </div>
       </section>
