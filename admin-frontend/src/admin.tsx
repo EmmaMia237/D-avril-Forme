@@ -2,11 +2,11 @@ import React from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 
 import { apiFetch, setAuthToken } from "./lib/api-client";
-import { CreditCard, LayoutDashboard, LogOut, Package, Palette, Settings, Users, Tag } from "lucide-react";
+import { CreditCard, LayoutDashboard, LogOut, Package, Palette, Settings, Users, Tag, Menu, X, ArrowUpRight, User } from "lucide-react";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
-  const storefrontUrl = (import.meta.env.VITE_FRONTEND_URL || (typeof window !== 'undefined' ? window.location.origin : "http://localhost:5173")).replace(/\/$/, "") + "/";
+  const storefrontUrl = (import.meta.env.VITE_FRONTEND_URL || 'https://davril-forme.vercel.app').replace(/\/$/, "") + "/";
   const items = [
     { to: "/admin", label: "Dashboard Overview", icon: LayoutDashboard },
     { to: "/admin/designs", label: "Manage Print Designs", icon: Palette },
@@ -53,7 +53,18 @@ export default function AdminLayout() {
           </span>
         </Link>
 
-        <nav className="mt-8 grid gap-1">
+        {/* Profile */}
+        <div className="mt-4 flex items-center gap-3 rounded-md bg-sidebar p-2">
+          <div className="h-10 w-10 shrink-0 rounded-full bg-nude grid place-items-center text-sidebar-foreground">
+            <User className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-medium">Store owner</div>
+            <div className="text-xs text-sidebar-accent">avril@avrilforme.com</div>
+          </div>
+        </div>
+
+        <nav className="mt-6 grid gap-1">
           {items.map((item) => (
             <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm" onClick={() => setMobileOpen(false)}>
               <item.icon className="h-4 w-4 shrink-0" />
@@ -90,7 +101,9 @@ export default function AdminLayout() {
                   <span className="block truncate font-display text-lg font-semibold">Avril Forme</span>
                 </span>
               </Link>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-sm">Close</button>
+              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-[var(--accent)] p-2 rounded-md">
+                <X className="h-5 w-5" />
+              </button>
             </div>
             <nav className="mt-2 grid gap-1">
               {items.map((item) => (
@@ -122,9 +135,16 @@ export default function AdminLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-card">
           <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-8">
-            <button onClick={() => setMobileOpen(true)} className="lg:hidden mr-2 p-2 rounded-md bg-transparent">Menu</button>
-            <p className="truncate text-sm text-muted-foreground">Studio owner · <span className="font-semibold text-foreground">avril@avrilforme.com</span></p>
-            <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-sm font-semibold text-primary underline-offset-4 hover:underline">View storefront</a>
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden mr-2 p-2 rounded-md bg-transparent text-[var(--accent)]" aria-label="Toggle menu">
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            <h1 className="text-lg font-display">Da Real Form</h1>
+
+            <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white border border-transparent">
+              <ArrowUpRight className="h-4 w-4" />
+              <span>View storefront</span>
+            </a>
           </div>
         </header>
         <main className="flex-1 px-4 py-8 lg:px-8">

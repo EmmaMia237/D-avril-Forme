@@ -182,7 +182,33 @@
   .group:hover {
     --tw-shadow: var(--shadow-lift);
   }
+
+  /* Form elements: give visible borders and focus states to inputs, textareas and selects */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--color-border);
+    background-color: var(--color-input);
+    padding: 0.5rem 0.75rem;
+    border-radius: calc(var(--radius) - 4px);
+    outline: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(200,90,50,0.12);
+  }
 }
+
 
 @utility text-balance-tight {
   text-wrap: balance;
