@@ -39,8 +39,11 @@ export default function AdminLayout() {
     return () => { mounted = false; };
   }, [navigate]);
 
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+
   return (
     <div className="flex min-h-screen w-full bg-background">
+      {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
         <Link to="/admin" className="flex items-center gap-2">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-nude font-display text-lg font-bold text-primary">A</span>
@@ -52,7 +55,7 @@ export default function AdminLayout() {
 
         <nav className="mt-8 grid gap-1">
           {items.map((item) => (
-            <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
+            <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm" onClick={() => setMobileOpen(false)}>
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
             </Link>
@@ -75,11 +78,53 @@ export default function AdminLayout() {
         </button>
       </aside>
 
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <aside className="relative z-50 w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground">
+            <div className="mb-4 flex items-center justify-between">
+              <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-nude font-display text-lg font-bold text-primary">A</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-lg font-semibold">Avril Forme</span>
+                </span>
+              </Link>
+              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-sm">Close</button>
+            </div>
+            <nav className="mt-2 grid gap-1">
+              {items.map((item) => (
+                <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+
+            <button
+              onClick={async () => {
+                try {
+                  await apiFetch('/api/auth/logout', { method: 'POST' });
+                  setAuthToken(null);
+                } finally {
+                  setMobileOpen(false);
+                  navigate('/admin/login');
+                }
+              }}
+              className="mt-auto flex items-center gap-3 rounded-md px-3 py-2.5 text-sm"
+            >
+              <LogOut className="h-4 w-4" /> Sign out
+            </button>
+          </aside>
+        </div>
+      )}
+
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-card">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-8">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-8">
+            <button onClick={() => setMobileOpen(true)} className="lg:hidden mr-2 p-2 rounded-md bg-transparent">Menu</button>
             <p className="truncate text-sm text-muted-foreground">Studio owner · <span className="font-semibold text-foreground">avril@avrilforme.com</span></p>
-            <a href={storefrontUrl} className="shrink-0 text-sm font-semibold text-primary underline-offset-4 hover:underline">View storefront</a>
+            <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-sm font-semibold text-primary underline-offset-4 hover:underline">View storefront</a>
           </div>
         </header>
         <main className="flex-1 px-4 py-8 lg:px-8">
