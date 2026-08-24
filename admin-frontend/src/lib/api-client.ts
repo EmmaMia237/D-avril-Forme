@@ -1,4 +1,19 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ? String(import.meta.env.VITE_API_BASE_URL) : "").replace(/\/$/, "");
+const DEFAULT_BACKEND = 'https://d-avril-forme.onrender.com';
+
+function resolveApiBase() {
+  const fromEnv = (import.meta.env.VITE_API_BASE_URL ? String(import.meta.env.VITE_API_BASE_URL) : "").replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname || '';
+    if (host.includes('vercel') || host.endsWith('onrender.com') || host.includes('davril-forme')) {
+      return DEFAULT_BACKEND;
+    }
+    if (host === 'localhost' || host.startsWith('127.0.0.1')) return '';
+  }
+  return DEFAULT_BACKEND;
+}
+
+const API_BASE_URL = resolveApiBase();
 const AUTH_TOKEN_KEY = "af_auth_token";
 
 export function apiUrl(path: string) {
