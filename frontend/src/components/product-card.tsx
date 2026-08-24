@@ -65,23 +65,29 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
           </div>
 
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => {
-              // Navigate to configure page with id param
-              try {
-                navigate({ to: '/configure', search: { id: product.id || product._id } });
-              } catch (e) {
-                // fallback
-                window.location.href = `/configure?id=${encodeURIComponent(product.id || product._id)}`;
-              }
-            }}>Configure</Button>
-
+            {/* Show Configure only for configurable products */}
+            {(product.configurable === true || product.productType === 'blank' || product.customizable === true) ? (
+              <Button size="sm" variant="outline" onClick={() => {
+                try {
+                  navigate({ to: '/configure', search: { id: product.id || product._id } });
+                } catch (e) {
+                  window.location.href = `/configure?id=${encodeURIComponent(product.id || product._id)}`;
+                }
+              }}>Configure</Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => {
+                // Go to product detail page
+                try {
+                  navigate({ to: '/product', search: { id: product.id || product._id } });
+                } catch (e) {
+                  window.location.href = `/product?id=${encodeURIComponent(product.id || product._id)}`;
+                }
+              }}>Details</Button>
+            )}
+ 
             <Button size="sm" onClick={() => {
+              // Add to cart — the cart provider opens the cart drawer; avoid navigating to a /cart route that may not exist
               addItem(product);
-              try {
-                navigate({ to: '/cart' });
-              } catch (e) {
-                window.location.href = '/cart';
-              }
             }}>{cta || 'Add to cart'}</Button>
           </div>
         </div>

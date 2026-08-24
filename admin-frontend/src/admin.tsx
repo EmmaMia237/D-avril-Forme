@@ -46,9 +46,9 @@ export default function AdminLayout() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
         <Link to="/admin" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-nude font-display text-lg font-bold text-primary">A</span>
+          <img src="/images/logo.png" alt="D'avril Forme" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
           <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-semibold">Avril Forme</span>
+                      <span className="block truncate font-display text-lg font-semibold">D'avrill Forme</span>
             <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">Admin portal</span>
           </span>
         </Link>
@@ -96,9 +96,9 @@ export default function AdminLayout() {
           <aside className="relative z-50 w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground">
             <div className="mb-4 flex items-center justify-between">
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-nude font-display text-lg font-bold text-primary">A</span>
+                <img src="/images/logo.png" alt="D'avril Forme" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-lg font-semibold">Avril Forme</span>
+                  <span className="block truncate font-display text-lg font-semibold">D'avrill Forme</span>
                 </span>
               </Link>
               <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-[var(--accent)] p-2 rounded-md">

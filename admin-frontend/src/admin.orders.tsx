@@ -78,11 +78,19 @@ function OrdersPage() {
     };
   }, [page, perPage]);
 
-  const rows = orders.filter(
-    (o) =>
-      (filter === "All" || o.status === filter) &&
-      (`${o.id}${o.customer || ''}${o.items || ''}`).toLowerCase().includes(query.toLowerCase()),
-  );
+  const rows = orders.filter((o) => {
+    // Only show orders with confirmed/processed payment. Accept common success indicators.
+    const paymentVal = String(o?.payment || o?.paymentStatus || (o?.paid === true ? 'paid' : '')).toLowerCase();
+    const paidStates = ['paid', 'completed', 'succeeded', 'captured', 'capture', 'paid_online', 'paid_via_stripe'];
+    const isPaid = o?.paid === true || paidStates.some((s) => paymentVal.includes(s));
+
+    if (!isPaid) return false;
+
+    return (
+      (filter === 'All' || o.status === filter) &&
+      (`${o.id}${o.customer || ''}${o.items || ''}`).toLowerCase().includes(query.toLowerCase())
+    );
+  });
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
