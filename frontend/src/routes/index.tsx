@@ -213,7 +213,7 @@ function HomePage() {
         className="hero-section relative overflow-hidden"
         style={{ backgroundImage: "var(--gradient-hero)" }}
       >
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 lg:grid-cols-2 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-2 lg:px-8 lg:py-20 min-h-[560px]">
           <div className="hero-content text-primary-foreground">
             <p className="text-xs font-semibold tracking-[0.28em] text-accent uppercase">
               Custom printing studio
@@ -248,7 +248,7 @@ function HomePage() {
               alt="Hero artwork"
               width={1600}
               height={1200}
-              className="w-full max-w-[900px] rounded-lg object-contain transition-transform duration-700 floating-image relative z-10"
+              className="w-full max-w-[1100px] rounded-lg object-contain transition-transform duration-700 floating-image relative z-10 mx-auto"
               style={{ mixBlendMode: 'normal' }}
             />
           </div>
