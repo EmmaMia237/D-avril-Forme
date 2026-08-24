@@ -15,7 +15,7 @@ function ProductPage() {
   const [id, setId] = useState<string | undefined>(undefined);
   const [product, setProduct] = useState<any | null>(null);
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, closeCart } = useCart();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -87,6 +87,7 @@ function ProductPage() {
                 size="lg"
                 onClick={() => {
                   addItem(currentProduct, 1, { productType: currentProduct.productType ?? "pre-designed" });
+                  try { closeCart(); } catch (err) {}
                 }}
               >
                 Add to Cart

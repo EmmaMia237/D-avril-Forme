@@ -32,6 +32,7 @@ function DesignsPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
@@ -70,6 +71,17 @@ function DesignsPage() {
 
   useEffect(() => {
     fetchProducts();
+    // load categories for product creation dropdown
+    (async function loadCategories() {
+      try {
+        const res = await apiFetch('/api/categories');
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        if (data?.categories) setCategoriesList(data.categories.map((c:any) => c.name || c.slug).filter(Boolean));
+      } catch (err) {
+        // ignore
+      }
+    })();
   }, []);
 
   async function fetchProducts() {
@@ -364,37 +376,22 @@ function DesignsPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
         <div />
         <div className="flex gap-2">
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
-          <Button variant="ghost" onClick={async () => {
-            if (!confirm('Remove demo/mock products from the database? This cannot be undone.')) return;
-            try {
-              const res = await apiFetch('/api/admin/clean-demo-products', { method: 'POST' });
-              const data = await res.json().catch(() => ({}));
-              if (res.ok && data?.ok) {
-                toast.success(`Removed ${data.deleted || 0} demo products`);
-                fetchProducts();
-              } else {
-                toast.error(data?.error || 'Failed to remove demo products');
-              }
-            } catch (err) {
-              toast.error('Failed to remove demo products');
+        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
+        <Button variant="destructive" onClick={async () => {
+          if (!confirm('WIPE ENTIRE CATALOG? This will permanently delete ALL products. This action is irreversible.')) return;
+          try {
+            const res = await apiFetch('/api/admin/wipe-all-products', { method: 'POST' });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data?.ok) {
+              toast.success(`Wiped ${data.deleted || 0} products`);
+              fetchProducts();
+            } else {
+              toast.error(data?.error || 'Failed to wipe products');
             }
-          }}>Remove demo products</Button>
-          <Button variant="destructive" onClick={async () => {
-            if (!confirm('WIPE ENTIRE CATALOG? This will permanently delete ALL products. This action is irreversible.')) return;
-            try {
-              const res = await apiFetch('/api/admin/wipe-all-products', { method: 'POST' });
-              const data = await res.json().catch(() => ({}));
-              if (res.ok && data?.ok) {
-                toast.success(`Wiped ${data.deleted || 0} products`);
-                fetchProducts();
-              } else {
-                toast.error(data?.error || 'Failed to wipe products');
-              }
-            } catch (err) {
-              toast.error('Failed to wipe products');
-            }
-          }}>Wipe catalog</Button>
+          } catch (err) {
+            toast.error('Failed to wipe products');
+          }
+        }}>Wipe catalog</Button>
         </div>
       </div>
 
@@ -406,10 +403,9 @@ function DesignsPage() {
               <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All categories</SelectItem>
-                <SelectItem value="Apparel">Apparel</SelectItem>
-                <SelectItem value="Drinkware">Drinkware</SelectItem>
-                <SelectItem value="Phone Cases">Phone Cases</SelectItem>
-                <SelectItem value="Stationery">Stationery</SelectItem>
+                {categoriesList.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v)}>
@@ -440,7 +436,7 @@ function DesignsPage() {
                   <TableRow><TableCell>Loading…</TableCell></TableRow>
                 ) : (
                   filtered.map((p) => {
-                    const thumbnail = (p.images && p.images.find((im:any) => im.role==='front'))?.url || (p.previewPaths && p.previewPaths[0]) || '';
+                    const thumbnail = (p.images && (p.images.find((im:any) => im.role==='front') || p.images[0]))?.url || p.image || p.imageUrl || p.coverImage || (p.previewPaths && p.previewPaths[0]) || '';
                     return (
                       <TableRow key={String(p._id)}>
                         <TableCell>
@@ -458,9 +454,9 @@ function DesignsPage() {
                         </TableCell>
                         <TableCell><StatusPill status={p.status || 'Draft'} /></TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(p)}><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => duplicateProduct(p)}><Copy className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => deleteProduct(String(p._id))}><Trash2 className="h-4 w-4" /></Button>
+                          <Button title="Edit" variant="ghost" size="sm" onClick={() => openEdit(p)} className="rounded p-1 hover:bg-nude/40"><Edit2 className="h-4 w-4" /></Button>
+                          <Button title="Duplicate" variant="ghost" size="sm" onClick={() => duplicateProduct(p)} className="rounded p-1 hover:bg-nude/40"><Copy className="h-4 w-4" /></Button>
+                          <Button title="Delete" variant="ghost" size="sm" onClick={() => deleteProduct(String(p._id))} className="rounded p-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -526,18 +522,24 @@ function DesignsPage() {
                 <Label>Category</Label>
                 <select
                   className="w-full rounded border p-2"
-                  value={form.category || 'Apparel'}
+                  value={form.category || (categoriesList[0] || 'Apparel')}
                   onChange={(e) => setForm((s:any) => ({ ...s, category: (e.target as HTMLSelectElement).value }))}
                 >
-                  <option value="Apparel">Apparel</option>
-                  <option value="Dress">Dress</option>
-                  <option value="T-shirt">T-shirt</option>
-                  <option value="Sweatpants">Sweatpants</option>
-                  <option value="Cup">Cup</option>
-                  <option value="Mug">Mug</option>
-                  <option value="Phone Case">Phone Case</option>
-                  <option value="Wall Art">Wall Art</option>
-                  <option value="Stationery">Stationery</option>
+                  {categoriesList.length > 0 ? (
+                    categoriesList.map((c) => <option key={c} value={c}>{c}</option>)
+                  ) : (
+                    <>
+                      <option value="Apparel">Apparel</option>
+                      <option value="Dress">Dress</option>
+                      <option value="T-shirt">T-shirt</option>
+                      <option value="Sweatpants">Sweatpants</option>
+                      <option value="Cup">Cup</option>
+                      <option value="Mug">Mug</option>
+                      <option value="Phone Case">Phone Case</option>
+                      <option value="Wall Art">Wall Art</option>
+                      <option value="Stationery">Stationery</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div className="grid gap-2">

@@ -28,7 +28,7 @@ export function Stars({ rating, reviews }: { rating: number; reviews?: number })
 
 export function ProductCard({ product, cta = "Add to Cart" }: { product: Product; cta?: string }) {
   const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
-  const { addItem } = useCart();
+  const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
 
   const imageSrc = (product.images && product.images[0]?.url) || product.image || (product.previewPaths && product.previewPaths[0]) || '';
@@ -86,8 +86,9 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
             )}
  
             <Button size="sm" onClick={() => {
-              // Add to cart — the cart provider opens the cart drawer; avoid navigating to a /cart route that may not exist
+              // Add to cart — do not open cart drawer; keep user on page
               addItem(product);
+              try { closeCart(); } catch {}
             }}>{cta || 'Add to cart'}</Button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 
 import { apiFetch, setAuthToken } from "./lib/api-client";
 import { CreditCard, LayoutDashboard, LogOut, Package, Palette, Settings, Users, Tag, Menu, X, ArrowUpRight, User } from "lucide-react";
+import { Input } from "./components/ui/input";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function AdminLayout() {
         <Link to="/admin" className="flex items-center gap-2">
           <img src="/images/logo.png" alt="D'avril Forme" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
           <span className="min-w-0">
-                      <span className="block truncate font-display text-lg font-semibold">D'avrill Forme</span>
+            <span className="block truncate font-display text-lg font-semibold">D'avril Forme</span>
             <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">Admin portal</span>
           </span>
         </Link>
@@ -66,7 +67,7 @@ export default function AdminLayout() {
 
         <nav className="mt-6 grid gap-1">
           {items.map((item) => (
-            <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm" onClick={() => setMobileOpen(false)}>
+            <Link key={item.to} to={item.to} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-[var(--sidebar-primary)] hover:text-[var(--sidebar-primary-foreground)]" onClick={() => setMobileOpen(false)}>
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
             </Link>
@@ -107,7 +108,7 @@ export default function AdminLayout() {
             </div>
             <nav className="mt-2 grid gap-1">
               {items.map((item) => (
-                <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
+                <Link key={item.to} to={item.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm hover:bg-[var(--sidebar-primary)] hover:text-[var(--sidebar-primary-foreground)]">
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </Link>
@@ -139,12 +140,20 @@ export default function AdminLayout() {
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
-            <h1 className="text-lg font-display">Da Real Form</h1>
+            <h1 className="text-lg font-display justify-self-start">D'avril Forme</h1>
 
-            <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white border border-transparent">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>View storefront</span>
-            </a>
+            <div className="justify-self-end">
+              <Input placeholder="Search admin..." className="w-60 mr-3 hidden md:inline" onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const q = (e.target as HTMLInputElement).value.trim();
+                  try { window.dispatchEvent(new CustomEvent('adminSearch', { detail: q })); } catch {};
+                }
+              }} />
+              <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white border border-transparent">
+                <ArrowUpRight className="h-4 w-4" />
+                <span>View storefront</span>
+              </a>
+            </div>
           </div>
         </header>
         <main className="flex-1 px-4 py-8 lg:px-8">
