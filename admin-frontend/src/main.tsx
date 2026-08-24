@@ -35,7 +35,7 @@ if (typeof window !== 'undefined') {
 }
 
 const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/admin" replace /> },
+  { path: '/', element: <Navigate to="/admin/login" replace /> },
   { path: '/admin/login', element: <AdminLogin /> },
   {
     path: '/admin',

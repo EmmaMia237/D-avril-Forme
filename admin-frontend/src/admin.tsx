@@ -18,6 +18,27 @@ export default function AdminLayout() {
     { to: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
+  // Verify admin session on mount — redirect to login if not authenticated
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await apiFetch('/api/auth/me');
+        if (!res.ok) {
+          if (mounted) navigate('/admin/login');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          if (!(data?.authenticated && data?.admin)) {
+            if (mounted) navigate('/admin/login');
+          }
+        }
+      } catch (e) {
+        if (mounted) navigate('/admin/login');
+      }
+    })();
+    return () => { mounted = false; };
+  }, [navigate]);
+
   return (
     <div className="flex min-h-screen w-full bg-background">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
