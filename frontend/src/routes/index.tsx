@@ -39,7 +39,8 @@ const trust = [
 function HomePage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
-  const [heroSrc, setHeroSrc] = useState<string>(heroImage);
+  // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
+  const [heroSrc, setHeroSrc] = useState<string>('/images/hero-image.png');
 
   useEffect(() => {
     let active = true;
@@ -241,12 +242,14 @@ function HomePage() {
             </div>
           </div>
           <div className="hero-image relative flex items-center justify-center">
+            {/* Render a single floating hero image from public/images/hero-image.png. z-10 ensures it overlays any background/mockup elements. */}
             <img
               src={heroSrc}
-              alt="Custom printed t-shirt, mug, phone case and notebook set in maroon and cream"
+              alt="Hero artwork"
               width={1600}
               height={1200}
-              className="w-full max-w-[700px] rounded-lg object-contain shadow-[var(--shadow-lift)] transition-transform duration-700 floating-image"
+              className="w-full max-w-[900px] rounded-lg object-contain transition-transform duration-700 floating-image relative z-10"
+              style={{ mixBlendMode: 'normal' }}
             />
           </div>
         </div>
