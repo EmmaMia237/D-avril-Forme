@@ -1,4 +1,25 @@
-﻿const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ? String(import.meta.env.VITE_API_BASE_URL) : "").replace(/\/$/, "");
+﻿const DEFAULT_BACKEND = 'https://d-avril-forme.onrender.com';
+
+function resolveApiBase() {
+  // build-time override (Vite)
+  const fromEnv = (import.meta.env.VITE_API_BASE_URL ? String(import.meta.env.VITE_API_BASE_URL) : "").replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+
+  // runtime heuristic: if app is hosted on Vercel (or not local), point to the Render backend
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname || '';
+    if (host.includes('vercel') || host.endsWith('onrender.com') || host.includes('davril-forme')) {
+      return DEFAULT_BACKEND;
+    }
+    // if running locally, keep relative paths
+    if (host === 'localhost' || host.startsWith('127.0.0.1')) return '';
+  }
+
+  // final fallback to Render backend so deployed frontends reach the API
+  return DEFAULT_BACKEND;
+}
+
+const API_BASE_URL = resolveApiBase();
 const AUTH_TOKEN_KEY = "af_auth_token";
 
 export function apiUrl(path: string) {
