@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { KpiCard, PageTitle, Panel, StatusPill } from "./components/admin-ui";
+import { Button } from "./components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -18,11 +20,12 @@ const ranges = ["Daily", "Weekly", "Monthly"];
 
 function PaymentsPage() {
   const [range, setRange] = useState("Monthly");
-  const [paymentsState, setPaymentsState] = useState(payments || [] as any[]);
-  const [revenueState, setRevenueState] = useState(revenueSeries || [] as any[]);
+  const [paymentsState, setPaymentsState] = useState<Array<Record<string, any>>>(Array.isArray(payments) ? payments : []);
+  const [revenueState, setRevenueState] = useState<Array<Record<string, any>>>(Array.isArray(revenueSeries) ? revenueSeries : []);
   // Confirm dialog for clearing payments
   const [showClearDialog, setShowClearDialog] = useState(false);
-  const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(Number.isFinite(v) ? v : 0);
   const data =
     range === "Monthly"
       ? revenueState
@@ -34,9 +37,9 @@ function PaymentsPage() {
             orders: Math.round(d.orders / 28),
           }));
 
-  const gross = paymentsState.reduce((s, p) => s + (p.gross || 0), 0);
-  const net = paymentsState.reduce((s, p) => s + (p.net || 0), 0);
-  const pendingCount = paymentsState.filter((p) => /pending|pending settlement|pending/i.test(p.state || '')).length;
+  const gross = paymentsState.reduce((s, p) => s + (Number(p?.gross ?? 0) || 0), 0);
+  const net = paymentsState.reduce((s, p) => s + (Number(p?.net ?? 0) || 0), 0);
+  const pendingCount = paymentsState.filter((p) => /pending|pending settlement/i.test(String(p?.state || "").toLowerCase())).length;
 
   // Ask user to confirm clearing payments (opens dialog)
   function requestClearPayments() {
@@ -81,7 +84,12 @@ function PaymentsPage() {
           value={formatEur(net)}
           delta="After gateway fees"
         />
-        <KpiCard icon={Receipt} label="Pending settlement" value={pendingCount ? formatEur(payments.filter(p => /pending/i.test(p.state||'')).reduce((s,p)=>s+(p.gross||0),0)) : formatEur(0)} delta={pendingCount ? `${pendingCount} card transaction${pendingCount>1?'s':''}` : 'No pending transactions'} />
+        <KpiCard
+          icon={Receipt}
+          label="Pending settlement"
+          value={pendingCount ? formatEur(paymentsState.filter((p) => /pending/i.test(String(p?.state || ""))).reduce((s, p) => s + (Number(p?.gross ?? 0) || 0), 0)) : formatEur(0)}
+          delta={pendingCount ? `${pendingCount} card transaction${pendingCount > 1 ? "s" : ""}` : "No pending transactions"}
+        />
       </div>
 
       <div className="mt-6">
@@ -144,19 +152,19 @@ function PaymentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paymentsState.map((p) => (
-                  <TableRow key={p.txn}>
-                    <TableCell className="font-mono text-xs">{p.txn}</TableCell>
-                    <TableCell className="font-semibold">{p.order}</TableCell>
-                    <TableCell>{p.gateway}</TableCell>
-                    <TableCell>{formatEur(p.gross || 0)}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatEur(p.fee || 0)}</TableCell>
-                    <TableCell className="font-semibold">{formatEur(p.net || 0)}</TableCell>
+                {paymentsState.map((p, index) => (
+                  <TableRow key={String(p?.txn ?? p?.id ?? `payment-${index}`)}>
+                    <TableCell className="font-mono text-xs">{p?.txn || "—"}</TableCell>
+                    <TableCell className="font-semibold">{p?.order || "—"}</TableCell>
+                    <TableCell>{p?.gateway || "N/A"}</TableCell>
+                    <TableCell>{formatEur(Number(p?.gross ?? 0))}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatEur(Number(p?.fee ?? 0))}</TableCell>
+                    <TableCell className="font-semibold">{formatEur(Number(p?.net ?? 0))}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {p.date}
+                      {p?.date ? new Date(p.date).toLocaleDateString() : "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <StatusPill status={p.state} />
+                      <StatusPill status={p?.state || "Pending"} />
                     </TableCell>
                   </TableRow>
                 ))}

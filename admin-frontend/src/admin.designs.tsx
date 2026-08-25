@@ -1,4 +1,4 @@
-import { UploadCloud, Edit2, Copy, Trash2, Image as ImageIcon, Plus } from "lucide-react";
+import { UploadCloud, Edit2, Copy, Trash2, Image as ImageIcon, Plus, Search, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { apiFetch } from "./lib/api-client";
@@ -27,14 +27,14 @@ import {
 import { Badge } from "./components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./components/ui/dialog";
 
-
 function DesignsPage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [previewProduct, setPreviewProduct] = useState<any | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,6 +44,20 @@ function DesignsPage() {
   // undo hint for deletes
   const [undoItem, setUndoItem] = useState<any>(null);
   const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
+
+  const statusOptions = ["All", "Published", "Draft", "Out of Stock"];
+  const categoryOptions = useMemo(
+    () =>
+      categoriesList.map((category: any) => {
+        const value = category.slug || category.name || category._id || category.id || '';
+        return {
+          id: category.id || category._id || value,
+          value,
+          label: category.name || category.title || category.slug || 'Unnamed category',
+        };
+      }),
+    [categoriesList]
+  );
 
   function normalizeThemeValue(value: string | null | undefined) {
    const v = String(value || '').trim();
@@ -61,19 +75,55 @@ function DesignsPage() {
    return map[v] || v;
   }
 
+  function resolveProductImage(product: any) {
+   if (!product) return "";
+   const images = Array.isArray(product.images) ? product.images : [];
+   const primaryImage =
+     images.find((img: any) => typeof img === 'string' ? !!img : !!(img?.url || img?.src)) ||
+     images[0];
+   const candidates = [
+     product.image,
+     product.imageUrl,
+     product.thumbnail,
+     product.previewUrl,
+     product.coverImage,
+     product.images?.[0]?.url,
+     product.images?.[0]?.src,
+     typeof primaryImage === 'string' ? primaryImage : primaryImage?.url || primaryImage?.src,
+     product.previewPaths?.[0],
+   ];
+
+   const raw = candidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+   if (!raw) return "";
+
+   const url = raw.trim();
+   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+     return url;
+   }
+   if (url.startsWith('/')) {
+     return `${window.location.origin}${url}`;
+   }
+
+   const base = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || window.location.origin || '').replace(/\/$/, '');
+   if (base) {
+     return `${base.replace(/\/$/, '')}/${url.replace(/^\.?\//, '')}`;
+   }
+   return url;
+  }
+
   // form state for create/edit
   const [form, setForm] = useState<any>({
-    name: "",
-    sku: "",
-    category: "",
-    price: 0,
-    salePrice: undefined,
-    stock: 0,
-    status: "Draft",
-    theme: "",
-    description: "",
-    images: [] as Array<{ id: string; url: string; role?: string }>,
-    is_customizable: false,
+   name: "",
+   sku: "",
+   category: "",
+   price: 0,
+   salePrice: undefined,
+   stock: 0,
+   status: "Draft",
+   theme: "",
+   description: "",
+   images: [] as Array<{ id: string; url: string; role?: string }>,
+   is_customizable: false,
   });
 
   useEffect(() => {
@@ -81,10 +131,18 @@ function DesignsPage() {
     // load categories for product creation dropdown
     (async function loadCategories() {
       try {
-        const res = await apiFetch('/api/categories');
+        const res = await apiFetch('/api/admin/categories');
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));
-        if (data?.categories) setCategoriesList(data.categories.map((c:any) => c.name || c.slug).filter(Boolean));
+        if (Array.isArray(data?.categories)) {
+          setCategoriesList(
+            data.categories.map((c:any) => ({
+              id: c._id || c.id,
+              slug: c.slug || c.name,
+              name: c.name || c.title || c.slug,
+            }))
+          );
+        }
       } catch (err) {
         // ignore
       }
@@ -113,11 +171,12 @@ function DesignsPage() {
     }
 
   function openNew() {
+    const firstCategory = categoryOptions[0]?.value || "";
     setEditing(null);
     setForm({
       name: "",
       sku: "",
-      category: (categoriesList && categoriesList[0]) || "",
+      category: firstCategory,
       price: 0,
       salePrice: undefined,
       stock: 0,
@@ -131,11 +190,12 @@ function DesignsPage() {
   }
 
   function openEdit(p: any) {
+    const productCategory = String(p.category || categoryOptions[0]?.value || "");
     setEditing(p);
     setForm({
       name: p.name || "",
       sku: p.sku || p._id || "",
-      category: p.category || (categoriesList && categoriesList[0]) || "",
+      category: productCategory,
       price: p.price || 0,
       salePrice: p.salePrice,
       stock: p.stock || 0,
@@ -289,17 +349,31 @@ function DesignsPage() {
 
   async function duplicateProduct(p: any) {
     try {
-      const payload = { ...p, name: `${p.name} (Copy)` };
+      const payload = {
+        ...p,
+        name: `${p.name || 'Product'} (Copy)`,
+        _id: undefined,
+        id: undefined,
+        category: p.category || categoriesList[0]?.name || categoriesList[0]?.slug || '',
+      };
       delete payload._id;
+      delete payload.id;
       const res = await apiFetch('/api/admin/products', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) {
         fetchProducts();
-        toast.success('Duplicated');
+        toast.success('Product duplicated successfully');
       } else toast.error(data?.error || 'Duplicate failed');
     } catch (err) {
       toast.error('Duplicate failed');
     }
+  }
+
+  async function handleRefresh() {
+    setSearch('');
+    setFilterCategory('All');
+    setFilterStatus('All');
+    await fetchProducts();
   }
 
   // request delete -> open dialog
@@ -375,14 +449,21 @@ function DesignsPage() {
   }, [productsList]);
 
   const filtered = productsList.filter((p) => {
-    if (search && !(String(p.name || '') + String(p._id || '')).toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterCategory && (p.category || '') !== filterCategory) return false;
-    if (filterStatus) {
-      const st = (p.status || '').toLowerCase();
-      if (filterStatus === 'published' && st !== 'published') return false;
-      if (filterStatus === 'draft' && st !== 'draft') return false;
-    }
-    return true;
+    const searchText = [p.name, p.sku, p.category, p._id, p.id].filter(Boolean).join(' ').toLowerCase();
+    const matchesSearch = !search || searchText.includes(search.toLowerCase());
+
+    const categoryValue = (p.category || '').toLowerCase();
+    const matchesCategory = filterCategory === 'All' || categoryValue === filterCategory.toLowerCase();
+
+    const stockLevel = Number(p.stock || 0);
+    const statusValue = String(p.status || 'Draft').toLowerCase();
+    const matchesStatus =
+      filterStatus === 'All' ||
+      (filterStatus === 'Published' && statusValue === 'published') ||
+      (filterStatus === 'Draft' && statusValue === 'draft') ||
+      (filterStatus === 'Out of Stock' && stockLevel === 0);
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   return (
@@ -395,58 +476,95 @@ function DesignsPage() {
         <KpiCard icon={UploadCloud} label="Low / Out of stock" value={`${stats.lowStock} / ${stats.outOfStock}`} delta="Inventory alerts" />
       </div>
 
-        <div className="mb-4 flex items-center justify-between gap-3">
-        <div />
-        <div className="flex gap-2">
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
-        </div>
-      </div>
-
       <Panel title="Inventory & product catalog">
         <div className="p-4">
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <Input placeholder="Search by name or SKU" value={search} onChange={(e) => setSearch((e.target as HTMLInputElement).value)} />
-            <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All categories</SelectItem>
-                {categoriesList.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v)}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
-            <div />
+          <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+            <div className="relative w-full max-w-xs md:w-72 xl:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+                placeholder="Search by name, SKU..."
+                className="w-full bg-card pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {statusOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setFilterStatus(option)}
+                  className={
+                    option === filterStatus
+                      ? 'rounded-full bg-slate-900 px-3.5 py-1 text-sm font-medium text-white shadow-sm dark:bg-white dark:text-slate-900'
+                      : 'rounded-full border border-slate-200 bg-slate-100 px-3.5 py-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200'
+                  }
+                >
+                  {option}
+                </button>
+              ))}
+
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-[170px] rounded-full border-slate-200 bg-white text-sm text-slate-700">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All categories</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.id} value={category.value}>{category.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={handleRefresh} className="inline-flex items-center gap-2">
+                <RotateCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              <Button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                <Plus className="h-4 w-4" />Add New
+              </Button>
+            </div>
           </div>
 
           <AdminDataTable
+            showToolbar={false}
             columns={[
-              { key: 'thumbnail', title: 'Preview', width: '72px', render: (p:any) => {
-                const thumbnail = (p.images && (p.images.find((im:any) => im.role==='front') || p.images[0]))?.url || p.image || p.imageUrl || p.coverImage || (p.previewPaths && p.previewPaths[0]) || '';
-                return (<div className="h-12 w-12 overflow-hidden rounded-md bg-muted/10">{thumbnail ? <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" /> : <div className="grid h-12 w-12 place-items-center text-xs text-muted-foreground">No image</div>}</div>);
-              }},
+              {
+                key: 'thumbnail',
+                title: 'Preview',
+                width: '72px',
+                render: (p:any) => {
+                  const thumbnail = resolveProductImage(p);
+                  return (
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                      {thumbnail ? (
+                        <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" />
+                      ) : (
+                        <ImageIcon className="h-5 w-5 text-slate-400" />
+                      )}
+                    </div>
+                  );
+                }
+              },
               { key: 'name', title: 'Product / SKU', render: (p:any) => (<div className="font-semibold"><div>{p.name}</div><div className="text-xs text-muted-foreground">{p.sku || p._id}</div></div>) },
-              { key: 'price', title: 'Price', render: (p:any) => (<div>${p.price}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${p.salePrice}</div> : null}</div>) },
+              { key: 'price', title: 'Price', render: (p:any) => (<div>${Number(p.price || 0).toFixed(2)}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${Number(p.salePrice || 0).toFixed(2)}</div> : null}</div>) },
               { key: 'stock', title: 'Inventory', render: (p:any) => ((p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>)) },
               { key: 'status', title: 'Status', render: (p:any) => <StatusPill status={p.status || 'Draft'} /> },
               { key: 'created', title: 'Created', render: (p:any) => new Date(p.createdAt || p.created || p.created_at || Date.now()).toLocaleDateString() },
             ]}
             rows={filtered}
             loading={loading}
-            total={productsList.length}
+            total={filtered.length}
             page={1}
             pageSize={25}
+            onView={(p) => setPreviewProduct(p)}
             onAdd={openNew}
             onEdit={openEdit}
             onDuplicate={duplicateProduct}
-            onDelete={(p) => requestDeleteProduct(String((p as any)._id))}
+            onDelete={(p) => requestDeleteProduct(String((p as any)._id || (p as any).id))}
           />
         </div>
       </Panel>
@@ -467,6 +585,63 @@ function DesignsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={Boolean(previewProduct)} onOpenChange={(value) => !value && setPreviewProduct(null)}>
+        <DialogContent className="max-w-3xl overflow-hidden">
+          <div className="mt-2 grid gap-5 md:grid-cols-[220px_1fr]">
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+              {previewProduct ? (
+                <img
+                  src={resolveProductImage(previewProduct)}
+                  alt={previewProduct.name}
+                  className="h-56 w-full object-cover md:h-full"
+                />
+              ) : null}
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Product preview</p>
+                <h3 className="mt-2 text-2xl font-semibold text-slate-900">{previewProduct?.name || 'Product'}</h3>
+                <div className="mt-2 flex flex-wrap gap-2 text-sm text-slate-600">
+                  <span className="rounded-full bg-slate-100 px-2 py-1">{previewProduct?.category || 'Uncategorized'}</span>
+                  <StatusPill status={previewProduct?.status || 'Draft'} />
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-slate-600">
+                <p>{previewProduct?.description || 'No description available.'}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Price</span>
+                    <span className="font-semibold text-slate-900">${Number(previewProduct?.price || 0).toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Stock</span>
+                    <span className="font-semibold text-slate-900">{previewProduct?.stock ?? 0} units</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const productId = previewProduct?._id || previewProduct?.id;
+                    if (!productId) return;
+                    const storefrontUrl = `/product?id=${encodeURIComponent(productId)}`;
+                    window.open(storefrontUrl, '_blank', 'noopener,noreferrer');
+                    setPreviewProduct(null);
+                  }}
+                >
+                  Open in Storefront
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setPreviewProduct(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openDialog} onOpenChange={(v) => setOpenDialog(v)}>
         <DialogContent className="max-h-[80vh] w-full overflow-y-auto">
@@ -522,23 +697,15 @@ function DesignsPage() {
                 <Label>Category</Label>
                 <select
                   className="w-full rounded border p-2"
-                  value={form.category || (categoriesList[0] || 'Apparel')}
+                  value={form.category || categoryOptions[0]?.value || ''}
                   onChange={(e) => setForm((s:any) => ({ ...s, category: (e.target as HTMLSelectElement).value }))}
                 >
-                  {categoriesList.length > 0 ? (
-                    categoriesList.map((c) => <option key={c} value={c}>{c}</option>)
+                  {categoryOptions.length > 0 ? (
+                    categoryOptions.map((category) => (
+                      <option key={category.id} value={category.value}>{category.label}</option>
+                    ))
                   ) : (
-                    <>
-                      <option value="Apparel">Apparel</option>
-                      <option value="Dress">Dress</option>
-                      <option value="T-shirt">T-shirt</option>
-                      <option value="Sweatpants">Sweatpants</option>
-                      <option value="Cup">Cup</option>
-                      <option value="Mug">Mug</option>
-                      <option value="Phone Case">Phone Case</option>
-                      <option value="Wall Art">Wall Art</option>
-                      <option value="Stationery">Stationery</option>
-                    </>
+                    <option value="" disabled>No categories found — create one first</option>
                   )}
                 </select>
               </div>

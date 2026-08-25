@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { apiFetch, setAuthToken } from "./lib/api-client";
 import { CreditCard, LayoutDashboard, LogOut, Package, Palette, Settings, Users, Tag, Menu, X, ArrowUpRight, User, Search } from "lucide-react";
@@ -7,7 +7,22 @@ import { Input } from "./components/ui/input";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const storefrontUrl = (import.meta.env.VITE_FRONTEND_URL || 'https://davril-forme.vercel.app').replace(/\/$/, "") + "/";
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const dispatchAdminSearch = React.useCallback((value: string) => {
+    const next = value ?? "";
+    setSearchQuery(next);
+    try {
+      window.dispatchEvent(new CustomEvent('adminSearch', { detail: next }));
+    } catch (error) {
+      console.warn('admin search dispatch failed', error);
+    }
+  }, []);
+
   const items = [
     { to: "/admin", label: "Dashboard Overview", icon: LayoutDashboard },
     { to: "/admin/designs", label: "Manage Print Designs", icon: Palette },
@@ -40,8 +55,6 @@ export default function AdminLayout() {
     return () => { mounted = false; };
   }, [navigate]);
 
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop sidebar */}
@@ -70,8 +83,9 @@ export default function AdminLayout() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === "/admin"}
               onClick={() => setMobileOpen(false)}
-              className={({ isActive }) => `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors duration-150 ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-[var(--sidebar-primary-foreground)]' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-200 transition-all duration-200 ease-in-out hover:bg-orange-600/90 hover:text-white ${isActive ? "bg-orange-600 text-white font-semibold shadow-sm" : "text-slate-200"}`}
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
@@ -116,8 +130,9 @@ export default function AdminLayout() {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end={item.to === "/admin"}
                   onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) => `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors duration-150 ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-[var(--sidebar-primary-foreground)]' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                  className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ease-in-out hover:bg-orange-600/90 hover:text-white ${isActive ? "bg-orange-600 text-white font-semibold shadow-sm" : "text-slate-200"}`}
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">{item.label}</span>
@@ -145,37 +160,61 @@ export default function AdminLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-card">
-          <div className="flex items-center justify-between gap-4 px-4 py-3 lg:px-8">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="flex items-center gap-3">
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 rounded-md bg-transparent text-[var(--accent)]" aria-label="Toggle menu">
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-md p-2 text-[var(--accent)] lg:hidden" aria-label="Toggle menu">
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
               <h1 className="text-lg font-display">D’avril Forme</h1>
             </div>
 
-            <div className="flex-1 px-4">
-              <div className="relative max-w-2xl mx-auto">
+            <div className="hidden flex-1 items-center justify-center px-4 md:flex">
+              <div className="relative mx-auto w-full max-w-2xl">
                 <Input
+                  value={searchQuery}
+                  onChange={(event) => dispatchAdminSearch(event.target.value)}
                   placeholder="Search admin..."
                   className="w-full pl-10"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const q = (e.target as HTMLInputElement).value.trim();
-                      try { window.dispatchEvent(new CustomEvent('adminSearch', { detail: q })); } catch {};
-                    }
-                  }}
+                  aria-label="Search admin"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="w-auto shrink-0 inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white border border-transparent">
+              <button
+                type="button"
+                aria-label="Open mobile search"
+                className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 md:hidden"
+                onClick={() => setMobileSearchOpen((open) => !open)}
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-auto shrink-0 items-center gap-2 rounded-md border border-transparent px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white">
                 <ArrowUpRight className="h-4 w-4" />
                 <span>View storefront</span>
               </a>
             </div>
           </div>
+
+          {mobileSearchOpen && (
+            <div className="border-t border-border px-4 py-3 md:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => {
+                    dispatchAdminSearch(event.target.value);
+                  }}
+                  onBlur={() => setMobileSearchOpen(false)}
+                  placeholder="Search admin..."
+                  className="w-full pl-10"
+                  autoFocus
+                  aria-label="Search admin mobile"
+                />
+              </div>
+            </div>
+          )}
         </header>
         <main className="flex-1 px-4 py-8 lg:px-8">
           <Outlet />
