@@ -185,7 +185,7 @@ export default function AdminLayout() {
               <button
                 type="button"
                 aria-label="Open mobile search"
-                className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 md:hidden"
+                className="inline-flex items-center justify-center rounded-md border-0 bg-transparent p-1 text-slate-700 shadow-none md:hidden"
                 onClick={() => setMobileSearchOpen((open) => !open)}
               >
                 <Search className="h-4 w-4" />

@@ -8,13 +8,6 @@ import { useEffect, useState, useMemo } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./components/ui/select";
 import { Switch } from "./components/ui/switch";
 import {
   Table,
@@ -476,9 +469,13 @@ function DesignsPage() {
         <KpiCard icon={UploadCloud} label="Low / Out of stock" value={`${stats.lowStock} / ${stats.outOfStock}`} delta="Inventory alerts" />
       </div>
 
-      <Panel title="Inventory & product catalog">
-        <div className="p-4">
-          <div className="flex min-w-0 flex-nowrap items-center justify-between gap-2 py-3 md:gap-3">
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-3 pb-1">
+          <h2 className="truncate text-base font-semibold">Inventory & product catalog</h2>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-card dark:border-slate-800">
+          <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 md:gap-3">
             <div className="relative w-[170px] shrink-0 sm:w-[200px] md:w-[220px] xl:w-[240px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -504,18 +501,6 @@ function DesignsPage() {
                   {option}
                 </button>
               ))}
-
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="h-8 w-[120px] shrink-0 rounded-full border-slate-200 bg-white text-xs text-slate-700 shadow-sm md:w-[150px] md:text-sm">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All categories</SelectItem>
-                  {categoryOptions.map((category) => (
-                    <SelectItem key={category.id} value={category.value}>{category.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -529,45 +514,47 @@ function DesignsPage() {
             </div>
           </div>
 
-          <AdminDataTable
-            showToolbar={false}
-            columns={[
-              {
-                key: 'thumbnail',
-                title: 'Preview',
-                width: '72px',
-                render: (p:any) => {
-                  const thumbnail = resolveProductImage(p);
-                  return (
-                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
-                      {thumbnail ? (
-                        <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" />
-                      ) : (
-                        <ImageIcon className="h-5 w-5 text-slate-400" />
-                      )}
-                    </div>
-                  );
-                }
-              },
-              { key: 'name', title: 'Product / SKU', render: (p:any) => (<div className="font-semibold"><div>{p.name}</div><div className="text-xs text-muted-foreground">{p.sku || p._id}</div></div>) },
-              { key: 'price', title: 'Price', render: (p:any) => (<div>${Number(p.price || 0).toFixed(2)}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${Number(p.salePrice || 0).toFixed(2)}</div> : null}</div>) },
-              { key: 'stock', title: 'Inventory', render: (p:any) => ((p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>)) },
-              { key: 'status', title: 'Status', render: (p:any) => <StatusPill status={p.status || 'Draft'} /> },
-              { key: 'created', title: 'Created', render: (p:any) => new Date(p.createdAt || p.created || p.created_at || Date.now()).toLocaleDateString() },
-            ]}
-            rows={filtered}
-            loading={loading}
-            total={filtered.length}
-            page={1}
-            pageSize={25}
-            onView={(p) => setPreviewProduct(p)}
-            onAdd={openNew}
-            onEdit={openEdit}
-            onDuplicate={duplicateProduct}
-            onDelete={(p) => requestDeleteProduct(String((p as any)._id || (p as any).id))}
-          />
+          <div className="border-t border-slate-200 dark:border-slate-800">
+            <AdminDataTable
+              showToolbar={false}
+              columns={[
+                {
+                  key: 'thumbnail',
+                  title: 'Preview',
+                  width: '72px',
+                  render: (p:any) => {
+                    const thumbnail = resolveProductImage(p);
+                    return (
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                        {thumbnail ? (
+                          <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" />
+                        ) : (
+                          <ImageIcon className="h-5 w-5 text-slate-400" />
+                        )}
+                      </div>
+                    );
+                  }
+                },
+                { key: 'name', title: 'Product / SKU', render: (p:any) => (<div className="font-semibold"><div>{p.name}</div><div className="text-xs text-muted-foreground">{p.sku || p._id}</div></div>) },
+                { key: 'price', title: 'Price', render: (p:any) => (<div>${Number(p.price || 0).toFixed(2)}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${Number(p.salePrice || 0).toFixed(2)}</div> : null}</div>) },
+                { key: 'stock', title: 'Inventory', render: (p:any) => ((p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>)) },
+                { key: 'status', title: 'Status', render: (p:any) => <StatusPill status={p.status || 'Draft'} /> },
+                { key: 'created', title: 'Created', render: (p:any) => new Date(p.createdAt || p.created || p.created_at || Date.now()).toLocaleDateString() },
+              ]}
+              rows={filtered}
+              loading={loading}
+              total={filtered.length}
+              page={1}
+              pageSize={25}
+              onView={(p) => setPreviewProduct(p)}
+              onAdd={openNew}
+              onEdit={openEdit}
+              onDuplicate={duplicateProduct}
+              onDelete={(p) => requestDeleteProduct(String((p as any)._id || (p as any).id))}
+            />
+          </div>
         </div>
-      </Panel>
+      </section>
 
       {/* Delete confirmation dialog for single product */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
