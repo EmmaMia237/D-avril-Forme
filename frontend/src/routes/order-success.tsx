@@ -53,10 +53,12 @@ function OrderSuccessPage() {
             <p className="mt-3 text-sm">
               Tracking number:{" "}
               <span className="font-semibold text-primary">
-                {loading ? "Loading..." : order?.trackingNumber ?? "Available after order sync"}
+                {loading ? "Loading..." : (order?.trackingNumber ?? "Available after order sync")}
               </span>
             </p>
-            {order?.status && <p className="mt-1 text-sm text-muted-foreground">Status: {order.status}</p>}
+            {order?.status && (
+              <p className="mt-1 text-sm text-muted-foreground">Status: {order.status}</p>
+            )}
           </div>
 
           <Button asChild className="mt-8">

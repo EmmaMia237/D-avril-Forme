@@ -34,9 +34,7 @@
         "price": 16
       }
     ],
-    "previewPaths": [
-      "http://localhost:5173/uploads/order-item-0-1786877598148.png"
-    ],
+    "previewPaths": ["http://localhost:5173/uploads/order-item-0-1786877598148.png"],
     "raw": {
       "items": [
         {
@@ -90,9 +88,7 @@
         "price": 20
       }
     ],
-    "previewPaths": [
-      "http://localhost:5173/uploads/order-item-1-1786877564595.png"
-    ],
+    "previewPaths": ["http://localhost:5173/uploads/order-item-1-1786877564595.png"],
     "raw": {
       "items": [
         {
@@ -147,9 +143,7 @@
         "price": 9.99
       }
     ],
-    "previewPaths": [
-      "http://localhost:4000/uploads/order-item-0-1786572894325.png"
-    ],
+    "previewPaths": ["http://localhost:4000/uploads/order-item-0-1786572894325.png"],
     "raw": {
       "success_url": "http://localhost:5173/order-success?session_id={CHECKOUT_SESSION_ID}",
       "cancel_url": "http://localhost:5173/categories",

@@ -14,9 +14,9 @@ import {
 import { CircleDollarSign, Landmark, Receipt } from "lucide-react";
 import { payments, revenueSeries } from "@/lib/shop-data";
 
-export const Route = createFileRoute('/admin/payments')({
+export const Route = createFileRoute("/admin/payments")({
   component: function AdminPaymentsRedirect() {
-    if (typeof window !== 'undefined') window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;
   },
 });
@@ -24,7 +24,8 @@ export const Route = createFileRoute('/admin/payments')({
 const ranges = ["Daily", "Weekly", "Monthly"];
 
 function PaymentsPage() {
-  const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const [range, setRange] = useState("Monthly");
   const data =
     range === "Monthly"
@@ -60,7 +61,12 @@ function PaymentsPage() {
           value={formatEur(net)}
           delta="After gateway fees"
         />
-        <KpiCard icon={Receipt} label="Pending settlement" value="$388" delta="1 card transaction" />
+        <KpiCard
+          icon={Receipt}
+          label="Pending settlement"
+          value="$388"
+          delta="1 card transaction"
+        />
       </div>
 
       <div className="mt-6">

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -8,7 +8,9 @@ import { renderErrorPage } from "./lib/error-page";
 import { connectDb } from "./lib/db";
 
 // Attempt to warm-connect to the database on server start to surface errors early.
-connectDb().then(() => console.log("Database connected (warm start)")).catch((err) => console.warn("DB warm connect failed:", err?.message ?? err));
+connectDb()
+  .then(() => console.log("Database connected (warm start)"))
+  .catch((err) => console.warn("DB warm connect failed:", err?.message ?? err));
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;

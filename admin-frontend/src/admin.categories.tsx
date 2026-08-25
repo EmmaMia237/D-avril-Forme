@@ -144,6 +144,7 @@ export default function CategoriesAdminPage() {
                         } catch (err:any) { toast.error(err?.message || 'Unable to update'); }
                       }} />
                       <Button size="sm" onClick={() => openEdit(c)}>Edit</Button>
+                                            <Button size="sm" onClick={() => { navigator.clipboard?.writeText(c.slug || ''); toast.success('Category slug copied'); }}>Copy slug</Button>
                                             <Button variant="destructive" size="sm" onClick={() => requestDeleteCategory(c._id || c.id)}>Remove</Button>
                     </div>
                   </div>

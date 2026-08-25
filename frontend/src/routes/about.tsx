@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Droplets, Leaf, Palette, Instagram, MessageCircle } from "lucide-react";
 
 import { StoreLayout } from "@/components/store-layout";
-const printProcess = '/images/printing-image.png';
-const heroImage = '/images/hero-image.png';
+const printProcess = "/images/printing-image.png";
+const heroImage = "/images/hero-image.png";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/about")({
@@ -45,20 +45,20 @@ const pillars = [
 
 function AboutPage() {
   const [aboutImg, setAboutImg] = useState<string>(printProcess);
-  const [videoSrc, setVideoSrc] = useState<string>('/images/TUTORIAL MP4.mp4');
+  const [videoSrc, setVideoSrc] = useState<string>("/images/TUTORIAL MP4.mp4");
 
   useEffect(() => {
-    (async function pickAboutAssets(){
+    (async function pickAboutAssets() {
       try {
-        const r = await fetch('/images/printing-image.png', { method: 'HEAD' });
-        if (r && r.ok) setAboutImg('/images/printing-image.png');
+        const r = await fetch("/images/printing-image.png", { method: "HEAD" });
+        if (r && r.ok) setAboutImg("/images/printing-image.png");
       } catch (e) {
         // keep fallback
       }
 
       try {
-        const v = await fetch('/images/tutorial.mp4', { method: 'HEAD' });
-        if (v && v.ok) setVideoSrc('/images/tutorial.mp4');
+        const v = await fetch("/images/tutorial.mp4", { method: "HEAD" });
+        if (v && v.ok) setVideoSrc("/images/tutorial.mp4");
       } catch (e) {
         // fallback to existing TUTORIAL MP4
       }
@@ -79,19 +79,20 @@ function AboutPage() {
             <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
               <p>
                 Where everyday items become your canvas. At D’avril Forme, we believe the things you
-                carry, wear, and use every day should feel like a reflection of you. From cozy graphic
-                tees and statement hoodies to protective phone cases, everyday tote bags, and your
-                morning coffee mug — we bring thoughtful design to life on high-quality essentials.
+                carry, wear, and use every day should feel like a reflection of you. From cozy
+                graphic tees and statement hoodies to protective phone cases, everyday tote bags,
+                and your morning coffee mug — we bring thoughtful design to life on high-quality
+                essentials.
               </p>
               <p>
-                Whether you love minimalist aesthetic prints, retro typography, or custom personalized
-                pieces, D’avril Forme adds form, function, and personality to your daily routine.
-                Designed to inspire. Printed to last.
+                Whether you love minimalist aesthetic prints, retro typography, or custom
+                personalized pieces, D’avril Forme adds form, function, and personality to your
+                daily routine. Designed to inspire. Printed to last.
               </p>
               <p>
-                We design around quality, individuality, and everyday practicality — helping people turn
-                useful items into personal statements, gifts, and keepsakes that feel special from the
-                very first use.
+                We design around quality, individuality, and everyday practicality — helping people
+                turn useful items into personal statements, gifts, and keepsakes that feel special
+                from the very first use.
               </p>
             </div>
           </div>
@@ -111,9 +112,21 @@ function AboutPage() {
           <h2 className="font-display text-3xl font-semibold mb-4">Why shop D'avril Forme</h2>
           <div className="grid gap-5 md:grid-cols-3 mb-8">
             {[
-              { emoji: "🌱", title: "Quality Materials", text: "Premium fabrics and durable, vibrant prints." },
-              { emoji: "🎨", title: "Unique Designs", text: "Original artwork, minimalist lines, and retro vibes." },
-              { emoji: "🎁", title: "Made to Order", text: "Personalization available for gifts that mean more." },
+              {
+                emoji: "🌱",
+                title: "Quality Materials",
+                text: "Premium fabrics and durable, vibrant prints.",
+              },
+              {
+                emoji: "🎨",
+                title: "Unique Designs",
+                text: "Original artwork, minimalist lines, and retro vibes.",
+              },
+              {
+                emoji: "🎁",
+                title: "Made to Order",
+                text: "Personalization available for gifts that mean more.",
+              },
             ].map((item) => (
               <div key={item.title} className="rounded-lg border border-border bg-white p-6">
                 <p className="text-3xl mb-2">{item.emoji}</p>
@@ -147,8 +160,8 @@ function AboutPage() {
         </p>
         <div className="relative mt-8 overflow-hidden rounded-lg bg-black">
           <video
-          src={videoSrc}
-          poster={aboutImg}
+            src={videoSrc}
+            poster={aboutImg}
             controls
             className="h-auto w-full max-h-[500px] object-contain"
           />

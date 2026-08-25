@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
@@ -21,18 +22,29 @@ export function Stars({ rating, reviews }: { rating: number; reviews?: number })
           />
         ))}
       </span>
-      <span className="text-xs text-muted-foreground">{r.toFixed(1)}{reviews ? ` (${reviews})` : ""}</span>
+      <span className="text-xs text-muted-foreground">
+        {r.toFixed(1)}
+        {reviews ? ` (${reviews})` : ""}
+      </span>
     </div>
   );
 }
 
 export function ProductCard({ product, cta = "Add to Cart" }: { product: Product; cta?: string }) {
-  const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
 
-  const imageSrc = (product.images && product.images[0]?.url) || product.image || (product.previewPaths && product.previewPaths[0]) || '';
-  const shortDescription = product.description ? (String(product.description).slice(0, 80) + (String(product.description).length > 80 ? '…' : '')) : product.options || '';
+  const imageSrc =
+    (product.images && product.images[0]?.url) ||
+    product.image ||
+    (product.previewPaths && product.previewPaths[0]) ||
+    "";
+  const shortDescription = product.description
+    ? String(product.description).slice(0, 80) +
+      (String(product.description).length > 80 ? "…" : "")
+    : product.options || "";
 
   return (
     <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-lift)]">
@@ -45,7 +57,9 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="grid h-full w-full place-items-center text-sm text-muted-foreground">No image</div>
+          <div className="grid h-full w-full place-items-center text-sm text-muted-foreground">
+            No image
+          </div>
         )}
         {product.badge && (
           <span className="absolute top-3 left-3 rounded-sm bg-accent px-2 py-1 text-[11px] font-bold tracking-wide text-accent-foreground uppercase">
@@ -54,42 +68,92 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4 min-h-0">
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">{product.category}</p>
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+          {product.category}
+        </p>
         <h3 className="text-base leading-snug font-semibold">{product.name}</h3>
         <Stars rating={product.rating ?? 0} reviews={product.reviews ?? 0} />
         <p className="text-sm text-muted-foreground">{shortDescription}</p>
 
         <div className="flex items-center justify-between gap-3 pt-2">
           <div className="flex-1">
-            <span className="font-display text-xl font-semibold text-primary">{formatEur(Number(product.price || 0))}</span>
+            <span className="font-display text-xl font-semibold text-primary">
+              {formatEur(Number(product.price || 0))}
+            </span>
           </div>
 
           <div className="flex gap-2">
             {/* Show Configure only for configurable products */}
-            {(product.configurable === true || product.productType === 'blank' || product.customizable === true) ? (
-              <Button size="sm" variant="outline" onClick={() => {
-                try {
-                  navigate({ to: '/configure', search: { id: product.id || product._id } });
-                } catch (e) {
-                  window.location.href = `/configure?id=${encodeURIComponent(product.id || product._id)}`;
-                }
-              }}>Configure</Button>
+            {product.configurable === true ||
+            product.productType === "blank" ||
+            product.customizable === true ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const pid = product.id || product._id;
+                  if (!pid) {
+                    try {
+                      toast.error("Product details not available");
+                    } catch (e) {
+                      /* ignore */
+                    }
+                    return;
+                  }
+                  try {
+                    navigate({ to: "/configure", search: { id: pid } });
+                  } catch (e) {
+                    window.location.href = `/configure?id=${encodeURIComponent(pid)}`;
+                  }
+                }}
+              >
+                Configure
+              </Button>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => {
-                // Go to product detail page
-                try {
-                  navigate({ to: '/product', search: { id: product.id || product._id } });
-                } catch (e) {
-                  window.location.href = `/product?id=${encodeURIComponent(product.id || product._id)}`;
-                }
-              }}>Details</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  // Go to product detail page
+                  const pid = product.id || product._id;
+                  if (!pid) {
+                    try {
+                      toast.error("Product details not available");
+                    } catch (e) {
+                      /* ignore */
+                    }
+                    return;
+                  }
+                  try {
+                    navigate({ to: "/product", search: { id: pid } });
+                  } catch (e) {
+                    window.location.href = `/product?id=${encodeURIComponent(pid)}`;
+                  }
+                }}
+              >
+                Details
+              </Button>
             )}
- 
-            <Button size="sm" onClick={() => {
-              // Add to cart — do not open cart drawer; keep user on page
-              addItem(product);
-              try { closeCart(); } catch {}
-            }}>{cta || 'Add to cart'}</Button>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                // Add to cart in background and show quick feedback; keep user on page and avoid auto-opening cart drawer
+                addItem(product);
+                try {
+                  closeCart();
+                } catch (e) {
+                  /* ignore */
+                }
+                try {
+                  toast.success("Added to cart");
+                } catch (e) {
+                  /* ignore */
+                }
+              }}
+            >
+              {cta || "Add to cart"}
+            </Button>
           </div>
         </div>
       </div>

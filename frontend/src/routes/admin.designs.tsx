@@ -26,9 +26,9 @@ import {
 } from "@/components/ui/table";
 import { adminDesigns } from "@/lib/shop-data";
 
-export const Route = createFileRoute('/admin/designs')({
+export const Route = createFileRoute("/admin/designs")({
   component: function AdminDesignsRedirect() {
-    if (typeof window !== 'undefined') window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;
   },
 });
@@ -52,7 +52,7 @@ function DesignsPage() {
   async function fetchProducts() {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/products');
+      const res = await apiFetch("/api/products");
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) setProductsList(data.products || []);
     } catch (err) {
@@ -67,36 +67,49 @@ function DesignsPage() {
     try {
       const payload = {
         ...newProduct,
-        colors: newProduct.colors.split(",").map((color) => color.trim()).filter(Boolean),
+        colors: newProduct.colors
+          .split(",")
+          .map((color) => color.trim())
+          .filter(Boolean),
         theme: newProduct.theme || undefined,
       };
-      const res = await apiFetch('/api/admin/products', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await apiFetch("/api/admin/products", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) {
-        setNewProduct({ name: "", category: "Apparel", price: 0, productType: "pre-designed", colors: "Cream, Maroon" });
+        setNewProduct({
+          name: "",
+          category: "Apparel",
+          price: 0,
+          productType: "pre-designed",
+          colors: "Cream, Maroon",
+        });
         fetchProducts();
-        toast.success('Product created');
+        toast.success("Product created");
       } else {
-        toast.error(data?.error || 'Create failed');
+        toast.error(data?.error || "Create failed");
       }
     } catch (err) {
-      toast.error('Create failed');
+      toast.error("Create failed");
     }
   }
 
   async function deleteProduct(id: string) {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm("Delete this product?")) return;
     try {
-      const res = await apiFetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/admin/products/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) {
         fetchProducts();
-        toast.success('Deleted');
+        toast.success("Deleted");
       } else {
-        toast.error(data?.error || 'Delete failed');
+        toast.error(data?.error || "Delete failed");
       }
     } catch (err) {
-      toast.error('Delete failed');
+      toast.error("Delete failed");
     }
   }
 
@@ -178,9 +191,28 @@ function DesignsPage() {
         <Panel title="Inventory & product catalog">
           <div className="p-4">
             <form className="grid gap-3 sm:grid-cols-5" onSubmit={createProduct}>
-              <Input placeholder="Name" value={newProduct.name} onChange={(e) => setNewProduct((s) => ({ ...s, name: (e.target as HTMLInputElement).value }))} />
-              <Input placeholder="Price" type="number" value={newProduct.price} onChange={(e) => setNewProduct((s) => ({ ...s, price: Number((e.target as HTMLInputElement).value || 0) }))} />
-              <Select value={newProduct.category} onValueChange={(v) => setNewProduct((s) => ({ ...s, category: v }))}>
+              <Input
+                placeholder="Name"
+                value={newProduct.name}
+                onChange={(e) =>
+                  setNewProduct((s) => ({ ...s, name: (e.target as HTMLInputElement).value }))
+                }
+              />
+              <Input
+                placeholder="Price"
+                type="number"
+                value={newProduct.price}
+                onChange={(e) =>
+                  setNewProduct((s) => ({
+                    ...s,
+                    price: Number((e.target as HTMLInputElement).value || 0),
+                  }))
+                }
+              />
+              <Select
+                value={newProduct.category}
+                onValueChange={(v) => setNewProduct((s) => ({ ...s, category: v }))}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -199,7 +231,10 @@ function DesignsPage() {
                   <SelectItem value="Kids">Kids</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={newProduct.productType} onValueChange={(v) => setNewProduct((s) => ({ ...s, productType: v }))}>
+              <Select
+                value={newProduct.productType}
+                onValueChange={(v) => setNewProduct((s) => ({ ...s, productType: v }))}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -208,8 +243,17 @@ function DesignsPage() {
                   <SelectItem value="blank">Blank Product</SelectItem>
                 </SelectContent>
               </Select>
-              <Input placeholder="Colors: Cream, Maroon" value={newProduct.colors} onChange={(e) => setNewProduct((s) => ({ ...s, colors: (e.target as HTMLInputElement).value }))} />
-              <Select value={newProduct.theme} onValueChange={(v) => setNewProduct((s) => ({ ...s, theme: v }))}>
+              <Input
+                placeholder="Colors: Cream, Maroon"
+                value={newProduct.colors}
+                onChange={(e) =>
+                  setNewProduct((s) => ({ ...s, colors: (e.target as HTMLInputElement).value }))
+                }
+              />
+              <Select
+                value={newProduct.theme}
+                onValueChange={(v) => setNewProduct((s) => ({ ...s, theme: v }))}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -237,24 +281,45 @@ function DesignsPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell>Loading…</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell>Loading…</TableCell>
+                  </TableRow>
                 ) : (
                   productsList.map((p) => (
                     <TableRow key={String(p._id)}>
                       <TableCell className="font-semibold">{p.name}</TableCell>
                       <TableCell>{p.category}</TableCell>
                       <TableCell>${p.price}</TableCell>
-                      <TableCell>{p.theme || '—'}</TableCell>
+                      <TableCell>{p.theme || "—"}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => {
-                          const price = prompt('New price', String(p.price));
-                          if (!price) return;
-                          apiFetch(`/api/admin/products/${p._id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ price: Number(price) }) }).then(async (r) => {
-                            const d = await r.json().catch(() => ({}));
-                            if (r.ok && d?.ok) { fetchProducts(); toast.success('Updated'); } else toast.error(d?.error || 'Update failed');
-                          });
-                        }}>Edit</Button>
-                        <Button variant="ghost" size="sm" onClick={() => deleteProduct(String(p._id))}>Delete</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const price = prompt("New price", String(p.price));
+                            if (!price) return;
+                            apiFetch(`/api/admin/products/${p._id}`, {
+                              method: "PUT",
+                              headers: { "content-type": "application/json" },
+                              body: JSON.stringify({ price: Number(price) }),
+                            }).then(async (r) => {
+                              const d = await r.json().catch(() => ({}));
+                              if (r.ok && d?.ok) {
+                                fetchProducts();
+                                toast.success("Updated");
+                              } else toast.error(d?.error || "Update failed");
+                            });
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteProduct(String(p._id))}
+                        >
+                          Delete
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-const heroImage = '/images/hero-image.png';
+const heroImage = "/images/hero-image.png";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -53,7 +53,15 @@ function AuthPage() {
 
     const saveLead = (email: string, name?: string) => {
       const leads = JSON.parse(window.localStorage.getItem("af_marketing_leads") || "[]");
-      const next = [{ email, name: name || "Customer", source: "registration", createdAt: new Date().toISOString() }, ...leads];
+      const next = [
+        {
+          email,
+          name: name || "Customer",
+          source: "registration",
+          createdAt: new Date().toISOString(),
+        },
+        ...leads,
+      ];
       window.localStorage.setItem("af_marketing_leads", JSON.stringify(next.slice(0, 200)));
     };
 
@@ -81,7 +89,9 @@ function AuthPage() {
         }
 
         const accounts = JSON.parse(window.localStorage.getItem("af_customer_accounts") || "[]");
-        const match = accounts.find((entry: any) => entry.email === email && entry.password === password);
+        const match = accounts.find(
+          (entry: any) => entry.email === email && entry.password === password,
+        );
         if (match) {
           saveCustomerSession(match.email, match.name || match.email.split("@")[0]);
           toast.success("Signed in");
@@ -176,11 +186,23 @@ function AuthPage() {
               <form onSubmit={submit} className="grid gap-4 pt-6">
                 <div>
                   <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" name="login-email" type="email" className="mt-1.5" required />
+                  <Input
+                    id="login-email"
+                    name="login-email"
+                    type="email"
+                    className="mt-1.5"
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="login-password">Password</Label>
-                  <Input id="login-password" name="login-password" type="password" className="mt-1.5" required />
+                  <Input
+                    id="login-password"
+                    name="login-password"
+                    type="password"
+                    className="mt-1.5"
+                    required
+                  />
                 </div>
                 <Button type="submit" size="lg">
                   Sign In
@@ -200,18 +222,29 @@ function AuthPage() {
                 </div>
                 <div>
                   <Label htmlFor="reg-password">Password</Label>
-                  <Input id="reg-password" name="reg-password" type="password" className="mt-1.5" required />
+                  <Input
+                    id="reg-password"
+                    name="reg-password"
+                    type="password"
+                    className="mt-1.5"
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="reg-address">Shipping address</Label>
-                  <Textarea id="reg-address" name="reg-address" rows={3} className="mt-1.5" required />
+                  <Textarea
+                    id="reg-address"
+                    name="reg-address"
+                    rows={3}
+                    className="mt-1.5"
+                    required
+                  />
                 </div>
                 <Button type="submit" size="lg">
                   Create Account
                 </Button>
               </form>
             </TabsContent>
-
           </Tabs>
 
           <div className="my-6 flex items-center gap-3 text-xs tracking-widest text-muted-foreground uppercase">
@@ -219,10 +252,16 @@ function AuthPage() {
             <span className="h-px flex-1 bg-border" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => toast.info("Social login pending backend setup.")}>
+            <Button
+              variant="outline"
+              onClick={() => toast.info("Social login pending backend setup.")}
+            >
               Google
             </Button>
-            <Button variant="outline" onClick={() => toast.info("Social login pending backend setup.")}>
+            <Button
+              variant="outline"
+              onClick={() => toast.info("Social login pending backend setup.")}
+            >
               Apple
             </Button>
           </div>

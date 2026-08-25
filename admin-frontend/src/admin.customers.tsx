@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { PageTitle, Panel } from "./components/admin-ui";
+import AdminDataTable from "./components/admin-data-table";
 import { Button } from "./components/ui/button";
 import {
   Table,
@@ -45,51 +46,20 @@ function CustomersPage() {
         subtitle="Everyone who has ordered a print, with lifetime spend and order counts."
       />
       <Panel title={loading ? "Loading customers..." : `${customers.length} customers`}>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Lifetime spend</TableHead>
-                <TableHead>Customer since</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                    Loading customers...
-                  </TableCell>
-                </TableRow>
-              ) : customers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                    No customers found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                customers.map((c) => (
-                  <TableRow key={c.email}>
-                    <TableCell className="font-semibold">{c.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                    <TableCell>{c.orders}</TableCell>
-                    <TableCell className="font-semibold text-primary">
-                      ${c.spend.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{c.since}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="outline">
-                        View orders
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        <div className="p-4">
+          <AdminDataTable
+            columns={[
+              { key: 'name', title: 'Customer', render: (c:any) => c.name },
+              { key: 'email', title: 'Email', render: (c:any) => <div className="text-muted-foreground">{c.email}</div> },
+              { key: 'orders', title: 'Orders', render: (c:any) => c.orders },
+              { key: 'spend', title: 'Lifetime spend', render: (c:any) => <div className="font-semibold text-primary">${Number(c.spend || 0).toLocaleString()}</div> },
+              { key: 'since', title: 'Customer since', render: (c:any) => c.since },
+            ]}
+            rows={customers}
+            loading={loading}
+            onView={(c:any) => { window.location.href = `/admin/customers/${encodeURIComponent(c.email)}` }}
+            selectable={false}
+          />
         </div>
       </Panel>
     </>

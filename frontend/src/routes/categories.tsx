@@ -15,7 +15,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { apiFetch } from "@/lib/api-client";
 
@@ -38,8 +44,32 @@ export const Route = createFileRoute("/categories")({
   component: CategoriesPage,
 });
 
-const catFilters = ["Apparel", "Mugs", "T-Shirts", "Tote Bags", "Drinkware", "Phone Cases", "Hoodies", "Wall Art", "Keychains", "Caps", "Stationery", "Kids", "Corporate Merch"];
-const materials = ["100% Cotton", "Ceramic", "Matte Plastic", "Recycled Paper", "Stainless Steel", "Cotton Blend", "Canvas", "Acrylic", "Paper"];
+const catFilters = [
+  "Apparel",
+  "Mugs",
+  "T-Shirts",
+  "Tote Bags",
+  "Drinkware",
+  "Phone Cases",
+  "Hoodies",
+  "Wall Art",
+  "Keychains",
+  "Caps",
+  "Stationery",
+  "Kids",
+  "Corporate Merch",
+];
+const materials = [
+  "100% Cotton",
+  "Ceramic",
+  "Matte Plastic",
+  "Recycled Paper",
+  "Stainless Steel",
+  "Cotton Blend",
+  "Canvas",
+  "Acrylic",
+  "Paper",
+];
 const colorFilters = ["Cream", "Maroon", "Charcoal", "Nude", "White", "Black", "Navy", "Pink"];
 
 function CategoriesPage() {
@@ -59,17 +89,19 @@ function CategoriesPage() {
     let active = true;
     async function load() {
       try {
-        const res = await apiFetch('/api/products');
+        const res = await apiFetch("/api/products");
         const data = await res.json().catch(() => ({}));
-        if (res.ok && active) setProductsList((data.products || []).map((p:any) => ({ ...p, id: p.id || p._id })) );
+        if (res.ok && active)
+          setProductsList((data.products || []).map((p: any) => ({ ...p, id: p.id || p._id })));
       } catch (e) {
         // ignore
       }
     }
     load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
-
 
   const toggle = (list: string[], setList: (v: string[]) => void, value: string) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -97,10 +129,16 @@ function CategoriesPage() {
     const result = source.filter((p) => {
       const matchesCat = !selectedCats.length || selectedCats.includes(p.category);
       const matchesMaterial = !selectedMaterials.length || selectedMaterials.includes(p.material);
-      const matchesColor = !selectedColors.length || (Array.isArray(p.colors) && p.colors.some((c) => selectedColors.includes(c)));
+      const matchesColor =
+        !selectedColors.length ||
+        (Array.isArray(p.colors) && p.colors.some((c) => selectedColors.includes(c)));
       const matchesPrice = (p.price || 0) <= maxPrice;
-      const q = (query ?? '').trim().toLowerCase();
-      const matchesQuery = !q || (p.name && p.name.toLowerCase().includes(q)) || (p.category && String(p.category).toLowerCase().includes(q)) || ((p.options || '').toLowerCase().includes(q));
+      const q = (query ?? "").trim().toLowerCase();
+      const matchesQuery =
+        !q ||
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.category && String(p.category).toLowerCase().includes(q)) ||
+        (p.options || "").toLowerCase().includes(q);
       return matchesCat && matchesMaterial && matchesColor && matchesPrice && matchesQuery;
     });
     if (sort === "price-asc") return [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -250,7 +288,12 @@ function CategoriesPage() {
                     </span>
                     <Button
                       size="sm"
-                      onClick={() => navigate({ to: "/configure", search: { id: p.id, color: p.colors?.[0] ?? "" } })}
+                      onClick={() =>
+                        navigate({
+                          to: "/configure",
+                          search: { id: p.id, color: p.colors?.[0] ?? "" },
+                        })
+                      }
                     >
                       Configure &amp; Order
                     </Button>
@@ -354,11 +397,7 @@ function CategoriesPage() {
                 ))}
               </FilterGroup>
 
-              <Button
-                size="lg"
-                className="mt-4 w-full"
-                onClick={() => setMobileFilterOpen(false)}
-              >
+              <Button size="lg" className="mt-4 w-full" onClick={() => setMobileFilterOpen(false)}>
                 Apply Filters
               </Button>
             </div>

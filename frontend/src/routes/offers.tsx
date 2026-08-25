@@ -44,7 +44,7 @@ function OffersPage() {
     let active = true;
     async function loadOffers() {
       try {
-        const res = await apiFetch('/api/offers');
+        const res = await apiFetch("/api/offers");
         const data = await res.json().catch(() => ({}));
         if (active && res.ok && data?.ok) {
           setOffers(data.offers || []);
@@ -56,11 +56,13 @@ function OffersPage() {
       }
     }
     loadOffers();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const couponOffers = offers.filter((o) => o.type === 'coupon' && o.isActive !== false);
-  const tierOffers = offers.filter((o) => o.type === 'tier' || o.type === 'bundle');
+  const couponOffers = offers.filter((o) => o.type === "coupon" && o.isActive !== false);
+  const tierOffers = offers.filter((o) => o.type === "tier" || o.type === "bundle");
 
   const copy = async (code: string) => {
     try {
@@ -77,7 +79,9 @@ function OffersPage() {
     <StoreLayout>
       <section className="mx-auto max-w-7xl px-4 py-14 lg:px-8">
         <h1 className="font-display text-4xl font-semibold">Current offers</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Offers shown here are active and updated in real time.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Offers shown here are active and updated in real time.
+        </p>
 
         <div className="mt-8">
           {loading ? (
@@ -94,15 +98,23 @@ function OffersPage() {
                   <h2 className="font-display text-2xl font-semibold">Active coupons</h2>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {couponOffers.map((c: any) => {
-                      const code = c.code || c.title || 'OFFER';
-                      const label = c.title || c.description || 'Store discount';
+                      const code = c.code || c.title || "OFFER";
+                      const label = c.title || c.description || "Store discount";
                       return (
                         <div key={c.id || code} className="rounded-lg border bg-nude p-5">
                           <p className="font-display text-2xl font-bold text-primary">{code}</p>
                           <p className="mt-2 text-sm font-medium">{label}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{c.startAt ? new Date(c.startAt).toLocaleString() : 'Starts: now'} • {c.endAt ? new Date(c.endAt).toLocaleString() : 'No end'}</p>
-                          <Button size="sm" variant="outline" className="mt-4" onClick={() => copy(code)}>
-                            {copied === code ? 'Copied' : 'Copy code'}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {c.startAt ? new Date(c.startAt).toLocaleString() : "Starts: now"} •{" "}
+                            {c.endAt ? new Date(c.endAt).toLocaleString() : "No end"}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-4"
+                            onClick={() => copy(code)}
+                          >
+                            {copied === code ? "Copied" : "Copy code"}
                           </Button>
                         </div>
                       );
@@ -126,9 +138,17 @@ function OffersPage() {
                       <TableBody>
                         {tierOffers.map((t: any) => (
                           <TableRow key={t.id}>
-                            <TableCell className="font-semibold">{t.minimumQty ? `Buy ${t.minimumQty}+ items` : 'Custom offer'}</TableCell>
-                            <TableCell className="text-primary">{t.discountPercent ? `${t.discountPercent}% OFF` : `$${t.discountValue} OFF`}</TableCell>
-                            <TableCell className="text-muted-foreground">{t.description || 'Storewide offer'}</TableCell>
+                            <TableCell className="font-semibold">
+                              {t.minimumQty ? `Buy ${t.minimumQty}+ items` : "Custom offer"}
+                            </TableCell>
+                            <TableCell className="text-primary">
+                              {t.discountPercent
+                                ? `${t.discountPercent}% OFF`
+                                : `$${t.discountValue} OFF`}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {t.description || "Storewide offer"}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -7,15 +7,19 @@ import { useCart, writeOrderSnapshot } from "@/lib/cart";
 import { toast } from "sonner";
 
 export function CartDrawer() {
-  const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const { items, open, closeCart, removeItem, updateQuantity, clear, totalAmount } = useCart();
   const subtotal = totalAmount();
   const estimatedShipping = items.length && subtotal < 120 ? 8 : 0;
   const [promoCode, setPromoCode] = useState("");
   const [applying, setApplying] = useState(false);
-  const [appliedOffer, setAppliedOffer] = useState<any | null>(null);
+  type Offer = { code?: string; amountOff?: number; subtotal?: number; newTotal?: number };
+  const [appliedOffer, setAppliedOffer] = useState<Offer | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
-  const discountedSubtotal = appliedOffer ? Math.max(0, subtotal - (appliedOffer.amountOff || 0)) : subtotal;
+  const discountedSubtotal = appliedOffer
+    ? Math.max(0, subtotal - (appliedOffer.amountOff || 0))
+    : subtotal;
   const total = discountedSubtotal + estimatedShipping;
 
   useEffect(() => {
@@ -26,29 +30,43 @@ export function CartDrawer() {
 
   async function applyPromo(auto = false) {
     if (!promoCode || promoCode.trim().length === 0) {
-      if (!auto) setPromoError('Enter a promo code');
+      if (!auto) setPromoError("Enter a promo code");
       return;
     }
     setApplying(true);
     setPromoError(null);
     try {
-      const res = await apiFetch('/api/offers/validate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: promoCode.trim(), items: items.map(it => ({ amount: it.price, quantity: it.quantity })) }) });
+      const res = await apiFetch("/api/offers/validate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          items: items.map((it) => ({ amount: it.price, quantity: it.quantity })),
+        }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
         setAppliedOffer(null);
-        setPromoError(data?.error || 'Invalid promo code');
-        toast.error(data?.error || 'Invalid promo code');
+        setPromoError(data?.error || "Invalid promo code");
+        toast.error(data?.error || "Invalid promo code");
       } else {
-        setAppliedOffer({ ...data.offer, amountOff: data.amountOff, subtotal: data.subtotal, newTotal: data.newTotal });
+        setAppliedOffer({
+          ...data.offer,
+          amountOff: data.amountOff,
+          subtotal: data.subtotal,
+          newTotal: data.newTotal,
+        });
         setPromoError(null);
         toast.success(`Promo ${data.offer.code} applied`);
       }
     } catch (err) {
-      console.error('Apply promo failed', err);
-      setPromoError('Unable to validate promo code');
+      console.error("Apply promo failed", err);
+      setPromoError("Unable to validate promo code");
       setAppliedOffer(null);
-      if (!auto) toast.error('Unable to validate promo code');
-    } finally { setApplying(false); }
+      if (!auto) toast.error("Unable to validate promo code");
+    } finally {
+      setApplying(false);
+    }
   }
 
   async function handleCheckout() {
@@ -70,7 +88,8 @@ export function CartDrawer() {
         payment: "Pending",
         createdAt: new Date().toISOString(),
         items: items.map((it) => `${it.name} x${it.quantity}`).join(", "),
-        previewImage: items.find((it) => it.customization?.image)?.customization?.image || items[0]?.image,
+        previewImage:
+          items.find((it) => it.customization?.image)?.customization?.image || items[0]?.image,
         customization: items.map((it) => it.customization).filter(Boolean),
         productName: items.map((it) => it.name).join(", "),
       };
@@ -95,10 +114,10 @@ export function CartDrawer() {
             cancel_url: `${origin}/categories`,
           }),
         });
-      } catch (err: any) {
+      } catch (err) {
         console.error("Checkout request failed:", err);
         alert(
-          "Unable to contact the backend to create a checkout session. Your order has been saved locally and can be reviewed in the admin orders fallback.\n\nProceeding with a simulated checkout redirect for now."
+          "Unable to contact the backend to create a checkout session. Your order has been saved locally and can be reviewed in the admin orders fallback.\n\nProceeding with a simulated checkout redirect for now.",
         );
         // fallback: simulate a checkout session so user can continue in frontend-only mode
         window.location.href = `${origin}/order-success?session_id=SIMULATED-${Date.now()}`;
@@ -119,9 +138,13 @@ export function CartDrawer() {
       console.warn("Unexpected checkout response", payload, res.status);
       alert(payload?.error || "Failed to create checkout session; order saved locally.");
       window.location.href = `${origin}/order-success?session_id=SIMULATED-${Date.now()}`;
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert(err?.message || String(err));
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert(String(err));
+      }
     }
   }
 
@@ -159,30 +182,63 @@ export function CartDrawer() {
             <div key={it.cartId} className="mb-3 rounded-lg border border-border bg-background p-3">
               <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] gap-3">
                 {it.image && (
-                  <img src={it.image} alt={it.name} className="h-[72px] w-[72px] rounded-md object-cover" />
+                  <img
+                    src={it.image}
+                    alt={it.name}
+                    className="h-[72px] w-[72px] rounded-md object-cover"
+                  />
                 )}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold">{it.name}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{formatEur(it.price)} each</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {formatEur(it.price)} each
+                  </div>
                   {it.customization && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {it.customization.color && <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">Color: {it.customization.color}</span>}
-                      {it.customization.size && <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">Size: {it.customization.size}</span>}
-                      {it.customization.text && <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">Text: {it.customization.text}</span>}
+                      {it.customization.color && (
+                        <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">
+                          Color: {it.customization.color}
+                        </span>
+                      )}
+                      {it.customization.size && (
+                        <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">
+                          Size: {it.customization.size}
+                        </span>
+                      )}
+                      {it.customization.text && (
+                        <span className="rounded-sm bg-nude px-2 py-0.5 text-[11px]">
+                          Text: {it.customization.text}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => removeItem(it.cartId)} aria-label={`Remove ${it.name}`}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeItem(it.cartId)}
+                  aria-label={`Remove ${it.name}`}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
               <div className="mt-3 flex items-center justify-between">
                 <div className="inline-flex h-9 items-center rounded-md border border-border bg-card">
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(it.cartId, it.quantity - 1)} aria-label="Decrease quantity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => updateQuantity(it.cartId, it.quantity - 1)}
+                    aria-label="Decrease quantity"
+                  >
                     <Minus className="h-4 w-4" />
                   </Button>
                   <span className="w-9 text-center text-sm font-semibold">{it.quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(it.cartId, it.quantity + 1)} aria-label="Increase quantity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => updateQuantity(it.cartId, it.quantity + 1)}
+                    aria-label="Increase quantity"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -195,8 +251,15 @@ export function CartDrawer() {
         <div className="border-t border-border bg-nude/50 p-5">
           <div className="grid gap-3 text-sm">
             <div className="flex gap-2">
-              <input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Promo / Offer Code" className="flex-1 rounded border p-2" />
-              <Button onClick={applyPromo} disabled={applying || items.length === 0}>{applying ? 'Applying…' : 'Apply'}</Button>
+              <input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                placeholder="Promo / Offer Code"
+                className="flex-1 rounded border p-2"
+              />
+              <Button onClick={applyPromo} disabled={applying || items.length === 0}>
+                {applying ? "Applying…" : "Apply"}
+              </Button>
             </div>
             {promoError && <div className="text-xs text-destructive">{promoError}</div>}
             {appliedOffer && (
@@ -204,9 +267,21 @@ export function CartDrawer() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold">{appliedOffer.code}</div>
-                    <div className="text-xs text-muted-foreground">{appliedOffer.discountPercent}% off — min {appliedOffer.minimumQty || 0} items</div>
+                    <div className="text-xs text-muted-foreground">
+                      {appliedOffer.discountPercent}% off — min {appliedOffer.minimumQty || 0} items
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => { setAppliedOffer(null); setPromoCode(''); }} aria-label="Remove promo">×</Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setAppliedOffer(null);
+                      setPromoCode("");
+                    }}
+                    aria-label="Remove promo"
+                  >
+                    ×
+                  </Button>
                 </div>
               </div>
             )}

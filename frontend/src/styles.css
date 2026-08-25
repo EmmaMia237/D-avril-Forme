@@ -69,49 +69,49 @@
 :root {
   --radius: 0.5rem;
   /* Avril Forme brand system - updated palette */
-  --background: #FAF6F0; /* Linen / Off-White (page background) */
-  --foreground: #1E1D1B; /* Deep Ink Black (primary text & headings) */
-  --card: #FFFFFF; /* Pure White (cards, product mockups) */
-  --card-foreground: #1E1D1B;
-  --popover: #FFFFFF;
-  --popover-foreground: #1E1D1B;
-  --primary: #3A3A3D; /* Charcoal Grey / Soft Black (primary UI) */
-  --primary-deep: #2B2B2D; /* Deeper charcoal used for strong primary surfaces (e.g., footer background) */
-  --primary-foreground: #FFFFFF;
-  --secondary: #F4ECE1; /* Warm Cream / Nude */
-  --secondary-foreground: #1E1D1B;
-  --nude: #F4ECE1;
-  --nude-deep: #C49A6C;
-  --muted: #E8C5B2; /* Dusty Rose for muted accents */
+  --background: #faf6f0; /* Linen / Off-White (page background) */
+  --foreground: #1e1d1b; /* Deep Ink Black (primary text & headings) */
+  --card: #ffffff; /* Pure White (cards, product mockups) */
+  --card-foreground: #1e1d1b;
+  --popover: #ffffff;
+  --popover-foreground: #1e1d1b;
+  --primary: #3a3a3d; /* Charcoal Grey / Soft Black (primary UI) */
+  --primary-deep: #2b2b2d; /* Deeper charcoal used for strong primary surfaces (e.g., footer background) */
+  --primary-foreground: #ffffff;
+  --secondary: #f4ece1; /* Warm Cream / Nude */
+  --secondary-foreground: #1e1d1b;
+  --nude: #f4ece1;
+  --nude-deep: #c49a6c;
+  --muted: #e8c5b2; /* Dusty Rose for muted accents */
   --muted-foreground: #708063; /* Earthy Olive for contrast */
-  --accent: #C85A32; /* Warm Terracotta */
-  --accent-foreground: #FFFFFF;
-  --accent-2: #A28647; /* Muted Mustard */
+  --accent: #c85a32; /* Warm Terracotta */
+  --accent-foreground: #ffffff;
+  --accent-2: #a28647; /* Muted Mustard */
   --accent-3: #708063; /* Earthy Olive */
-  --accent-4: #E8C5B2; /* Dusty Rose */
-  --wood: #C49A6C; /* Natural Wood / Tan */
-  --destructive: #C85A32;
-  --destructive-foreground: #FFFFFF;
-  --border: #EDE7E0;
-  --input: #FFFFFF;
-  --ring: #3A3A3D;
-  --chart-1: #3A3A3D;
-  --chart-2: #C85A32;
-  --chart-3: #A28647;
+  --accent-4: #e8c5b2; /* Dusty Rose */
+  --wood: #c49a6c; /* Natural Wood / Tan */
+  --destructive: #c85a32;
+  --destructive-foreground: #ffffff;
+  --border: #ede7e0;
+  --input: #ffffff;
+  --ring: #3a3a3d;
+  --chart-1: #3a3a3d;
+  --chart-2: #c85a32;
+  --chart-3: #a28647;
   --chart-4: #708063;
-  --chart-5: #E8C5B2;
-  --sidebar: #3A3A3D;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #C85A32;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #A28647;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #EDE7E0;
-  --sidebar-ring: #C85A32;
-  --gradient-hero: linear-gradient(135deg,#3A3A3D 0%,#C85A32 45%,#F4ECE1 100%);
-  --gradient-maroon: linear-gradient(120deg,#3A3A3D,#A28647);
-  --shadow-soft: 0 12px 32px -18px rgba(0,0,0,0.08);
-  --shadow-lift: 0 24px 48px -24px rgba(0,0,0,0.12);
+  --chart-5: #e8c5b2;
+  --sidebar: #3a3a3d;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #c85a32;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #a28647;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #ede7e0;
+  --sidebar-ring: #c85a32;
+  --gradient-hero: linear-gradient(135deg, #3a3a3d 0%, #c85a32 45%, #f4ece1 100%);
+  --gradient-maroon: linear-gradient(120deg, #3a3a3d, #a28647);
+  --shadow-soft: 0 12px 32px -18px rgba(0, 0, 0, 0.08);
+  --shadow-lift: 0 24px 48px -24px rgba(0, 0, 0, 0.12);
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-body: "Karla", system-ui, sans-serif;
 }
@@ -173,7 +173,11 @@
   }
 
   /* Ensure pointer cursor for interactive elements */
-  button, a, [role="button"], input[type="button"], input[type="submit"] {
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
     cursor: pointer;
   }
 
@@ -182,7 +186,7 @@
   [role="link"] {
     transition: color 0.2s ease;
   }
-   
+
   a:not([class]):hover,
   [role="link"]:hover {
     color: var(--accent);
@@ -221,15 +225,23 @@
   }
 
   @keyframes floatY {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-18px); }
-    100% { transform: translateY(0px); }
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-18px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
   }
 
   .hero-text-highlight {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
     background-size: 200% 200%;
-    animation: gradientShift 3s ease infinite, fadeIn 1s ease-out both;
+    animation:
+      gradientShift 3s ease infinite,
+      fadeIn 1s ease-out both;
   }
 
   .micro-fade-in {
@@ -237,7 +249,9 @@
   }
 
   .product-card-animated {
-    animation: fadeIn 0.5s ease-out both, slideInUp 0.5s ease-out both;
+    animation:
+      fadeIn 0.5s ease-out both,
+      slideInUp 0.5s ease-out both;
   }
 
   .trust-item {

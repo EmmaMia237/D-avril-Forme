@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api-client";
 
-export const Route = createFileRoute('/admin')({
+export const Route = createFileRoute("/admin")({
   component: function AdminIndexRedirect() {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") {
+      window.location.href = "/avril-admin";
     }
     return null;
   },
@@ -35,7 +35,8 @@ export const Route = createFileRoute('/admin')({
 const POLL_MS = 5000;
 
 function AdminOverview() {
-  const formatEur = (v: number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,13 +124,19 @@ function AdminOverview() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
                       Loading recent orders...
                     </TableCell>
                   </TableRow>
                 ) : recentOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
                       No recent orders yet.
                     </TableCell>
                   </TableRow>
@@ -138,11 +145,15 @@ function AdminOverview() {
                     <TableRow key={order.id}>
                       <TableCell className="font-semibold">{order.id}</TableCell>
                       <TableCell>{order.customer}</TableCell>
-                      <TableCell className="text-muted-foreground truncate max-w-[18rem]">{order.items}</TableCell>
+                      <TableCell className="text-muted-foreground truncate max-w-[18rem]">
+                        {order.items}
+                      </TableCell>
                       <TableCell>
                         <StatusPill status={order.status} />
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{formatEur(order.total ?? 0)}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatEur(order.total ?? 0)}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

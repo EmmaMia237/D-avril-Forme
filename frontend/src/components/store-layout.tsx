@@ -1,5 +1,17 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Search, User, ShoppingBag, Menu, X, ChevronDown, CreditCard, Headphones, ShieldCheck, Instagram, MessageCircle } from "lucide-react";
+import {
+  Search,
+  User,
+  ShoppingBag,
+  Menu,
+  X,
+  ChevronDown,
+  CreditCard,
+  Headphones,
+  ShieldCheck,
+  Instagram,
+  MessageCircle,
+} from "lucide-react";
 import { useState, useRef, useEffect, type FormEvent, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -138,7 +150,9 @@ function ThemesDropdown() {
         className="inline-flex items-center gap-1 cursor-pointer rounded-md px-2 py-1 hover:bg-primary-light transition-colors"
       >
         <span className="text-sm text-primary-foreground opacity-90">Themes</span>
-        <ChevronDown className={`h-4 w-4 text-primary-foreground opacity-80 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`h-4 w-4 text-primary-foreground opacity-80 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && (
         <div className="absolute left-0 top-full mt-2 w-48 rounded-md border border-border bg-card p-2 shadow-lg z-50">
@@ -240,37 +254,37 @@ export function StoreFooter() {
           <div>
             <p className="font-display text-2xl">D'avril Forme</p>
             <p className="mt-3 max-w-xs text-sm text-primary-foreground/85">
-              Where everyday items become your canvas. At D’avril Forme, we turn essentials into personal,
-              meaningful pieces for daily life.
+              Where everyday items become your canvas. At D’avril Forme, we turn essentials into
+              personal, meaningful pieces for daily life.
             </p>
             <div className="mt-4 text-sm text-primary-foreground/85">
               <div className="flex gap-4">
-                <a 
-                  href="https://www.instagram.com/davril_forme?igsh=MTYwZGllOWs5aWFweg==" 
-                  target="_blank" 
-                  rel="noreferrer" 
+                <a
+                  href="https://www.instagram.com/davril_forme?igsh=MTYwZGllOWs5aWFweg=="
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center gap-2 transition-all duration-200 hover:text-accent"
                   aria-label="Follow us on Instagram"
                 >
                   <Instagram className="h-5 w-5" />
                   <span className="text-xs">Instagram</span>
                 </a>
-                <a 
-                  href="https://www.tiktok.com/@atelier_davril" 
-                  target="_blank" 
-                  rel="noreferrer" 
+                <a
+                  href="https://www.tiktok.com/@atelier_davril"
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center gap-2 transition-all duration-200 hover:text-accent"
                   aria-label="Follow us on TikTok"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.68v13.67a2.4 2.4 0 0 1-2.4 2.4 2.4 2.4 0 0 1-2.4-2.4 2.4 2.4 0 0 1 2.4-2.4c.34 0 .67.05 1 .15V9.48a5.9 5.9 0 0 0-1-.08A6.02 6.02 0 0 0 5 21.58a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-7.85a7.6 7.6 0 0 0 4.64 1.53V13.9a4.76 4.76 0 0 1-.95-.08z"/>
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.68v13.67a2.4 2.4 0 0 1-2.4 2.4 2.4 2.4 0 0 1-2.4-2.4 2.4 2.4 0 0 1 2.4-2.4c.34 0 .67.05 1 .15V9.48a5.9 5.9 0 0 0-1-.08A6.02 6.02 0 0 0 5 21.58a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-7.85a7.6 7.6 0 0 0 4.64 1.53V13.9a4.76 4.76 0 0 1-.95-.08z" />
                   </svg>
                   <span className="text-xs">TikTok</span>
                 </a>
-                <a 
-                  href="https://wa.me/447417575436" 
-                  target="_blank" 
-                  rel="noreferrer" 
+                <a
+                  href="https://wa.me/447417575436"
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center gap-2 transition-all duration-200 hover:text-accent"
                   aria-label="Contact us on WhatsApp"
                 >
@@ -315,20 +329,17 @@ export function StoreFooter() {
   );
 }
 
-function FooterCol({
-  title,
-  links,
-}: {
-  title: string;
-  links: { to: string; label: string }[];
-}) {
+function FooterCol({ title, links }: { title: string; links: { to: string; label: string }[] }) {
   return (
     <div>
       <p className="text-xs font-semibold tracking-[0.18em] text-nude uppercase">{title}</p>
       <ul className="mt-4 space-y-2 text-sm">
         {links.map((l) => (
           <li key={l.label}>
-            <Link to={l.to} className="text-primary-foreground/90 transition-colors duration-200 hover:text-accent">
+            <Link
+              to={l.to}
+              className="text-primary-foreground/90 transition-colors duration-200 hover:text-accent"
+            >
               {l.label}
             </Link>
           </li>
@@ -341,57 +352,59 @@ function FooterCol({
 export function StoreLayout({ children }: { children: ReactNode }) {
   // Set up Server-Sent Events (SSE) connection for real-time product updates
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     try {
-      const es = new EventSource('/api/events');
-      es.addEventListener('product-created', (ev: MessageEvent) => {
+      const es = new EventSource("/api/events");
+      es.addEventListener("product-created", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
+          const payload = JSON.parse((ev as any).data || "{}");
           // dispatch a DOM event other components can listen to
-          window.dispatchEvent(new CustomEvent('product-created', { detail: payload.product }));
+          window.dispatchEvent(new CustomEvent("product-created", { detail: payload.product }));
         } catch (e) {
           // ignore malformed
         }
       });
-      es.addEventListener('product-updated', (ev: MessageEvent) => {
+      es.addEventListener("product-updated", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
-          window.dispatchEvent(new CustomEvent('product-updated', { detail: payload.product }));
+          const payload = JSON.parse((ev as any).data || "{}");
+          window.dispatchEvent(new CustomEvent("product-updated", { detail: payload.product }));
         } catch (e) {}
       });
-      es.addEventListener('product-deleted', (ev: MessageEvent) => {
+      es.addEventListener("product-deleted", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
-          window.dispatchEvent(new CustomEvent('product-deleted', { detail: payload }));
+          const payload = JSON.parse((ev as any).data || "{}");
+          window.dispatchEvent(new CustomEvent("product-deleted", { detail: payload }));
         } catch (e) {}
       });
 
       // Category events
-      es.addEventListener('category-created', (ev: MessageEvent) => {
+      es.addEventListener("category-created", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
-          window.dispatchEvent(new CustomEvent('category-created', { detail: payload }));
+          const payload = JSON.parse((ev as any).data || "{}");
+          window.dispatchEvent(new CustomEvent("category-created", { detail: payload }));
         } catch (e) {}
       });
-      es.addEventListener('category-updated', (ev: MessageEvent) => {
+      es.addEventListener("category-updated", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
-          window.dispatchEvent(new CustomEvent('category-updated', { detail: payload }));
+          const payload = JSON.parse((ev as any).data || "{}");
+          window.dispatchEvent(new CustomEvent("category-updated", { detail: payload }));
         } catch (e) {}
       });
-      es.addEventListener('category-deleted', (ev: MessageEvent) => {
+      es.addEventListener("category-deleted", (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse((ev as any).data || '{}');
-          window.dispatchEvent(new CustomEvent('category-deleted', { detail: payload }));
+          const payload = JSON.parse((ev as any).data || "{}");
+          window.dispatchEvent(new CustomEvent("category-deleted", { detail: payload }));
         } catch (e) {}
       });
 
-      es.addEventListener('error', () => {
+      es.addEventListener("error", () => {
         // handle silently; EventSource reconnects automatically
       });
 
       return () => {
-        try { es.close(); } catch (e) {}
+        try {
+          es.close();
+        } catch (e) {}
       };
     } catch (err) {
       // EventSource not supported or blocked
