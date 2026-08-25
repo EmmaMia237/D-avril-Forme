@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { apiFetch } from "./lib/api-client";
 import { PageTitle, Panel, StatusPill, KpiCard } from "./components/admin-ui";
+import AdminDataTable from "./components/admin-data-table";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
@@ -40,7 +41,6 @@ function DesignsPage() {
   // delete & wipe confirmation dialogs
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [wipeDialogOpen, setWipeDialogOpen] = useState(false);
   // undo hint for deletes
   const [undoItem, setUndoItem] = useState<any>(null);
   const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
@@ -65,7 +65,7 @@ function DesignsPage() {
   const [form, setForm] = useState<any>({
     name: "",
     sku: "",
-    category: "Apparel",
+    category: "",
     price: 0,
     salePrice: undefined,
     stock: 0,
@@ -117,7 +117,7 @@ function DesignsPage() {
     setForm({
       name: "",
       sku: "",
-      category: "Apparel",
+      category: (categoriesList && categoriesList[0]) || "",
       price: 0,
       salePrice: undefined,
       stock: 0,
@@ -135,7 +135,7 @@ function DesignsPage() {
     setForm({
       name: p.name || "",
       sku: p.sku || p._id || "",
-      category: p.category || "Apparel",
+      category: p.category || (categoriesList && categoriesList[0]) || "",
       price: p.price || 0,
       salePrice: p.salePrice,
       stock: p.stock || 0,
@@ -398,8 +398,7 @@ function DesignsPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
         <div />
         <div className="flex gap-2">
-        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
-                <Button variant="destructive" onClick={() => setWipeDialogOpen(true)}>Wipe catalog</Button>
+          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" />Add New Product / Design</Button>
         </div>
       </div>
 
@@ -427,52 +426,28 @@ function DesignsPage() {
             <div />
           </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Preview</TableHead>
-                  <TableHead>Product / SKU</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Inventory</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell>Loading…</TableCell></TableRow>
-                ) : (
-                  filtered.map((p) => {
-                    const thumbnail = (p.images && (p.images.find((im:any) => im.role==='front') || p.images[0]))?.url || p.image || p.imageUrl || p.coverImage || (p.previewPaths && p.previewPaths[0]) || '';
-                    return (
-                      <TableRow key={String(p._id)}>
-                        <TableCell>
-                          <div className="h-12 w-12 overflow-hidden rounded-md bg-muted/10">
-                            {thumbnail ? <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" /> : <div className="grid h-12 w-12 place-items-center text-xs text-muted-foreground">No image</div>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-semibold">
-                          <div>{p.name}</div>
-                          <div className="text-xs text-muted-foreground">{p.sku || p._id}</div>
-                        </TableCell>
-                        <TableCell>${p.price}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${p.salePrice}</div> : null}</TableCell>
-                        <TableCell>
-                          { (p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>) }
-                        </TableCell>
-                        <TableCell><StatusPill status={p.status || 'Draft'} /></TableCell>
-                        <TableCell className="text-right">
-                          <Button title="Edit" variant="ghost" size="sm" onClick={() => openEdit(p)} className="rounded p-1 hover:bg-nude/40"><Edit2 className="h-4 w-4" /></Button>
-                          <Button title="Duplicate" variant="ghost" size="sm" onClick={() => duplicateProduct(p)} className="rounded p-1 hover:bg-nude/40"><Copy className="h-4 w-4" /></Button>
-                          <Button title="Delete" variant="ghost" size="sm" onClick={() => requestDeleteProduct(String(p._id))} className="rounded p-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <AdminDataTable
+            columns={[
+              { key: 'thumbnail', title: 'Preview', width: '72px', render: (p:any) => {
+                const thumbnail = (p.images && (p.images.find((im:any) => im.role==='front') || p.images[0]))?.url || p.image || p.imageUrl || p.coverImage || (p.previewPaths && p.previewPaths[0]) || '';
+                return (<div className="h-12 w-12 overflow-hidden rounded-md bg-muted/10">{thumbnail ? <img src={thumbnail} alt={p.name} className="h-12 w-12 object-cover" /> : <div className="grid h-12 w-12 place-items-center text-xs text-muted-foreground">No image</div>}</div>);
+              }},
+              { key: 'name', title: 'Product / SKU', render: (p:any) => (<div className="font-semibold"><div>{p.name}</div><div className="text-xs text-muted-foreground">{p.sku || p._id}</div></div>) },
+              { key: 'price', title: 'Price', render: (p:any) => (<div>${p.price}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${p.salePrice}</div> : null}</div>) },
+              { key: 'stock', title: 'Inventory', render: (p:any) => ((p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>)) },
+              { key: 'status', title: 'Status', render: (p:any) => <StatusPill status={p.status || 'Draft'} /> },
+              { key: 'created', title: 'Created', render: (p:any) => new Date(p.createdAt || p.created || p.created_at || Date.now()).toLocaleDateString() },
+            ]}
+            rows={filtered}
+            loading={loading}
+            total={productsList.length}
+            page={1}
+            pageSize={25}
+            onAdd={openNew}
+            onEdit={openEdit}
+            onDuplicate={duplicateProduct}
+            onDelete={(p) => requestDeleteProduct(String((p as any)._id))}
+          />
         </div>
       </Panel>
 
@@ -492,35 +467,6 @@ function DesignsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Wipe catalog confirmation dialog */}
-      <Dialog open={wipeDialogOpen} onOpenChange={setWipeDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>WIPE ENTIRE CATALOG?</DialogTitle>
-            <DialogDescription>This will permanently delete ALL products. This action is irreversible.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex w-full justify-end gap-2">
-              <Button variant="outline" onClick={() => setWipeDialogOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={async () => {
-                setWipeDialogOpen(false);
-                try {
-                  const res = await apiFetch('/api/admin/wipe-all-products', { method: 'POST' });
-                  const data = await res.json().catch(() => ({}));
-                  if (res.ok && data?.ok) {
-                    toast.success(`Wiped ${data.deleted || 0} products`);
-                    fetchProducts();
-                  } else {
-                    toast.error(data?.error || 'Failed to wipe products');
-                  }
-                } catch (err) {
-                  toast.error('Failed to wipe products');
-                }
-              }}>Wipe catalog</Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={openDialog} onOpenChange={(v) => setOpenDialog(v)}>
         <DialogContent className="max-h-[80vh] w-full overflow-y-auto">

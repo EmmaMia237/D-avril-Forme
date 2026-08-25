@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { categories as fallbackCategories } from "@/lib/shop-data";
-const heroImage = '/images/hero-image.png';
+const heroImage = "/images/hero-image.png";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 
@@ -40,16 +40,17 @@ function HomePage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
   // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
-  const [heroSrc, setHeroSrc] = useState<string>('/images/hero-image.png');
+  const [heroSrc, setHeroSrc] = useState<string>("/images/hero-image.png");
 
   useEffect(() => {
     let active = true;
     let timer: any = null;
     async function load() {
       try {
-        const res = await apiFetch('/api/products');
+        const res = await apiFetch("/api/products");
         const data = await res.json().catch(() => ({}));
-        if (res.ok && active) setProductsList((data.products || []).map((p:any) => ({ ...p, id: p.id || p._id })) );
+        if (res.ok && active)
+          setProductsList((data.products || []).map((p: any) => ({ ...p, id: p.id || p._id })));
       } catch (e) {
         // ignore
       }
@@ -59,8 +60,8 @@ function HomePage() {
     // Try to prefer a public hero image if available (admin may have uploaded new hero-image.png)
     (async function pickHero() {
       try {
-        const r = await fetch('/images/hero-image.png', { method: 'HEAD' });
-        if (r && r.ok) setHeroSrc('/images/hero-image.png');
+        const r = await fetch("/images/hero-image.png", { method: "HEAD" });
+        if (r && r.ok) setHeroSrc("/images/hero-image.png");
       } catch (err) {
         // keep fallback heroImage import
       }
@@ -87,20 +88,26 @@ function HomePage() {
       const id = payload?.id || payload?._id;
       if (!id) return;
       // Special case: admin wipe broadcasts { id: 'all' }
-      if (id === 'all') {
+      if (id === "all") {
         setProductsList([]);
         return;
       }
       setProductsList((prev) => prev.filter((x) => (x._id || x.id) !== id));
     }
 
-    window.addEventListener('product-created', onCreated as any);
-    window.addEventListener('product-updated', onUpdated as any);
-    window.addEventListener('product-deleted', onDeleted as any);
+    window.addEventListener("product-created", onCreated as any);
+    window.addEventListener("product-updated", onUpdated as any);
+    window.addEventListener("product-deleted", onDeleted as any);
 
     // Poll as a fallback every 10s
     timer = window.setInterval(load, 10000);
-    return () => { active = false; if (timer) window.clearInterval(timer); window.removeEventListener('product-created', onCreated as any); window.removeEventListener('product-updated', onUpdated as any); window.removeEventListener('product-deleted', onDeleted as any); };
+    return () => {
+      active = false;
+      if (timer) window.clearInterval(timer);
+      window.removeEventListener("product-created", onCreated as any);
+      window.removeEventListener("product-updated", onUpdated as any);
+      window.removeEventListener("product-deleted", onDeleted as any);
+    };
   }, []);
 
   // Load categories dynamically from the API. Use the in-repo shop-data as a safe fallback.
@@ -108,11 +115,20 @@ function HomePage() {
     let active = true;
     async function loadCategories() {
       try {
-        const res = await apiFetch('/api/categories');
-        if (!res.ok) throw new Error('Failed to fetch categories');
+        const res = await apiFetch("/api/categories");
+        if (!res.ok) throw new Error("Failed to fetch categories");
         const data = await res.json().catch(() => ({}));
         if (active && Array.isArray(data.categories)) {
-          setCategoriesList(data.categories.map((c:any) => ({ id: c.id || c._id, name: c.name, slug: c.slug, blurb: c.description || c.blurb || '', image: c.imageUrl || c.image || '', items: c.items || 0 })));
+          setCategoriesList(
+            data.categories.map((c: any) => ({
+              id: c.id || c._id,
+              name: c.name,
+              slug: c.slug,
+              blurb: c.description || c.blurb || "",
+              image: c.imageUrl || c.image || "",
+              items: c.items || 0,
+            })),
+          );
           return;
         }
       } catch (err) {
@@ -125,7 +141,14 @@ function HomePage() {
     // Listen for realtime category events broadcast from the store layout SSE handler
     function onCatCreated(e: any) {
       const payload = e.detail || {};
-      const cat = { id: payload.id || payload._id, name: payload.name, slug: payload.slug, blurb: payload.description || '', image: payload.imageUrl || '', items: payload.items || 0 };
+      const cat = {
+        id: payload.id || payload._id,
+        name: payload.name,
+        slug: payload.slug,
+        blurb: payload.description || "",
+        image: payload.imageUrl || "",
+        items: payload.items || 0,
+      };
       setCategoriesList((prev) => {
         // avoid duplicates
         if (prev.some((c) => c.id === cat.id || c.slug === cat.slug)) return prev;
@@ -134,7 +157,19 @@ function HomePage() {
     }
     function onCatUpdated(e: any) {
       const payload = e.detail || {};
-      setCategoriesList((prev) => prev.map((c) => ((c.id === payload.id || c.slug === payload.slug) ? { ...c, name: payload.name || c.name, blurb: payload.description || c.blurb, image: payload.imageUrl || c.image, items: payload.items || c.items } : c)));
+      setCategoriesList((prev) =>
+        prev.map((c) =>
+          c.id === payload.id || c.slug === payload.slug
+            ? {
+                ...c,
+                name: payload.name || c.name,
+                blurb: payload.description || c.blurb,
+                image: payload.imageUrl || c.image,
+                items: payload.items || c.items,
+              }
+            : c,
+        ),
+      );
     }
     function onCatDeleted(e: any) {
       const payload = e.detail || {};
@@ -143,11 +178,16 @@ function HomePage() {
       setCategoriesList((prev) => prev.filter((c) => c.id !== id && c.slug !== id));
     }
 
-    window.addEventListener('category-created', onCatCreated as any);
-    window.addEventListener('category-updated', onCatUpdated as any);
-    window.addEventListener('category-deleted', onCatDeleted as any);
+    window.addEventListener("category-created", onCatCreated as any);
+    window.addEventListener("category-updated", onCatUpdated as any);
+    window.addEventListener("category-deleted", onCatDeleted as any);
 
-    return () => { active = false; window.removeEventListener('category-created', onCatCreated as any); window.removeEventListener('category-updated', onCatUpdated as any); window.removeEventListener('category-deleted', onCatDeleted as any); };
+    return () => {
+      active = false;
+      window.removeEventListener("category-created", onCatCreated as any);
+      window.removeEventListener("category-updated", onCatUpdated as any);
+      window.removeEventListener("category-deleted", onCatDeleted as any);
+    };
   }, []);
 
   // Helper: two-row horizontal carousel (each column shows 2 stacked cards)
@@ -155,7 +195,7 @@ function HomePage() {
     // group items into columns of 2
     const cols: any[] = [];
     for (let i = 0; i < items.length; i += 2) {
-      cols.push([items[i], items[i+1]]);
+      cols.push([items[i], items[i + 1]]);
     }
     return (
       <div className="-mx-4 mt-6 overflow-x-auto px-4">
@@ -163,8 +203,16 @@ function HomePage() {
           {cols.map((pair, idx) => (
             <div key={idx} className="w-64 shrink-0">
               <div className="flex flex-col gap-4">
-                {pair[0] ? <ProductCard product={pair[0]} cta="Add to cart" /> : <div className="h-64" />}
-                {pair[1] ? <ProductCard product={pair[1]} cta="Add to cart" /> : <div className="h-64" />}
+                {pair[0] ? (
+                  <ProductCard product={pair[0]} cta="Add to cart" />
+                ) : (
+                  <div className="h-64" />
+                )}
+                {pair[1] ? (
+                  <ProductCard product={pair[1]} cta="Add to cart" />
+                ) : (
+                  <div className="h-64" />
+                )}
               </div>
             </div>
           ))}
@@ -174,18 +222,31 @@ function HomePage() {
   }
 
   // Helper: horizontal simple carousel for themes
-  function SimpleCarousel({ title, products, themeSlug }: { title: string; products: any[]; themeSlug?: string }) {
+  function SimpleCarousel({
+    title,
+    products,
+    themeSlug,
+  }: {
+    title: string;
+    products: any[];
+    themeSlug?: string;
+  }) {
     return (
       <section className="mt-8">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">{title}</h3>
           {themeSlug && (
-            <Link to={`/collections?theme=${encodeURIComponent(themeSlug)}`} className="text-sm font-semibold text-primary underline-offset-4 hover:underline">View more →</Link>
+            <Link
+              to={`/collections?theme=${encodeURIComponent(themeSlug)}`}
+              className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              View more →
+            </Link>
           )}
         </div>
         <div className="-mx-4 mt-4 overflow-x-auto px-4">
           <div className="inline-flex gap-4">
-            {products.slice(0, 10).map((p:any) => (
+            {products.slice(0, 10).map((p: any) => (
               <div key={p.id || p._id} className="w-64 shrink-0">
                 <ProductCard product={p} cta="Add to cart" />
               </div>
@@ -199,7 +260,7 @@ function HomePage() {
   // group products by theme
   const themesMap: Record<string, any[]> = {};
   productsList.forEach((p) => {
-    const t = (p.theme || 'other') || 'other';
+    const t = p.theme || "other";
     themesMap[t] = themesMap[t] || [];
     themesMap[t].push(p);
   });
@@ -226,7 +287,12 @@ function HomePage() {
               deep-pigment ink, packed with care, shipped fast.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="secondary" className="transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
                 <Link to="/categories">
                   Shop Prints Now <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -249,7 +315,7 @@ function HomePage() {
               width={1600}
               height={1200}
               className="w-full max-w-[1100px] rounded-lg object-contain transition-transform duration-700 floating-image relative z-10 mx-auto"
-              style={{ mixBlendMode: 'normal' }}
+              style={{ mixBlendMode: "normal" }}
             />
           </div>
         </div>
@@ -258,8 +324,8 @@ function HomePage() {
       <section className="bg-background">
         <div className="mx-auto grid max-w-7xl gap-4 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
           {trust.map((item, index) => (
-            <div 
-              key={item.title} 
+            <div
+              key={item.title}
               className="trust-item rounded-lg border border-border bg-nude p-5 transition-all duration-300 hover:shadow-[var(--shadow-lift)] hover:border-accent/30"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -283,23 +349,29 @@ function HomePage() {
               .filter((cat) => {
                 // Only show categories that have at least one product in the live product list
                 const count = productsList.filter((p) => {
-                  const catName = (cat.name || '').toString();
-                  return (p.category && (p.category === catName || p.category === cat.slug));
+                  const catName = (cat.name || "").toString();
+                  return p.category && (p.category === catName || p.category === cat.slug);
                 }).length;
                 return count > 0;
               })
               .map((cat, index) => {
                 const count = productsList.filter((p) => {
-                  const catName = (cat.name || '').toString();
-                  return (p.category && (p.category === catName || p.category === cat.slug));
+                  const catName = (cat.name || "").toString();
+                  return p.category && (p.category === catName || p.category === cat.slug);
                 }).length;
 
                 // Pick a representative product image for the category when available
                 const representative = productsList.find((p) => {
-                  const catName = (cat.name || '').toString();
-                  return (p.category && (p.category === catName || p.category === cat.slug));
+                  const catName = (cat.name || "").toString();
+                  return p.category && (p.category === catName || p.category === cat.slug);
                 });
-                const imgSrc = (representative && ((representative.images && representative.images[0]?.url) || representative.image || representative.previewPaths && representative.previewPaths[0])) || cat.image || heroImage;
+                const imgSrc =
+                  (representative &&
+                    ((representative.images && representative.images[0]?.url) ||
+                      representative.image ||
+                      (representative.previewPaths && representative.previewPaths[0]))) ||
+                  cat.image ||
+                  heroImage;
 
                 return (
                   <Link
@@ -311,7 +383,7 @@ function HomePage() {
                     <div className="aspect-4/3 overflow-hidden bg-nude">
                       <img
                         src={imgSrc}
-                        alt={`${cat.name} printing mockup` }
+                        alt={`${cat.name} printing mockup`}
                         loading="lazy"
                         width={800}
                         height={800}
@@ -319,10 +391,12 @@ function HomePage() {
                       />
                     </div>
                     <div className="p-4">
-                      <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">{cat.name}</h3>
+                      <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">
+                        {cat.name}
+                      </h3>
                       <p className="text-xs text-muted-foreground">{cat.blurb}</p>
                       <p className="mt-2 text-[11px] tracking-wide text-accent uppercase">
-                        {count} product{count !== 1 ? 's' : ''}
+                        {count} product{count !== 1 ? "s" : ""}
                       </p>
                     </div>
                   </Link>
@@ -362,9 +436,16 @@ function HomePage() {
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        {Object.keys(themesMap).filter(t => t && t !== 'other').map((t) => (
-          <SimpleCarousel key={t} title={t.charAt(0).toUpperCase() + t.slice(1)} products={themesMap[t]} themeSlug={t} />
-        ))}
+        {Object.keys(themesMap)
+          .filter((t) => t && t !== "other")
+          .map((t) => (
+            <SimpleCarousel
+              key={t}
+              title={t.charAt(0).toUpperCase() + t.slice(1)}
+              products={themesMap[t]}
+              themeSlug={t}
+            />
+          ))}
       </div>
 
       <section className="bg-nude/60">
@@ -376,7 +457,11 @@ function HomePage() {
           />
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {productsList.slice(0, 5).map((p, index) => (
-              <div key={p.id} className="product-card-animated w-64 mx-auto" style={{ animationDelay: `${index * 0.08}s` }}>
+              <div
+                key={p.id}
+                className="product-card-animated w-64 mx-auto"
+                style={{ animationDelay: `${index * 0.08}s` }}
+              >
                 <ProductCard product={p} cta="Customize" />
               </div>
             ))}

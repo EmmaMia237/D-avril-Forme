@@ -67,9 +67,7 @@ const removeBackgroundFromImage = async (src: string) => {
 
   for (let i = 0; i < pixels.length; i += 4) {
     const distance = Math.sqrt(
-      (pixels[i] - base.r) ** 2 +
-        (pixels[i + 1] - base.g) ** 2 +
-        (pixels[i + 2] - base.b) ** 2,
+      (pixels[i] - base.r) ** 2 + (pixels[i + 1] - base.g) ** 2 + (pixels[i + 2] - base.b) ** 2,
     );
 
     if (distance < 48) {
@@ -81,8 +79,18 @@ const removeBackgroundFromImage = async (src: string) => {
   return canvas.toDataURL("image/png");
 };
 
-export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload }: { initialId?: string; initialBlank?: boolean; initialOpenUpload?: boolean }) {
-  const [productId, setProductId] = useState(initialId ?? (initialBlank ? '__blank__' : products[0]?.id) ?? "");
+export function ProductConfigurator({
+  initialId,
+  initialBlank,
+  initialOpenUpload,
+}: {
+  initialId?: string;
+  initialBlank?: boolean;
+  initialOpenUpload?: boolean;
+}) {
+  const [productId, setProductId] = useState(
+    initialId ?? (initialBlank ? "__blank__" : products[0]?.id) ?? "",
+  );
   const [productData, setProductData] = useState<any | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -99,7 +107,9 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
       }
     }
     load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [productId]);
 
   useEffect(() => {
@@ -108,7 +118,7 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
 
   useEffect(() => {
     // If the page requested a blank canvas, ensure productId reflects that
-    if (initialBlank) setProductId('__blank__');
+    if (initialBlank) setProductId("__blank__");
   }, [initialBlank]);
 
   useEffect(() => {
@@ -127,19 +137,44 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
   const [fontSize, setFontSize] = useState(32);
   const [fontFamily, setFontFamily] = useState("sans-serif");
   const [textColor, setTextColor] = useState("#1E1D1B");
-  const [textPlacement, setTextPlacement] = useState<Placement>({ x: 50, y: 50, rotation: 0, scale: 1 });
-  const [imagePlacement, setImagePlacement] = useState<Placement>({ x: 50, y: 50, rotation: 0, scale: 1 });
+  const [textPlacement, setTextPlacement] = useState<Placement>({
+    x: 50,
+    y: 50,
+    rotation: 0,
+    scale: 1,
+  });
+  const [imagePlacement, setImagePlacement] = useState<Placement>({
+    x: 50,
+    y: 50,
+    rotation: 0,
+    scale: 1,
+  });
   const [draggingTarget, setDraggingTarget] = useState<"text" | "image" | null>(null);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number; initial: Placement } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number; initial: Placement } | null>(
+    null,
+  );
   const stageRef = useRef<HTMLDivElement | null>(null);
 
-  const blankProduct = { id: '__blank__', name: 'Blank canvas', image: null, images: [], colors: [], sizes: ['Standard'], productType: 'blank' } as any;
-  const product = productData ?? (productId === '__blank__' ? blankProduct : products.find((p) => p.id === productId)) ?? products[0];
+  const blankProduct = {
+    id: "__blank__",
+    name: "Blank canvas",
+    image: null,
+    images: [],
+    colors: [],
+    sizes: ["Standard"],
+    productType: "blank",
+  } as any;
+  const product =
+    productData ??
+    (productId === "__blank__" ? blankProduct : products.find((p) => p.id === productId)) ??
+    products[0];
   const { addItem } = useCart();
   const sizes = product?.sizes?.length ? product.sizes : ["Standard", "Small", "Medium", "Large"];
 
   const previewImage = useMemo(
-    () => (product?.imageByColor && selectedColor ? product.imageByColor[selectedColor] : null) ?? product.image,
+    () =>
+      (product?.imageByColor && selectedColor ? product.imageByColor[selectedColor] : null) ??
+      product.image,
     [product, selectedColor],
   );
 
@@ -254,7 +289,7 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
           // ignore base image draw failures
         }
       } else {
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvasW, canvasH);
       }
 
@@ -264,7 +299,7 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
           const img = await loadImage(uploaded);
           // calculate size similar to preview logic
           const widthPercent = Math.max(16, 28 * imagePlacement.scale) / 100;
-          const drawW = canvasW * (widthPercent);
+          const drawW = canvasW * widthPercent;
           const drawH = (img.naturalHeight / img.naturalWidth) * drawW;
           const cx = (imagePlacement.x / 100) * canvasW;
           const cy = (imagePlacement.y / 100) * canvasH;
@@ -285,20 +320,20 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
         ctx.save();
         ctx.translate((textPlacement.x / 100) * canvasW, (textPlacement.y / 100) * canvasH);
         ctx.rotate((textPlacement.rotation * Math.PI) / 180);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = textColor || '#000';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = textColor || "#000";
         ctx.font = `${fontPx}px ${fontFamily}, sans-serif`;
         // add slight shadow for visibility
-        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowColor = "rgba(0,0,0,0.15)";
         ctx.shadowBlur = 8;
         ctx.fillText(text, 0, 0);
         ctx.restore();
       }
 
-      return canvas.toDataURL('image/png');
+      return canvas.toDataURL("image/png");
     } catch (err) {
-      console.error('Failed to generate composite image', err);
+      console.error("Failed to generate composite image", err);
       return null;
     }
   };
@@ -309,7 +344,7 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
       composite = await generateComposite();
     } catch (err) {
       // proceed even if composite generation fails
-      console.warn('Composite generation failed, proceeding without it', err);
+      console.warn("Composite generation failed, proceeding without it", err);
     }
 
     addItem(product, quantity, {
@@ -333,10 +368,16 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
       <div className="rounded-lg border border-border bg-card p-5">
         <div>
           <label className="block text-sm font-semibold">Product</label>
-          <select value={productId} onChange={(e) => setProductId(e.target.value)} className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2">
+          <select
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
+            className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2"
+          >
             {initialBlank && <option value="__blank__">Blank canvas</option>}
             {products.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
         </div>
@@ -344,23 +385,42 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-semibold">Size</label>
-            <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value)} className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2">
+            <select
+              value={selectedSize}
+              onChange={(e) => setSelectedSize(e.target.value)}
+              className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2"
+            >
               {sizes.map((size) => (
-                <option key={size} value={size}>{size}</option>
+                <option key={size} value={size}>
+                  {size}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-sm font-semibold">Color</label>
-            <select value={selectedColor ?? ""} onChange={(e) => setSelectedColor(e.target.value)} className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2">
+            <select
+              value={selectedColor ?? ""}
+              onChange={(e) => setSelectedColor(e.target.value)}
+              className="mt-2 w-full cursor-pointer rounded border border-border bg-background p-2"
+            >
               {(product.colors ?? []).map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-sm font-semibold">Quantity</label>
-            <input type="number" min={1} max={99} value={quantity} onChange={(e) => setQuantity(Math.max(1, Number(e.target.value || 1)))} className="mt-2 w-full rounded border border-border bg-background p-2" />
+            <input
+              type="number"
+              min={1}
+              max={99}
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value || 1)))}
+              className="mt-2 w-full rounded border border-border bg-background p-2"
+            />
           </div>
         </div>
 
@@ -389,68 +449,112 @@ export function ProductConfigurator({ initialId, initialBlank, initialOpenUpload
 
         <div className="mt-4">
           <label className="block text-sm font-semibold">Custom text</label>
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Name, phrase, initials..." className="mt-2 w-full rounded border border-border bg-background p-2" />
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Name, phrase, initials..."
+            className="mt-2 w-full rounded border border-border bg-background p-2"
+          />
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
-            <input type="number" min={12} max={96} value={fontSize} onChange={(e) => setFontSize(Number(e.target.value || 16))} className="rounded border border-border bg-background p-2" aria-label="Font size" />
-            <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="cursor-pointer rounded border border-border bg-background p-2" aria-label="Font type">
+            <input
+              type="number"
+              min={12}
+              max={96}
+              value={fontSize}
+              onChange={(e) => setFontSize(Number(e.target.value || 16))}
+              className="rounded border border-border bg-background p-2"
+              aria-label="Font size"
+            />
+            <select
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+              className="cursor-pointer rounded border border-border bg-background p-2"
+              aria-label="Font type"
+            >
               {fontOptions.map((font) => (
-                <option key={font} value={font}>{font}</option>
+                <option key={font} value={font}>
+                  {font}
+                </option>
               ))}
             </select>
-            <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="h-10 w-full rounded border border-border bg-background p-1" aria-label="Text color" />
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+              className="h-10 w-full rounded border border-border bg-background p-1"
+              aria-label="Text color"
+            />
           </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Text rotation</label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Text rotation
+            </label>
             <input
               type="range"
               min={-180}
               max={180}
               value={textPlacement.rotation}
-              onChange={(e) => setTextPlacement((prev) => ({ ...prev, rotation: Number(e.target.value) }))}
+              onChange={(e) =>
+                setTextPlacement((prev) => ({ ...prev, rotation: Number(e.target.value) }))
+              }
               className="mt-2 w-full"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Text scale</label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Text scale
+            </label>
             <input
               type="range"
               min={0.5}
               max={2}
               step={0.05}
               value={textPlacement.scale}
-              onChange={(e) => setTextPlacement((prev) => ({ ...prev, scale: Number(e.target.value) }))}
+              onChange={(e) =>
+                setTextPlacement((prev) => ({ ...prev, scale: Number(e.target.value) }))
+              }
               className="mt-2 w-full"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Image rotation</label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Image rotation
+            </label>
             <input
               type="range"
               min={-180}
               max={180}
               value={imagePlacement.rotation}
-              onChange={(e) => setImagePlacement((prev) => ({ ...prev, rotation: Number(e.target.value) }))}
+              onChange={(e) =>
+                setImagePlacement((prev) => ({ ...prev, rotation: Number(e.target.value) }))
+              }
               className="mt-2 w-full"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Image scale</label>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Image scale
+            </label>
             <input
               type="range"
               min={0.4}
               max={2}
               step={0.05}
               value={imagePlacement.scale}
-              onChange={(e) => setImagePlacement((prev) => ({ ...prev, scale: Number(e.target.value) }))}
+              onChange={(e) =>
+                setImagePlacement((prev) => ({ ...prev, scale: Number(e.target.value) }))
+              }
               className="mt-2 w-full"
             />
           </div>
         </div>
 
-        <Button className="mt-6 w-full" size="lg" onClick={handleConfirm}>Confirm &amp; Add to Cart</Button>
+        <Button className="mt-6 w-full" size="lg" onClick={handleConfirm}>
+          Confirm &amp; Add to Cart
+        </Button>
       </div>
 
       <div>

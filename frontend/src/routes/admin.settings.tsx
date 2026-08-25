@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-export const Route = createFileRoute('/admin/settings')({
+export const Route = createFileRoute("/admin/settings")({
   component: function AdminSettingsRedirect() {
-    if (typeof window !== 'undefined') window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;
   },
 });
@@ -50,10 +50,22 @@ function SettingsPage() {
         <Panel title="Security & access">
           <div className="grid gap-3 p-5">
             {[
-              { label: "Multi-factor authentication", note: "Required for the owner account", on: true },
+              {
+                label: "Multi-factor authentication",
+                note: "Required for the owner account",
+                on: true,
+              },
               { label: "IP lockout after 3 failed attempts", note: "30 minute cooldown", on: true },
-              { label: "Email alert on new admin sign-in", note: "Sent to owner address", on: true },
-              { label: "Allow additional admin accounts", note: "Single-admin platform", on: false },
+              {
+                label: "Email alert on new admin sign-in",
+                note: "Sent to owner address",
+                on: true,
+              },
+              {
+                label: "Allow additional admin accounts",
+                note: "Single-admin platform",
+                on: false,
+              },
             ].map((s) => (
               <div
                 key={s.label}

@@ -22,8 +22,15 @@ function sanitizeCustomization(value: any): any {
   const next: Record<string, any> = {};
   Object.entries(value).forEach(([key, entryValue]) => {
     if (typeof entryValue === "string") {
-      next[key] = entryValue.length > MAX_CUSTOMIZATION_TEXT ? entryValue.slice(0, MAX_CUSTOMIZATION_TEXT) : entryValue;
-    } else if (typeof entryValue === "number" || typeof entryValue === "boolean" || entryValue == null) {
+      next[key] =
+        entryValue.length > MAX_CUSTOMIZATION_TEXT
+          ? entryValue.slice(0, MAX_CUSTOMIZATION_TEXT)
+          : entryValue;
+    } else if (
+      typeof entryValue === "number" ||
+      typeof entryValue === "boolean" ||
+      entryValue == null
+    ) {
       next[key] = entryValue;
     } else if (typeof entryValue === "object") {
       const compact = sanitizeCustomization(entryValue);
@@ -73,7 +80,9 @@ function storeJsonSafely(key: string, value: any, fallbackLimit = 10) {
       const compacted = Array.isArray(existing)
         ? existing.slice(0, fallbackLimit).map((entry) => compactOrderSnapshot(entry))
         : [];
-      const reduced = Array.isArray(value) ? value.slice(0, fallbackLimit).map((entry) => compactOrderSnapshot(entry)) : compactOrderSnapshot(value);
+      const reduced = Array.isArray(value)
+        ? value.slice(0, fallbackLimit).map((entry) => compactOrderSnapshot(entry))
+        : compactOrderSnapshot(value);
       const payload = JSON.stringify(compacted.length ? compacted : reduced);
       window.localStorage.setItem(key, payload);
     } catch {
@@ -178,7 +187,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (customization) {
         const orderSnapshot = {
           id: `AF-${Date.now()}`,
-          customer: (typeof window !== "undefined" && window.localStorage.getItem("af_customer_current")) || "Guest customer",
+          customer:
+            (typeof window !== "undefined" && window.localStorage.getItem("af_customer_current")) ||
+            "Guest customer",
           status: "Awaiting Print",
           payment: "Pending",
           createdAt: new Date().toISOString(),
@@ -195,7 +206,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setOpen(true);
   };
 
-  const removeItem = (cartId: string) => setItems((prev) => prev.filter((it) => it.cartId !== cartId));
+  const removeItem = (cartId: string) =>
+    setItems((prev) => prev.filter((it) => it.cartId !== cartId));
 
   const updateQuantity = (cartId: string, quantity: number) => {
     const nextQuantity = Math.max(1, Math.min(99, Number(quantity) || 1));
@@ -209,7 +221,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalAmount = () => items.reduce((s, it) => s + it.price * it.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, open, openCart, closeCart, addItem, updateQuantity, removeItem, clear, totalAmount }}>
+    <CartContext.Provider
+      value={{
+        items,
+        open,
+        openCart,
+        closeCart,
+        addItem,
+        updateQuantity,
+        removeItem,
+        clear,
+        totalAmount,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

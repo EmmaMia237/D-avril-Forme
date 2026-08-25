@@ -1,7 +1,7 @@
 // Asset fallbacks: prefer public images added by the admin/user, otherwise fall back to a hosted placeholder
-const printing = '/images/printing-image.png';
-const hero = '/images/hero-image.png';
-const placeholder = 'https://via.placeholder.com/800x600?text=Product';
+const printing = "/images/printing-image.png";
+const hero = "/images/hero-image.png";
+const placeholder = "https://via.placeholder.com/800x600?text=Product";
 
 const apparel = printing;
 const drinkware = printing;
@@ -28,13 +28,49 @@ export const categories: Category[] = [
     items: 48,
   },
   { slug: "mugs", name: "Mugs", blurb: "Ceramic & enamel mugs", image: drinkware, items: 24 },
-  { slug: "t-shirts", name: "T-Shirts", blurb: "Various sizes & colours", image: apparel, items: 64 },
-  { slug: "totes", name: "Tote Bags", blurb: "Canvas and reusable totes", image: corporate, items: 18 },
+  {
+    slug: "t-shirts",
+    name: "T-Shirts",
+    blurb: "Various sizes & colours",
+    image: apparel,
+    items: 64,
+  },
+  {
+    slug: "totes",
+    name: "Tote Bags",
+    blurb: "Canvas and reusable totes",
+    image: corporate,
+    items: 18,
+  },
   { slug: "drinkware", name: "Drinkware", blurb: "Mugs & bottles", image: drinkware, items: 26 },
-  { slug: "phone-cases", name: "Phone Cases", blurb: "Matte & glossy shells", image: cases, items: 34 },
-  { slug: "hoodies", name: "Hoodies", blurb: "Pullover and zip-up hoodies", image: apparel, items: 22 },
-  { slug: "wall-art", name: "Wall Art", blurb: "Prints, canvases and posters", image: stationery, items: 30 },
-  { slug: "keychains", name: "Keychains", blurb: "Metal and acrylic keychains", image: corporate, items: 12 },
+  {
+    slug: "phone-cases",
+    name: "Phone Cases",
+    blurb: "Matte & glossy shells",
+    image: cases,
+    items: 34,
+  },
+  {
+    slug: "hoodies",
+    name: "Hoodies",
+    blurb: "Pullover and zip-up hoodies",
+    image: apparel,
+    items: 22,
+  },
+  {
+    slug: "wall-art",
+    name: "Wall Art",
+    blurb: "Prints, canvases and posters",
+    image: stationery,
+    items: 30,
+  },
+  {
+    slug: "keychains",
+    name: "Keychains",
+    blurb: "Metal and acrylic keychains",
+    image: corporate,
+    items: 12,
+  },
   { slug: "caps", name: "Caps", blurb: "Caps and hats", image: apparel, items: 16 },
   {
     slug: "stationery",
@@ -407,15 +443,78 @@ export type Template = {
 };
 
 export const templates: Template[] = [
-  { id: "t1", title: "Golden Year Birthday", creator: "Studio Avril", category: "Birthday", fits: "Fits T-Shirts & Mugs", image: drinkware },
-  { id: "t2", title: "Monogram Crest", creator: "Avril Forme", category: "Corporate Branding", fits: "Fits Polos & Notebooks", image: stationery },
-  { id: "t3", title: "Serif Statement", creator: "Ink Lab", category: "Typography", fits: "Fits T-Shirts & Totes", image: apparel },
-  { id: "t4", title: "Quiet Arches", creator: "Studio Avril", category: "Minimalist Art", fits: "Fits Phone Cases", image: cases },
-  { id: "t5", title: "Festive Wine Wreath", creator: "Avril Forme", category: "Holidays", fits: "Fits Mugs & Cards", image: stationery },
-  { id: "t6", title: "Team Launch Kit", creator: "Avril Forme", category: "Corporate Branding", fits: "Fits Corporate Packages", image: corporate },
-  { id: "t7", title: "Confetti Bloom", creator: "Ink Lab", category: "Birthday", fits: "Fits Mugs & Tees", image: drinkware },
-  { id: "t8", title: "Bold Grotesque", creator: "Studio Avril", category: "Typography", fits: "Fits T-Shirts", image: apparel },
-  { id: "t9", title: "Soft Nude Lines", creator: "Ink Lab", category: "Minimalist Art", fits: "Fits Notebooks & Cases", image: stationery },
+  {
+    id: "t1",
+    title: "Golden Year Birthday",
+    creator: "Studio Avril",
+    category: "Birthday",
+    fits: "Fits T-Shirts & Mugs",
+    image: drinkware,
+  },
+  {
+    id: "t2",
+    title: "Monogram Crest",
+    creator: "Avril Forme",
+    category: "Corporate Branding",
+    fits: "Fits Polos & Notebooks",
+    image: stationery,
+  },
+  {
+    id: "t3",
+    title: "Serif Statement",
+    creator: "Ink Lab",
+    category: "Typography",
+    fits: "Fits T-Shirts & Totes",
+    image: apparel,
+  },
+  {
+    id: "t4",
+    title: "Quiet Arches",
+    creator: "Studio Avril",
+    category: "Minimalist Art",
+    fits: "Fits Phone Cases",
+    image: cases,
+  },
+  {
+    id: "t5",
+    title: "Festive Wine Wreath",
+    creator: "Avril Forme",
+    category: "Holidays",
+    fits: "Fits Mugs & Cards",
+    image: stationery,
+  },
+  {
+    id: "t6",
+    title: "Team Launch Kit",
+    creator: "Avril Forme",
+    category: "Corporate Branding",
+    fits: "Fits Corporate Packages",
+    image: corporate,
+  },
+  {
+    id: "t7",
+    title: "Confetti Bloom",
+    creator: "Ink Lab",
+    category: "Birthday",
+    fits: "Fits Mugs & Tees",
+    image: drinkware,
+  },
+  {
+    id: "t8",
+    title: "Bold Grotesque",
+    creator: "Studio Avril",
+    category: "Typography",
+    fits: "Fits T-Shirts",
+    image: apparel,
+  },
+  {
+    id: "t9",
+    title: "Soft Nude Lines",
+    creator: "Ink Lab",
+    category: "Minimalist Art",
+    fits: "Fits Notebooks & Cases",
+    image: stationery,
+  },
 ];
 
 export const coupons = [
@@ -465,19 +564,94 @@ export type AdminOrder = {
 };
 
 export const adminOrders: AdminOrder[] = [
-  { id: "#AF-1082", customer: "Sarah Jenkins", items: "1x Custom Mug, 2x Graphic Tees", status: "In Production", payment: "Paid (Stripe)", total: 64, action: "View Artwork / Update Status" },
-  { id: "#AF-1083", customer: "Corporate Client", items: "50x Branded Phone Cases", status: "Awaiting Print", payment: "Paid (Mobile Money)", total: 735, action: "Download Vector Files" },
-  { id: "#AF-1084", customer: "Daniel Osei", items: "12x Team Polos", status: "Design Review", payment: "Pending (Card)", total: 388, action: "Request Approval" },
-  { id: "#AF-1085", customer: "Lina Baptiste", items: "3x Foil Notebooks", status: "Shipped", payment: "Paid (Stripe)", total: 54, action: "View Tracking" },
-  { id: "#AF-1086", customer: "Northline Agency", items: "80x Welcome Kits", status: "In Production", payment: "Paid (Mobile Money)", total: 3808, action: "View Artwork / Update Status" },
+  {
+    id: "#AF-1082",
+    customer: "Sarah Jenkins",
+    items: "1x Custom Mug, 2x Graphic Tees",
+    status: "In Production",
+    payment: "Paid (Stripe)",
+    total: 64,
+    action: "View Artwork / Update Status",
+  },
+  {
+    id: "#AF-1083",
+    customer: "Corporate Client",
+    items: "50x Branded Phone Cases",
+    status: "Awaiting Print",
+    payment: "Paid (Mobile Money)",
+    total: 735,
+    action: "Download Vector Files",
+  },
+  {
+    id: "#AF-1084",
+    customer: "Daniel Osei",
+    items: "12x Team Polos",
+    status: "Design Review",
+    payment: "Pending (Card)",
+    total: 388,
+    action: "Request Approval",
+  },
+  {
+    id: "#AF-1085",
+    customer: "Lina Baptiste",
+    items: "3x Foil Notebooks",
+    status: "Shipped",
+    payment: "Paid (Stripe)",
+    total: 54,
+    action: "View Tracking",
+  },
+  {
+    id: "#AF-1086",
+    customer: "Northline Agency",
+    items: "80x Welcome Kits",
+    status: "In Production",
+    payment: "Paid (Mobile Money)",
+    total: 3808,
+    action: "View Artwork / Update Status",
+  },
 ];
 
 export const adminDesigns = [
-  { name: "Maple Crest Emblem", file: "maple-crest.svg", mockups: "Tee front · Mug wrap", price: 24, category: "Apparel", status: "Active" },
-  { name: "Wine Bloom Pattern", file: "wine-bloom.png", mockups: "Mug wrap · Case back", price: 18, category: "Drinkware", status: "Active" },
-  { name: "Serif Statement", file: "serif-statement.ai", mockups: "Tee front", price: 26, category: "Apparel", status: "Draft" },
-  { name: "Corporate Monogram", file: "corp-mono.psd", mockups: "Polo chest · Notebook", price: 32, category: "Corporate", status: "Active" },
-  { name: "Nude Arches", file: "nude-arches.svg", mockups: "Case back", price: 21, category: "Phone Cases", status: "Out of Stock" },
+  {
+    name: "Maple Crest Emblem",
+    file: "maple-crest.svg",
+    mockups: "Tee front · Mug wrap",
+    price: 24,
+    category: "Apparel",
+    status: "Active",
+  },
+  {
+    name: "Wine Bloom Pattern",
+    file: "wine-bloom.png",
+    mockups: "Mug wrap · Case back",
+    price: 18,
+    category: "Drinkware",
+    status: "Active",
+  },
+  {
+    name: "Serif Statement",
+    file: "serif-statement.ai",
+    mockups: "Tee front",
+    price: 26,
+    category: "Apparel",
+    status: "Draft",
+  },
+  {
+    name: "Corporate Monogram",
+    file: "corp-mono.psd",
+    mockups: "Polo chest · Notebook",
+    price: 32,
+    category: "Corporate",
+    status: "Active",
+  },
+  {
+    name: "Nude Arches",
+    file: "nude-arches.svg",
+    mockups: "Case back",
+    price: 21,
+    category: "Phone Cases",
+    status: "Out of Stock",
+  },
 ];
 
 export const payments: any[] = [];
@@ -489,5 +663,11 @@ export const adminCustomers = [
   { name: "Northline Agency", email: "ops@northline.co", orders: 4, spend: 6120, since: "2024" },
   { name: "Daniel Osei", email: "d.osei@mail.com", orders: 3, spend: 588, since: "2026" },
   { name: "Lina Baptiste", email: "lina.b@mail.com", orders: 11, spend: 734, since: "2024" },
-  { name: "Corporate Client Ltd", email: "print@corpclient.com", orders: 2, spend: 1470, since: "2026" },
+  {
+    name: "Corporate Client Ltd",
+    email: "print@corpclient.com",
+    orders: 2,
+    spend: 1470,
+    since: "2026",
+  },
 ];

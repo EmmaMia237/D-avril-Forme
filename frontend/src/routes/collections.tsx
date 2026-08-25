@@ -7,13 +7,16 @@ import { apiFetch } from "@/lib/api-client";
 
 export const Route = createFileRoute("/collections")({
   head: () => ({
-    meta: [{ title: "Collections — D'avril Forme" }, { property: "og:title", content: "Collections — D'avril Forme" }],
+    meta: [
+      { title: "Collections — D'avril Forme" },
+      { property: "og:title", content: "Collections — D'avril Forme" },
+    ],
   }),
   component: CollectionsPage,
 });
 
 function CollectionsPage() {
-  const search = useSearch({ from: '/collections' });
+  const search = useSearch({ from: "/collections" });
   const theme = (search as any)?.theme || null;
   const [productsList, setProductsList] = useState<any[]>([]);
 
@@ -21,10 +24,11 @@ function CollectionsPage() {
     let active = true;
     async function load() {
       try {
-        const q = theme ? `?theme=${encodeURIComponent(theme)}` : '';
+        const q = theme ? `?theme=${encodeURIComponent(theme)}` : "";
         const res = await apiFetch(`/api/products${q}`);
         const data = await res.json().catch(() => ({}));
-        if (res.ok && active) setProductsList((data.products || []).map((p:any) => ({ ...p, id: p.id || p._id })) );
+        if (res.ok && active)
+          setProductsList((data.products || []).map((p: any) => ({ ...p, id: p.id || p._id })));
       } catch (e) {
         // ignore
       }
@@ -36,7 +40,7 @@ function CollectionsPage() {
       const p = e.detail;
       if (!p) return;
       const id = p._id || p.id;
-      const belongs = (p.theme || '').toLowerCase() === (theme || '').toLowerCase();
+      const belongs = (p.theme || "").toLowerCase() === (theme || "").toLowerCase();
       if (!belongs) return;
       setProductsList((prev) => {
         if (prev.some((x) => (x._id || x.id) === id)) return prev;
@@ -48,13 +52,14 @@ function CollectionsPage() {
       const p = e.detail;
       if (!p) return;
       const id = p._id || p.id;
-      const belongs = (p.theme || '').toLowerCase() === (theme || '').toLowerCase();
+      const belongs = (p.theme || "").toLowerCase() === (theme || "").toLowerCase();
       setProductsList((prev) => {
         if (!belongs) {
           // if previously present but no longer belongs, remove it
           return prev.filter((x) => (x._id || x.id) !== id);
         }
-        if (prev.some((x) => (x._id || x.id) === id)) return prev.map((x) => ((x._id || x.id) === id ? { ...x, ...p, id } : x));
+        if (prev.some((x) => (x._id || x.id) === id))
+          return prev.map((x) => ((x._id || x.id) === id ? { ...x, ...p, id } : x));
         return [...prev, { ...p, id }];
       });
     }
@@ -63,30 +68,30 @@ function CollectionsPage() {
       const payload = e.detail || {};
       const id = payload?.id || payload?._id;
       if (!id) return;
-      if (id === 'all') {
+      if (id === "all") {
         setProductsList([]);
         return;
       }
       setProductsList((prev) => prev.filter((x) => (x._id || x.id) !== id));
     }
 
-    window.addEventListener('product-created', onCreated as any);
-    window.addEventListener('product-updated', onUpdated as any);
-    window.addEventListener('product-deleted', onDeleted as any);
+    window.addEventListener("product-created", onCreated as any);
+    window.addEventListener("product-updated", onUpdated as any);
+    window.addEventListener("product-deleted", onDeleted as any);
 
     return () => {
       active = false;
-      window.removeEventListener('product-created', onCreated as any);
-      window.removeEventListener('product-updated', onUpdated as any);
-      window.removeEventListener('product-deleted', onDeleted as any);
+      window.removeEventListener("product-created", onCreated as any);
+      window.removeEventListener("product-updated", onUpdated as any);
+      window.removeEventListener("product-deleted", onDeleted as any);
     };
   }, [theme]);
 
   const themeMap: Record<string, string> = {
-    kids: 'Kids Collection',
-    halloween: 'Halloween Collection',
-    autumn: 'Fall / Autumn Collection',
-    anime: 'Anime Collection',
+    kids: "Kids Collection",
+    halloween: "Halloween Collection",
+    autumn: "Fall / Autumn Collection",
+    anime: "Anime Collection",
   };
 
   const filtered = theme ? productsList : productsList;
@@ -94,15 +99,33 @@ function CollectionsPage() {
   return (
     <StoreLayout>
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
-        <h1 className="font-display text-3xl font-semibold">{theme ? themeMap[theme] || 'Theme' : 'Collections & Themes'}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{theme ? `Products assigned to the ${themeMap[theme] || theme} theme.` : 'Browse curated collections and seasonal themes.'}</p>
+        <h1 className="font-display text-3xl font-semibold">
+          {theme ? themeMap[theme] || "Theme" : "Collections & Themes"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {theme
+            ? `Products assigned to the ${themeMap[theme] || theme} theme.`
+            : "Browse curated collections and seasonal themes."}
+        </p>
 
         {!theme && (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[{name:'Kids Collection',slug:'kids'},{name:'Halloween Collection',slug:'halloween'},{name:'Fall / Autumn Collection',slug:'autumn'},{name:'Anime Collection',slug:'anime'}].map((c) => (
-              <Link key={c.slug} to="/collections" search={{ theme: c.slug }} className="rounded-lg border border-border bg-card p-6 hover:shadow-[var(--shadow-lift)]">
+            {[
+              { name: "Kids Collection", slug: "kids" },
+              { name: "Halloween Collection", slug: "halloween" },
+              { name: "Fall / Autumn Collection", slug: "autumn" },
+              { name: "Anime Collection", slug: "anime" },
+            ].map((c) => (
+              <Link
+                key={c.slug}
+                to="/collections"
+                search={{ theme: c.slug }}
+                className="rounded-lg border border-border bg-card p-6 hover:shadow-[var(--shadow-lift)]"
+              >
                 <p className="text-sm font-semibold">{c.name}</p>
-                <p className="mt-2 text-xs text-muted-foreground">Explore {c.name} themed products.</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Explore {c.name} themed products.
+                </p>
               </Link>
             ))}
           </div>
@@ -111,20 +134,28 @@ function CollectionsPage() {
         {theme && (
           <div className="mt-8">
             {filtered.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">No products assigned to this theme yet.</p>
+              <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
+                No products assigned to this theme yet.
+              </p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((p) => (
-                  <Link key={p.id} to="/product" className="rounded-lg border border-border bg-card p-4" search={{ id: p.id }}>
+                  <Link
+                    key={p.id}
+                    to="/product"
+                    className="rounded-lg border border-border bg-card p-4"
+                    search={{ id: p.id }}
+                  >
                     <p className="font-semibold">{p.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{p.category} · ${p.price}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {p.category} · ${p.price}
+                    </p>
                   </Link>
                 ))}
               </div>
             )}
           </div>
         )}
-
       </div>
     </StoreLayout>
   );

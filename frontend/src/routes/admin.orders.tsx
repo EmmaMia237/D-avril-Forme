@@ -15,9 +15,9 @@ import {
 import { apiFetch, setAuthToken } from "@/lib/api-client";
 import { readStoredOrders } from "@/lib/cart";
 
-export const Route = createFileRoute('/admin/orders')({
+export const Route = createFileRoute("/admin/orders")({
   component: function AdminOrdersRedirect() {
-    if (typeof window !== 'undefined') window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;
   },
 });
@@ -44,7 +44,7 @@ function OrdersPage() {
         const res = await apiFetch(`/api/admin/orders?page=${page}&per_page=${perPage}`);
         if (res.status === 401 || res.status === 403) {
           // Not authenticated — redirect to the dedicated admin login page
-          navigate({ to: '/avril-admin' });
+          navigate({ to: "/avril-admin" });
           setLoading(false);
           return;
         }
@@ -84,25 +84,21 @@ function OrdersPage() {
     };
   }, [page, perPage]);
 
-
-
-
   const rows = orders.filter(
     (o) =>
       (filter === "All" || o.status === filter) &&
-      (`${o.id}${o.customer || ''}${o.items || ''}`).toLowerCase().includes(query.toLowerCase()),
+      `${o.id}${o.customer || ""}${o.items || ""}`.toLowerCase().includes(query.toLowerCase()),
   );
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
-
 
   const handleApprove = async (id: string, status?: string) => {
     try {
       setLoading(true);
       const res = await apiFetch(`/api/admin/orders/${id}/approve`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ status: status || 'In Production' }),
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: status || "In Production" }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.ok) {
@@ -110,7 +106,7 @@ function OrdersPage() {
         setOrders((prev) => prev.map((o) => (o.id === id ? data.order : o)));
         return;
       }
-      setError(data?.error || 'Failed to update order');
+      setError(data?.error || "Failed to update order");
     } catch (err: any) {
       setError(err?.message || String(err));
     } finally {
@@ -124,8 +120,6 @@ function OrdersPage() {
         title="Orders & Fulfillment"
         subtitle="Track artwork approval, production status and payment state for every order."
       />
-
-    
 
       <div className="mb-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <Input
@@ -190,14 +184,24 @@ function OrdersPage() {
                     <TableCell className="whitespace-nowrap text-sm">{o.payment}</TableCell>
                     <TableCell>
                       {Array.isArray(o.previewPaths) && o.previewPaths[0] ? (
-                        <img src={o.previewPaths[0]} alt={o.id} className="h-12 w-12 rounded object-cover cursor-pointer" onClick={() => typeof window !== 'undefined' && window.open(o.previewPaths[0], '_blank')} />
+                        <img
+                          src={o.previewPaths[0]}
+                          alt={o.id}
+                          className="h-12 w-12 rounded object-cover cursor-pointer"
+                          onClick={() =>
+                            typeof window !== "undefined" &&
+                            window.open(o.previewPaths[0], "_blank")
+                          }
+                        />
                       ) : (
                         <span className="text-xs text-muted-foreground">No preview</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Link to={`/admin/orders/${o.id}`}>
-                        <Button size="sm" variant="outline" className="whitespace-nowrap">View</Button>
+                        <Button size="sm" variant="outline" className="whitespace-nowrap">
+                          View
+                        </Button>
                       </Link>
                     </TableCell>
                   </TableRow>
@@ -207,11 +211,34 @@ function OrdersPage() {
           </Table>
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">Page {page} of {totalPages}</div>
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</Button>
-            <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
-            <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }} className="rounded border border-border bg-background p-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              Prev
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+            <select
+              value={perPage}
+              onChange={(e) => {
+                setPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+              className="rounded border border-border bg-background p-1"
+            >
               <option value={5}>5/page</option>
               <option value={10}>10/page</option>
               <option value={20}>20/page</option>
@@ -221,7 +248,6 @@ function OrdersPage() {
         </div>
         {error && <div className="mt-3 text-sm text-destructive">{error}</div>}
       </Panel>
-
     </>
   );
 }

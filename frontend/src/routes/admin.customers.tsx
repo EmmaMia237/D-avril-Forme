@@ -13,15 +13,16 @@ import {
 } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api-client";
 
-export const Route = createFileRoute('/admin/customers')({
+export const Route = createFileRoute("/admin/customers")({
   component: function AdminCustomersRedirect() {
-    if (typeof window !== 'undefined') window.location.href = '/avril-admin';
+    if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;
   },
 });
 
 function CustomersPage() {
-  const formatEur = (v:number) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(v);
+  const formatEur = (v: number) =>
+    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

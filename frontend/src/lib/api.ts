@@ -31,14 +31,35 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const role = user.role === "admin" ? "admin" : "user";
       const token = signToken({ sub: String(user._id), role });
 
-      const cookie = makeSetCookieHeader("session", token, { maxAge: 60 * 60 * 24 * 7, httpOnly: true });
-      return jsonResponse({ ok: true, user: { id: String(user._id), email: user.email, name: user.name ?? null, address: user.address ?? null, role } }, 200, { "Set-Cookie": cookie });
+      const cookie = makeSetCookieHeader("session", token, {
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+      });
+      return jsonResponse(
+        {
+          ok: true,
+          user: {
+            id: String(user._id),
+            email: user.email,
+            name: user.name ?? null,
+            address: user.address ?? null,
+            role,
+          },
+        },
+        200,
+        { "Set-Cookie": cookie },
+      );
     }
 
     // Register: POST /api/auth/register
     if (path === "/api/auth/register" && request.method === "POST") {
       const body = await request.json().catch(() => ({}));
-      const { name, email, password, address } = body as { name?: string; email?: string; password?: string; address?: string };
+      const { name, email, password, address } = body as {
+        name?: string;
+        email?: string;
+        password?: string;
+        address?: string;
+      };
       if (!name || !email || !password) return errorResponse("Missing registration fields", 400);
 
       const db = await connectDb();
@@ -47,11 +68,28 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       if (existing) return errorResponse("Email already registered", 409);
 
       const passwordHash = await hashPassword(password);
-      const res = await users.insertOne({ name, email: String(email).toLowerCase(), passwordHash, address: address ?? null, role: "user", createdAt: new Date() });
+      const res = await users.insertOne({
+        name,
+        email: String(email).toLowerCase(),
+        passwordHash,
+        address: address ?? null,
+        role: "user",
+        createdAt: new Date(),
+      });
 
       const token = signToken({ sub: String(res.insertedId), role: "user" });
-      const cookie = makeSetCookieHeader("session", token, { maxAge: 60 * 60 * 24 * 7, httpOnly: true });
-      return jsonResponse({ ok: true, user: { id: String(res.insertedId), email, name, address: address ?? null, role: "user" } }, 201, { "Set-Cookie": cookie });
+      const cookie = makeSetCookieHeader("session", token, {
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+      });
+      return jsonResponse(
+        {
+          ok: true,
+          user: { id: String(res.insertedId), email, name, address: address ?? null, role: "user" },
+        },
+        201,
+        { "Set-Cookie": cookie },
+      );
     }
 
     // Admin login: POST /api/auth/admin-login
@@ -62,10 +100,20 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
 
       const adminEmail = (process.env.ADMIN_EMAIL ?? "").trim();
       const adminPass = (process.env.ADMIN_PASS ?? "").trim();
-      if (adminEmail && adminPass && String(email).toLowerCase() === adminEmail.toLowerCase() && password === adminPass) {
+      if (
+        adminEmail &&
+        adminPass &&
+        String(email).toLowerCase() === adminEmail.toLowerCase() &&
+        password === adminPass
+      ) {
         const token = signToken({ sub: adminEmail, role: "admin" });
-        const cookie = makeSetCookieHeader("session", token, { maxAge: 60 * 60 * 24 * 7, httpOnly: true });
-        return jsonResponse({ ok: true, admin: true, email: adminEmail }, 200, { "Set-Cookie": cookie });
+        const cookie = makeSetCookieHeader("session", token, {
+          maxAge: 60 * 60 * 24 * 7,
+          httpOnly: true,
+        });
+        return jsonResponse({ ok: true, admin: true, email: adminEmail }, 200, {
+          "Set-Cookie": cookie,
+        });
       }
 
       try {
@@ -77,8 +125,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         if (!ok) return errorResponse("Invalid admin credentials", 401);
 
         const token = signToken({ sub: String(user._id), role: "admin" });
-        const cookie = makeSetCookieHeader("session", token, { maxAge: 60 * 60 * 24 * 7, httpOnly: true });
-        return jsonResponse({ ok: true, admin: true, email: user.email }, 200, { "Set-Cookie": cookie });
+        const cookie = makeSetCookieHeader("session", token, {
+          maxAge: 60 * 60 * 24 * 7,
+          httpOnly: true,
+        });
+        return jsonResponse({ ok: true, admin: true, email: user.email }, 200, {
+          "Set-Cookie": cookie,
+        });
       } catch (err: any) {
         return errorResponse("Invalid admin credentials", 401);
       }
@@ -101,7 +154,11 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       if (!decoded) return jsonResponse({ ok: false, authenticated: false }, 200);
 
       // If admin token, return minimal admin info
-      if (decoded.role === "admin") return jsonResponse({ ok: true, authenticated: true, admin: true, email: decoded.sub, payload: decoded }, 200);
+      if (decoded.role === "admin")
+        return jsonResponse(
+          { ok: true, authenticated: true, admin: true, email: decoded.sub, payload: decoded },
+          200,
+        );
 
       // For user tokens, fetch user record
       if (decoded.role === "user") {
@@ -113,7 +170,19 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
           try {
             const u = await users.findOne({ _id: new ObjectId(String(decoded.sub)) });
             if (!u) return jsonResponse({ ok: false, authenticated: false }, 200);
-            return jsonResponse({ ok: true, authenticated: true, user: { id: String(u._id), email: u.email, name: u.name ?? null, address: u.address ?? null } }, 200);
+            return jsonResponse(
+              {
+                ok: true,
+                authenticated: true,
+                user: {
+                  id: String(u._id),
+                  email: u.email,
+                  name: u.name ?? null,
+                  address: u.address ?? null,
+                },
+              },
+              200,
+            );
           } catch (err: any) {
             return errorResponse("Failed to load user: " + (err?.message ?? String(err)), 500);
           }
@@ -123,9 +192,29 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
           const body = await request.json().catch(() => ({}));
           const { name, address } = body as { name?: string; address?: string };
           try {
-            await users.updateOne({ _id: new ObjectId(String(decoded.sub)) }, { $set: { ...(name ? { name } : {}), ...(address ? { address } : {}), updatedAt: new Date() } });
+            await users.updateOne(
+              { _id: new ObjectId(String(decoded.sub)) },
+              {
+                $set: {
+                  ...(name ? { name } : {}),
+                  ...(address ? { address } : {}),
+                  updatedAt: new Date(),
+                },
+              },
+            );
             const u = await users.findOne({ _id: new ObjectId(String(decoded.sub)) });
-            return jsonResponse({ ok: true, user: { id: String(u._id), email: u.email, name: u.name ?? null, address: u.address ?? null } }, 200);
+            return jsonResponse(
+              {
+                ok: true,
+                user: {
+                  id: String(u._id),
+                  email: u.email,
+                  name: u.name ?? null,
+                  address: u.address ?? null,
+                },
+              },
+              200,
+            );
           } catch (err: any) {
             return errorResponse("Failed to update user: " + (err?.message ?? String(err)), 500);
           }
@@ -139,18 +228,27 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
     if (path === "/api/payment/create-checkout" && request.method === "POST") {
       if (!stripe) return errorResponse("Stripe not configured", 500);
       const body = await request.json().catch(() => ({}));
-      const { items, success_url, cancel_url } = body as { items?: Array<any>; success_url?: string; cancel_url?: string };
-      if (!Array.isArray(items) || items.length === 0) return errorResponse("No items provided", 400);
+      const { items, success_url, cancel_url } = body as {
+        items?: Array<any>;
+        success_url?: string;
+        cancel_url?: string;
+      };
+      if (!Array.isArray(items) || items.length === 0)
+        return errorResponse("No items provided", 400);
       if (!success_url || !cancel_url) return errorResponse("Missing redirect URLs", 400);
 
       // Map items to Stripe line_items with price_data (expects amount in cents)
       const line_items = items.map((it) => {
         const unitAmount = Math.round((Number(it.amount) || 0) * 100);
-        if (unitAmount < 50) throw new Error(`${it.name ?? "Item"} must be at least $0.50 for card checkout.`);
+        if (unitAmount < 50)
+          throw new Error(`${it.name ?? "Item"} must be at least $0.50 for card checkout.`);
         const product_data: any = { name: it.name ?? "Item" };
         if (it.customization) {
           try {
-            product_data.description = typeof it.customization === 'string' ? it.customization : JSON.stringify(it.customization);
+            product_data.description =
+              typeof it.customization === "string"
+                ? it.customization
+                : JSON.stringify(it.customization);
             product_data.metadata = { custom: JSON.stringify(it.customization) };
           } catch {
             // ignore serialization errors
@@ -180,8 +278,18 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       try {
         const db = await connectDb();
         const orders = db.collection("orders");
-        const total = items.reduce((s: number, it: any) => s + (Number(it.amount) || 0) * (it.quantity || 1), 0);
-        await orders.insertOne({ sessionId: session.id, trackingNumber, items, total, status: "Payment Pending", createdAt: new Date() });
+        const total = items.reduce(
+          (s: number, it: any) => s + (Number(it.amount) || 0) * (it.quantity || 1),
+          0,
+        );
+        await orders.insertOne({
+          sessionId: session.id,
+          trackingNumber,
+          items,
+          total,
+          status: "Payment Pending",
+          createdAt: new Date(),
+        });
       } catch (err) {
         // ignore DB order creation errors but do not fail the checkout
         console.warn("Failed to create order record:", err);
@@ -264,7 +372,10 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       if (request.method === "PUT") {
         const body = await request.json().catch(() => ({}));
         const { ObjectId } = await import("mongodb");
-        await col.updateOne({ _id: new ObjectId(id) }, { $set: { ...body, updatedAt: new Date() } });
+        await col.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { ...body, updatedAt: new Date() } },
+        );
         return jsonResponse({ ok: true }, 200);
       }
 

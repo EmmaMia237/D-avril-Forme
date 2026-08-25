@@ -83,18 +83,35 @@ function ContactPage() {
         <aside className="grid h-fit gap-4">
           {[
             { icon: Mail, title: "Email", value: "support@avrilforme.com" },
-            { icon: Phone, title: "Business & WhatsApp", value: "+44 7417 575436", href: "https://wa.me/447417575436" },
+            {
+              icon: Phone,
+              title: "Business & WhatsApp",
+              value: "+44 7417 575436",
+              href: "https://wa.me/447417575436",
+            },
             { icon: Clock, title: "Operating hours", value: "Mon–Sat, 8:00am – 7:00pm" },
-            { icon: MapPin, title: "Studio address", value: "Custom printing studio • UK-based order support" },
+            {
+              icon: MapPin,
+              title: "Studio address",
+              value: "Custom printing studio • UK-based order support",
+            },
           ].map((c) => (
-            <div key={c.title} className="flex items-start gap-3 rounded-lg border border-border bg-nude p-5">
+            <div
+              key={c.title}
+              className="flex items-start gap-3 rounded-lg border border-border bg-nude p-5"
+            >
               <c.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
                   {c.title}
                 </p>
                 {c.href ? (
-                  <a href={c.href} target="_blank" rel="noreferrer" className="mt-1 block text-sm break-words text-foreground underline-offset-4 hover:underline">
+                  <a
+                    href={c.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 block text-sm break-words text-foreground underline-offset-4 hover:underline"
+                  >
                     {c.value}
                   </a>
                 ) : (
@@ -134,7 +151,8 @@ function ContactPage() {
         <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
           <h2 className="font-display text-2xl font-semibold">Follow us</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connect with us on social media for behind-the-scenes updates, new collections, and inspiration.
+            Connect with us on social media for behind-the-scenes updates, new collections, and
+            inspiration.
           </p>
           <div className="mt-6 flex flex-wrap gap-4">
             <a
