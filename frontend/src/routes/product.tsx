@@ -214,9 +214,9 @@ function ProductPage() {
   const goToProduct = (item: Product) => {
     const targetId = item.id || item.name;
     try {
-        navigate({ to: "/product", search: { id: targetId } });
+        navigate({ to: `/product/${encodeURIComponent(String(targetId))}` });
       } catch (e) {
-        window.location.href = `/product?id=${encodeURIComponent(String(targetId))}`;
+        window.location.href = `/product/${encodeURIComponent(String(targetId))}`;
       }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
