@@ -1,4 +1,4 @@
-import { UploadCloud, Edit2, Copy, Trash2, Image as ImageIcon, Plus, Search, X } from "lucide-react";
+import { UploadCloud, Edit2, Copy, Trash2, Image as ImageIcon, Plus, Search, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { apiFetch } from "./lib/api-client";
@@ -32,7 +32,7 @@ function DesignsPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
-  const [categoriesList, setCategoriesList] = useState<string[]>([]);
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState("All");
   const [previewProduct, setPreviewProduct] = useState<any | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -46,6 +46,18 @@ function DesignsPage() {
   const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
 
   const statusOptions = ["All", "Published", "Draft", "Out of Stock"];
+  const categoryOptions = useMemo(
+    () =>
+      categoriesList.map((category: any) => {
+        const value = category.slug || category.name || category._id || category.id || '';
+        return {
+          id: category.id || category._id || value,
+          value,
+          label: category.name || category.title || category.slug || 'Unnamed category',
+        };
+      }),
+    [categoriesList]
+  );
 
   function normalizeThemeValue(value: string | null | undefined) {
    const v = String(value || '').trim();
@@ -119,10 +131,18 @@ function DesignsPage() {
     // load categories for product creation dropdown
     (async function loadCategories() {
       try {
-        const res = await apiFetch('/api/categories');
+        const res = await apiFetch('/api/admin/categories');
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));
-        if (data?.categories) setCategoriesList(data.categories.map((c:any) => c.name || c.slug).filter(Boolean));
+        if (Array.isArray(data?.categories)) {
+          setCategoriesList(
+            data.categories.map((c:any) => ({
+              id: c._id || c.id,
+              slug: c.slug || c.name,
+              name: c.name || c.title || c.slug,
+            }))
+          );
+        }
       } catch (err) {
         // ignore
       }
@@ -151,11 +171,12 @@ function DesignsPage() {
     }
 
   function openNew() {
+    const firstCategory = categoryOptions[0]?.value || "";
     setEditing(null);
     setForm({
       name: "",
       sku: "",
-      category: (categoriesList && categoriesList[0]) || "",
+      category: firstCategory,
       price: 0,
       salePrice: undefined,
       stock: 0,
@@ -169,11 +190,12 @@ function DesignsPage() {
   }
 
   function openEdit(p: any) {
+    const productCategory = String(p.category || categoryOptions[0]?.value || "");
     setEditing(p);
     setForm({
       name: p.name || "",
       sku: p.sku || p._id || "",
-      category: p.category || (categoriesList && categoriesList[0]) || "",
+      category: productCategory,
       price: p.price || 0,
       salePrice: p.salePrice,
       stock: p.stock || 0,
@@ -332,6 +354,7 @@ function DesignsPage() {
         name: `${p.name || 'Product'} (Copy)`,
         _id: undefined,
         id: undefined,
+        category: p.category || categoriesList[0]?.name || categoriesList[0]?.slug || '',
       };
       delete payload._id;
       delete payload.id;
@@ -455,20 +478,15 @@ function DesignsPage() {
 
       <Panel title="Inventory & product catalog">
         <div className="p-4">
-          <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-1 items-center gap-3">
-              <div className="relative w-full max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
-                  placeholder="Search product name, SKU, or category..."
-                  className="w-full bg-card pl-9"
-                />
-              </div>
-              <Button type="button" variant="outline" size="sm" onClick={handleRefresh}>
-                Refresh
-              </Button>
+          <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+            <div className="relative w-full max-w-xs md:w-72 xl:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+                placeholder="Search by name, SKU..."
+                className="w-full bg-card pl-9"
+              />
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -479,8 +497,8 @@ function DesignsPage() {
                   onClick={() => setFilterStatus(option)}
                   className={
                     option === filterStatus
-                      ? 'rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-sm'
-                      : 'rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-50'
+                      ? 'rounded-full bg-slate-900 px-3.5 py-1 text-sm font-medium text-white shadow-sm dark:bg-white dark:text-slate-900'
+                      : 'rounded-full border border-slate-200 bg-slate-100 px-3.5 py-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200'
                   }
                 >
                   {option}
@@ -488,19 +506,25 @@ function DesignsPage() {
               ))}
 
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[180px] rounded-full border-slate-200 bg-white text-xs text-slate-700">
+                <SelectTrigger className="w-[170px] rounded-full border-slate-200 bg-white text-sm text-slate-700">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All categories</SelectItem>
-                  {categoriesList.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.id} value={category.value}>{category.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
 
-              <Button onClick={openNew} className="inline-flex items-center">
-                <Plus className="mr-2 h-4 w-4" />Add New
+            <div className="ml-auto flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={handleRefresh} className="inline-flex items-center gap-2">
+                <RotateCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              <Button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                <Plus className="h-4 w-4" />Add New
               </Button>
             </div>
           </div>
@@ -563,11 +587,6 @@ function DesignsPage() {
 
       <Dialog open={Boolean(previewProduct)} onOpenChange={(value) => !value && setPreviewProduct(null)}>
         <DialogContent className="max-w-3xl overflow-hidden">
-          <div className="absolute right-4 top-4">
-            <Button type="button" variant="ghost" size="icon" onClick={() => setPreviewProduct(null)} aria-label="Close product preview">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
           <div className="mt-2 grid gap-5 md:grid-cols-[220px_1fr]">
             <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
               {previewProduct ? (
@@ -678,23 +697,15 @@ function DesignsPage() {
                 <Label>Category</Label>
                 <select
                   className="w-full rounded border p-2"
-                  value={form.category || (categoriesList[0] || 'Apparel')}
+                  value={form.category || categoryOptions[0]?.value || ''}
                   onChange={(e) => setForm((s:any) => ({ ...s, category: (e.target as HTMLSelectElement).value }))}
                 >
-                  {categoriesList.length > 0 ? (
-                    categoriesList.map((c) => <option key={c} value={c}>{c}</option>)
+                  {categoryOptions.length > 0 ? (
+                    categoryOptions.map((category) => (
+                      <option key={category.id} value={category.value}>{category.label}</option>
+                    ))
                   ) : (
-                    <>
-                      <option value="Apparel">Apparel</option>
-                      <option value="Dress">Dress</option>
-                      <option value="T-shirt">T-shirt</option>
-                      <option value="Sweatpants">Sweatpants</option>
-                      <option value="Cup">Cup</option>
-                      <option value="Mug">Mug</option>
-                      <option value="Phone Case">Phone Case</option>
-                      <option value="Wall Art">Wall Art</option>
-                      <option value="Stationery">Stationery</option>
-                    </>
+                    <option value="" disabled>No categories found — create one first</option>
                   )}
                 </select>
               </div>
