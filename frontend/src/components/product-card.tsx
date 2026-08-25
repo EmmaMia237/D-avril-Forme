@@ -125,7 +125,7 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
                     return;
                   }
                   try {
-                    navigate({ to: "/product", search: { id: pid } });
+                    navigate({ to: "/product/:id", params: { id: pid } });
                   } catch (e) {
                     window.location.href = `/product?id=${encodeURIComponent(pid)}`;
                   }
