@@ -17,6 +17,7 @@ import { Route as AvrilAdminRouteImport } from './routes/avril-admin'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as ConfigureRouteImport } from './routes/configure'
+import { Route as ConfigureIdRouteImport } from './routes/configure.$id'
 import { Route as ConfiguratorRouteImport } from './routes/configurator'
 import { Route as ProductRouteImport } from './routes/product'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
@@ -70,6 +71,11 @@ const ConfigureRoute = ConfigureRouteImport.update({
   id: '/configure',
   path: '/configure',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ConfigureIdRoute = ConfigureIdRouteImport.update({
+  id: '/configure/:id',
+  path: ':id',
+  getParentRoute: () => ConfigureRoute,
 } as any)
 const ConfiguratorRoute = ConfiguratorRouteImport.update({
   id: '/configurator',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
   '/configure': typeof ConfigureRoute
+  '/configure/:id': typeof ConfigureIdRoute
   '/configurator': typeof ConfiguratorRoute
   '/product': typeof ProductRoute
   '/product/:id': typeof ProductIdRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
   '/configure': typeof ConfigureRoute
+  '/configure/:id': typeof ConfigureIdRoute
   '/configurator': typeof ConfiguratorRoute
   '/product': typeof ProductRoute
   '/contact': typeof ContactRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
   '/configure': typeof ConfigureRoute
+  '/configure/:id': typeof ConfigureIdRoute
   '/configurator': typeof ConfiguratorRoute
   '/product': typeof ProductRoute
   '/contact': typeof ContactRoute
