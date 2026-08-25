@@ -19,6 +19,7 @@ import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as ConfigureRouteImport } from './routes/configure'
 import { Route as ConfiguratorRouteImport } from './routes/configurator'
 import { Route as ProductRouteImport } from './routes/product'
+import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
@@ -79,6 +80,11 @@ const ProductRoute = ProductRouteImport.update({
   id: '/product',
   path: '/product',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProductIdRoute = ProductIdRouteImport.update({
+  id: '/product/:id',
+  path: ':id',
+  getParentRoute: () => ProductRoute,
 } as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/configure': typeof ConfigureRoute
   '/configurator': typeof ConfiguratorRoute
   '/product': typeof ProductRoute
+  '/product/:id': typeof ProductIdRoute
   '/contact': typeof ContactRoute
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
