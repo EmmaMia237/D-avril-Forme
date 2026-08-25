@@ -9,6 +9,7 @@ const Product = require('./models/Product');
 const Order = require('./models/Order');
 const Offer = require('./models/Offer');
 const Category = require('./models/Category');
+const CustomItem = require('./models/CustomItem');
 
 const app = express();
 const mongoose = require('mongoose');
@@ -103,16 +104,64 @@ app.post('/api/admin/upload', uploadMemory.array('files', 10), async (req, res) 
   }
 });
 
+// Public upload endpoint for design exports (accepts multipart form 'file')
+app.post('/api/upload-design', uploadMemory.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream({ folder: 'avril-forme/designs' }, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+      stream.end(req.file.buffer);
+    });
+
+    const url = (uploadResult && (uploadResult.secure_url || uploadResult.url)) || null;
+    return res.json({ ok: true, url });
+  } catch (err) {
+    console.error('Upload design failed', err);
+    return res.status(500).json({ ok: false, error: 'Upload failed' });
+  }
+});
+
 // Persist a custom configured cart item (best-effort)
 app.post('/api/cart/custom-item', async (req, res) => {
   try {
     const payload = req.body || {};
-    // Minimal validation
     if (!payload.productId) return res.status(400).json({ ok: false, error: 'Missing productId' });
-    // In this simple implementation we do not persist into DB; log and return ok with a generated id
-    const created = { id: String(Date.now()), createdAt: new Date().toISOString(), payload };
-    console.log('Custom cart item persisted (dev):', created);
-    return res.json({ ok: true, item: created });
+
+    // Connect to DB and persist
+    await connectDb();
+
+    // Try to attach to authenticated user if possible
+    let userId = null;
+    try {
+      const maybe = await getUserFromToken(req);
+      if (maybe && maybe.user) userId = maybe.user._id;
+    } catch (e) {
+      // ignore
+    }
+
+    const sessionId = req.cookies?.session || null;
+
+    const item = new CustomItem({
+      productId: payload.productId,
+      title: payload.title || payload.name || null,
+      sku: payload.sku || null,
+      category: payload.category || null,
+      selectedColor: payload.selectedColor || null,
+      selectedSize: payload.selectedSize || null,
+      totalPrice: payload.totalPrice || 0,
+      customizations: payload.customizations || {},
+      userId: userId || null,
+      sessionId: sessionId || null,
+    });
+
+    await item.save();
+
+    return res.json({ ok: true, item: { id: String(item._id), createdAt: item.createdAt } });
   } catch (err) {
     console.error('Failed to persist custom cart item', err);
     return res.status(500).json({ ok: false, error: 'Failed to persist' });
