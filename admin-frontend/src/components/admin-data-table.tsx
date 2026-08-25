@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
-import { Tooltip } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Eye, SquarePen, Copy, Trash2, RefreshCw, Plus } from "lucide-react";
 
 export type Column<T = any> = {
@@ -125,12 +125,31 @@ export default function AdminDataTable<T = any>(props: AdminDataTableProps<T>) {
                       </TableCell>
                     ))}
                     <TableCell className="text-right">
-                      <div className="inline-flex items-center gap-2 justify-end">
-                        <Tooltip content="View"><Button variant="ghost" size="sm" onClick={() => onView && onView(r)}><Eye className="h-4 w-4" /></Button></Tooltip>
-                        <Tooltip content="Edit"><Button variant="ghost" size="sm" onClick={() => onEdit && onEdit(r)}><SquarePen className="h-4 w-4" /></Button></Tooltip>
-                        <Tooltip content="Duplicate"><Button variant="ghost" size="sm" onClick={() => onDuplicate && onDuplicate(r)}><Copy className="h-4 w-4" /></Button></Tooltip>
-                        <Tooltip content="Delete"><Button variant="ghost" size="sm" onClick={() => onDelete && onDelete(r)} className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button></Tooltip>
-                      </div>
+                      <TooltipProvider delayDuration={0}>
+                        <div className="inline-flex items-center gap-2 justify-end">
+                          {[
+                            { label: "View", icon: Eye, onClick: () => onView && onView(r) },
+                            { label: "Edit", icon: SquarePen, onClick: () => onEdit && onEdit(r) },
+                            { label: "Duplicate", icon: Copy, onClick: () => onDuplicate && onDuplicate(r) },
+                            { label: "Delete", icon: Trash2, onClick: () => onDelete && onDelete(r), destructive: true },
+                          ].map(({ label, icon: Icon, onClick, destructive }) => (
+                            <Tooltip key={label}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={onClick}
+                                  className={destructive ? "text-destructive hover:bg-destructive/10" : undefined}
+                                  aria-label={label}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">{label}</TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 );
