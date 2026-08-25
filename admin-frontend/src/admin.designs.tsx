@@ -478,18 +478,18 @@ function DesignsPage() {
 
       <Panel title="Inventory & product catalog">
         <div className="p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 py-3">
-            <div className="relative w-full max-w-xs md:w-72 xl:w-80">
+          <div className="flex min-w-0 flex-nowrap items-center justify-between gap-2 py-3 md:gap-3">
+            <div className="relative w-[170px] shrink-0 sm:w-[200px] md:w-[220px] xl:w-[240px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={search}
                 onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
                 placeholder="Search by name, SKU..."
-                className="w-full bg-card pl-9"
+                className="w-full bg-card pl-9 text-sm"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-x-auto md:gap-2">
               {statusOptions.map((option) => (
                 <button
                   key={option}
@@ -497,8 +497,8 @@ function DesignsPage() {
                   onClick={() => setFilterStatus(option)}
                   className={
                     option === filterStatus
-                      ? 'rounded-full bg-slate-900 px-3.5 py-1 text-sm font-medium text-white shadow-sm dark:bg-white dark:text-slate-900'
-                      : 'rounded-full border border-slate-200 bg-slate-100 px-3.5 py-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200'
+                      ? 'shrink-0 whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white shadow-sm md:px-3.5 md:text-sm dark:bg-white dark:text-slate-900'
+                      : 'shrink-0 whitespace-nowrap rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 md:px-3.5 md:text-sm'
                   }
                 >
                   {option}
@@ -506,7 +506,7 @@ function DesignsPage() {
               ))}
 
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[170px] rounded-full border-slate-200 bg-white text-sm text-slate-700">
+                <SelectTrigger className="h-8 w-[120px] shrink-0 rounded-full border-slate-200 bg-white text-xs text-slate-700 shadow-sm md:w-[150px] md:text-sm">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -518,12 +518,12 @@ function DesignsPage() {
               </Select>
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleRefresh} className="inline-flex items-center gap-2">
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+i              <Button type="button" variant="outline" size="sm" onClick={handleRefresh} className="inline-flex items-center gap-2 whitespace-nowrap">
                 <RotateCw className="h-4 w-4" />
                 Refresh
               </Button>
-              <Button onClick={openNew} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+              <Button onClick={openNew} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
                 <Plus className="h-4 w-4" />Add New
               </Button>
             </div>
