@@ -467,3 +467,5 @@ function ProductPage() {
     </StoreLayout>
   );
 }
+
+export { ProductPage };
