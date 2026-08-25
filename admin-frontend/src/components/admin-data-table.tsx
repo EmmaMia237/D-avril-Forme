@@ -31,6 +31,7 @@ export type AdminDataTableProps<T = any> = {
   onDuplicate?: (row: T) => void;
   onDelete?: (row: T) => void;
   selectable?: boolean;
+  showToolbar?: boolean;
 };
 
 export function StatusPill({ status }: { status?: string }) {
@@ -59,6 +60,7 @@ export default function AdminDataTable<T = any>(props: AdminDataTableProps<T>) {
     onDuplicate,
     onDelete,
     selectable = true,
+    showToolbar = true,
   } = props;
 
   const [selected, setSelected] = React.useState<Record<string, boolean>>({});
@@ -78,16 +80,18 @@ export default function AdminDataTable<T = any>(props: AdminDataTableProps<T>) {
 
   return (
     <div className="bg-card rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <Input placeholder="Search..." onChange={(e) => onSearch && onSearch((e.target as HTMLInputElement).value)} />
-          <Button variant="ghost" title="Refresh" onClick={() => (onSearch ? onSearch("") : undefined)}><RefreshCw className="h-4 w-4" /></Button>
-        </div>
+      {showToolbar ? (
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Input placeholder="Search..." onChange={(e) => onSearch && onSearch((e.target as HTMLInputElement).value)} />
+            <Button variant="ghost" title="Refresh" onClick={() => (onSearch ? onSearch("") : undefined)}><RefreshCw className="h-4 w-4" /></Button>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button onClick={() => onAdd && onAdd()} className="inline-flex items-center"><Plus className="mr-2 h-4 w-4" />Add New</Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => onAdd && onAdd()} className="inline-flex items-center"><Plus className="mr-2 h-4 w-4" />Add New</Button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="overflow-x-auto">
         <Table>
