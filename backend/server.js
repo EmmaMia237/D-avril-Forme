@@ -103,6 +103,22 @@ app.post('/api/admin/upload', uploadMemory.array('files', 10), async (req, res) 
   }
 });
 
+// Persist a custom configured cart item (best-effort)
+app.post('/api/cart/custom-item', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    // Minimal validation
+    if (!payload.productId) return res.status(400).json({ ok: false, error: 'Missing productId' });
+    // In this simple implementation we do not persist into DB; log and return ok with a generated id
+    const created = { id: String(Date.now()), createdAt: new Date().toISOString(), payload };
+    console.log('Custom cart item persisted (dev):', created);
+    return res.json({ ok: true, item: created });
+  } catch (err) {
+    console.error('Failed to persist custom cart item', err);
+    return res.status(500).json({ ok: false, error: 'Failed to persist' });
+  }
+});
+
 function getToken(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {

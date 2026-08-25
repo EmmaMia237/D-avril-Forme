@@ -101,7 +101,11 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
                     return;
                   }
                   try {
-                    navigate({ to: "/configure", search: { id: pid } });
+                    try {
+                      navigate({ to: `/configure/${encodeURIComponent(pid)}` });
+                    } catch (e) {
+                      window.location.href = `/configure/${encodeURIComponent(pid)}`;
+                    }
                   } catch (e) {
                     window.location.href = `/configure?id=${encodeURIComponent(pid)}`;
                   }

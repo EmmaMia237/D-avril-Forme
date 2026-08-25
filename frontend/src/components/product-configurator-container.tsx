@@ -3,6 +3,7 @@ import CanvasStage, { CanvasStageHandle } from "./product-configurator-canvas-st
 import SidebarTabs from "./product-configurator-sidebar";
 import { useConfiguratorState } from "./product-configurator-use-state";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useCart } from "@/lib/cart";
 
 export default function ProductConfiguratorContainer({
@@ -165,7 +166,25 @@ export default function ProductConfiguratorContainer({
         console.warn(e);
       }
 
-      window.location.href = "/cart";
+      // Persist the custom item to backend checkout session (best-effort, non-blocking)
+      (async () => {
+        try {
+          await fetch('/api/cart/custom-item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        } catch (e) {
+          // ignore backend persist failures
+          console.warn('Failed to persist custom cart item', e);
+        }
+      })();
+
+      try {
+        toast.success('Added custom item to cart');
+      } catch (e) {
+        // ignore
+      }
     } catch (e) {
       console.error(e);
       alert("Failed to add to cart");

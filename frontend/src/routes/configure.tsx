@@ -19,7 +19,17 @@ function ConfiguratorPage() {
     if (typeof window === "undefined") return;
     const read = () => {
       const params = new URLSearchParams(window.location.search);
-      setId(params.get("id") ?? undefined);
+      const qid = params.get("id");
+      // If no query id, also support path-based /configure/:id
+      let pathId = undefined as string | undefined;
+      try {
+        const m = window.location.pathname.match(/^\/configure\/([^\/\?#]+)/);
+        if (m && m[1]) pathId = decodeURIComponent(m[1]);
+      } catch (e) {
+        // ignore
+      }
+
+      setId((qid ?? pathId) ?? undefined);
       setBlank(params.get("blank") === "1" || params.get("blank") === "true");
       setOpenUpload(params.get("upload") === "1" || params.get("upload") === "true");
       const t = params.get("type");

@@ -126,9 +126,13 @@ function CustomTemplatesPage() {
                     <div className="absolute inset-0 flex items-center justify-center gap-3 bg-primary/70 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         size="sm"
-                        onClick={() =>
-                          navigate({ to: "/configure", search: (q) => ({ ...q, id }) })
-                        }
+                        onClick={() => {
+                          try {
+                            navigate({ to: `/configure/${encodeURIComponent(id)}` });
+                          } catch (e) {
+                            window.location.href = `/configure/${encodeURIComponent(id)}`;
+                          }
+                        }}
                       >
                         Customize This Product
                       </Button>
