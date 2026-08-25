@@ -214,10 +214,10 @@ function ProductPage() {
   const goToProduct = (item: Product) => {
     const targetId = item.id || item.name;
     try {
-      navigate({ to: "/product/:id", params: { id: targetId } });
-    } catch (e) {
-      window.location.href = `/product/${encodeURIComponent(String(targetId))}`;
-    }
+        navigate({ to: "/product", search: { id: targetId } });
+      } catch (e) {
+        window.location.href = `/product?id=${encodeURIComponent(String(targetId))}`;
+      }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
