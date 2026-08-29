@@ -4,7 +4,7 @@ import { PageTitle, Panel } from "@/components/admin-ui";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api-client";
 
-export const Route = createFileRoute("/admin/orders/$id")({
+export const Route = createFileRoute("/admin/order")({
   component: function AdminOrderRedirect() {
     if (typeof window !== "undefined") window.location.href = "/avril-admin";
     return null;

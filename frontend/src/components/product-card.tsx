@@ -124,14 +124,11 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
                     }
                     return;
                   }
+                  // Always navigate using path-based canonical URL
                   try {
-                    try {
-                      navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
-                    } catch (e) {
-                      window.location.href = `/product/${encodeURIComponent(String(pid))}`;
-                    }
+                    navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
                   } catch (e) {
-                    window.location.href = `/product?id=${encodeURIComponent(pid)}`;
+                    window.location.href = `/product/${encodeURIComponent(String(pid))}`;
                   }
                 }}
               >

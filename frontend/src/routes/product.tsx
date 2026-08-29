@@ -8,7 +8,7 @@ import {
   Star,
   Truck,
 } from "lucide-react";
-import { Link, createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,7 @@ import { useCart } from "@/lib/cart";
 import { apiFetch } from "@/lib/api-client";
 import { products as fallbackProducts, type Product } from "@/lib/shop-data";
 
-export const Route = createFileRoute("/product")({
-  head: () => ({ meta: [{ title: "Product — Avril Forme" }] }),
-  component: ProductPage,
-});
+const PRODUCT_PLACEHOLDER_IMAGE = "/images/printing-image.png";
 
 const STOP_WORDS = new Set([
   "a",
@@ -56,6 +53,34 @@ function getProductImage(product?: Product | null, colorOverride?: string) {
   return directImage;
 }
 
+function getProductId(product?: Product | null) {
+  return String(product?.id || (product as any)?._id || (product as any)?.sku || "");
+}
+
+function normalizeProduct(raw: any): Product {
+  const image =
+    raw?.image ||
+    raw?.images?.find?.((item: any) => item?.role === "front")?.url ||
+    raw?.images?.[0]?.url ||
+    raw?.previewPaths?.[0] ||
+    "";
+
+  return {
+    ...raw,
+    id: getProductId(raw),
+    category: raw?.category || "Products",
+    material: raw?.material || "Premium print-ready material",
+    colors: Array.isArray(raw?.colors) ? raw.colors : [],
+    price: Number(raw?.price || 0),
+    rating: Number(raw?.rating || 4.8),
+    reviews: Number(raw?.reviews || 0),
+    options: raw?.options || "",
+    image,
+    sizes: Array.isArray(raw?.sizes) ? raw.sizes : [],
+    imageByColor: raw?.imageByColor || {},
+  };
+}
+
 function getKeywordSet(label: string) {
   return (label || "")
     .toLowerCase()
@@ -68,8 +93,11 @@ function getSimilarProducts(currentProduct: Product | null, allProducts: Product
   if (!currentProduct) return [];
 
   const currentKeywords = new Set(getKeywordSet(currentProduct.name));
+  const currentId = getProductId(currentProduct);
+  const currentCategory = currentProduct.category?.toLowerCase();
   const scored = allProducts
-    .filter((product) => product.id !== currentProduct.id)
+    .filter((product) => getProductId(product) !== currentId)
+    .filter((product) => !currentCategory || product.category?.toLowerCase() === currentCategory)
     .map((product) => {
       let score = 0;
       if (product.category === currentProduct.category) score += 8;
@@ -84,40 +112,30 @@ function getSimilarProducts(currentProduct: Product | null, allProducts: Product
 
       return { product, score };
     })
-    .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 6)
+    .slice(0, 8)
     .map((entry) => entry.product);
 
-  if (scored.length >= 4) return scored;
-
-  const fallback = allProducts
-    .filter((product) => product.id !== currentProduct.id)
-    .sort((a, b) => Number(b.rating || 0) * Number(b.reviews || 0) - Number(a.rating || 0) * Number(a.reviews || 0));
-
-  return [...scored, ...fallback].filter((product, index, arr) => arr.findIndex((item) => item.id === product.id) === index).slice(0, 6);
+  return scored;
 }
 
 function ProductPage() {
+  const { id } = useParams({}) as { id?: string };
   const formatEur = (v: number) =>
     new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const navigate = useNavigate();
-  const location = useLocation();
   const { addItem, closeCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
-  const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("M");
   const [activeImage, setActiveImage] = useState<string>("");
   const [expandedSection, setExpandedSection] = useState<"details" | "care" | "shipping">("details");
   const [liked, setLiked] = useState(false);
 
-  const productId = useMemo(() => {
-    const searchId = (location.search as Record<string, string | undefined>)?.id;
-    if (searchId) return searchId;
-    const fallbackPath = window.location.pathname.match(/\/product\/([^/?]+)/)?.[1];
-    return fallbackPath || "";
-  }, [location.pathname, location.search]);
+  // Use router params for the id
+  const productId = id ?? "";
+
 
   useEffect(() => {
     let active = true;
@@ -131,7 +149,7 @@ function ProductPage() {
       try {
         const res = await apiFetch(`/api/products/${encodeURIComponent(productId)}`);
         const data = await res.json().catch(() => ({}));
-        const serverProduct = data?.product ?? null;
+        const serverProduct = data?.product ? normalizeProduct(data.product) : null;
         const localMatch = fallbackProducts.find(
           (item) =>
             item.id === productId ||
@@ -143,7 +161,6 @@ function ProductPage() {
 
         if (active) {
           setProduct(nextProduct ?? null);
-          setAllProducts(fallbackProducts);
         }
       } catch (error) {
         const localMatch = fallbackProducts.find(
@@ -187,15 +204,47 @@ function ProductPage() {
 
   useEffect(() => {
     if (galleryImages.length === 0) return;
-    if (!galleryImages.includes(activeImage)) setActiveImage(galleryImages[0]);
+    if (!galleryImages.includes(activeImage)) setActiveImage(galleryImages[0] ?? "");
   }, [galleryImages, activeImage]);
 
   const currentProduct = product ?? null;
+  useEffect(() => {
+    let active = true;
+
+    async function loadSimilarProducts() {
+      if (!currentProduct) {
+        setAllProducts([]);
+        return;
+      }
+
+      try {
+        const query = currentProduct.category
+          ? `?category=${encodeURIComponent(currentProduct.category)}&limit=8`
+          : "?limit=8";
+        const res = await apiFetch(`/api/products${query}`);
+        const data = await res.json().catch(() => ({}));
+        const serverProducts = Array.isArray(data?.products)
+          ? data.products.map((item: any) => normalizeProduct({ category: currentProduct.category, ...item }))
+          : [];
+
+        if (active) setAllProducts(serverProducts);
+      } catch (error) {
+        if (active) setAllProducts([]);
+      }
+    }
+
+    loadSimilarProducts();
+    return () => {
+      active = false;
+    };
+  }, [currentProduct]);
+
   const sizeOptions = currentProduct?.sizes?.length ? currentProduct.sizes : ["S", "M", "L", "XL", "XXL"];
   const colorOptions = currentProduct?.colors?.length ? currentProduct.colors : ["Cream", "Maroon", "Charcoal"];
   const listPrice = Number(currentProduct?.price || 0) * 1.4;
   const discountValue = Math.max(10, Math.round(((listPrice - Number(currentProduct?.price || 0)) / listPrice) * 100));
   const similarProducts = useMemo(() => getSimilarProducts(currentProduct, allProducts), [currentProduct, allProducts]);
+  const mainImage = currentProduct ? activeImage || getProductImage(currentProduct, selectedColor) || currentProduct.image : "";
 
   const handleAddToCart = () => {
     if (!currentProduct) return;
@@ -262,13 +311,27 @@ function ProductPage() {
           <div className="space-y-4">
             <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
               <div className="absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm">
-                SKU {currentProduct.id}
+                SKU {getProductId(currentProduct)}
               </div>
-              <img
-                src={activeImage || getProductImage(currentProduct, selectedColor) || currentProduct.image}
-                alt={currentProduct.name}
-                className="h-[420px] w-full object-cover transition-transform duration-300 md:h-[560px]"
-              />
+              {mainImage ? (
+                <img
+                  src={mainImage}
+                  alt={currentProduct.name}
+                  className="h-[420px] w-full object-cover transition-transform duration-300 md:h-[560px]"
+                />
+              ) : (
+                <div className="flex h-[420px] w-full flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center md:h-[560px]">
+                  <img
+                    src={PRODUCT_PLACEHOLDER_IMAGE}
+                    alt=""
+                    className="h-28 w-28 rounded-xl object-cover opacity-70"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700">No product image available</p>
+                    <p className="mt-1 text-xs text-slate-500">Image pending</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 overflow-x-auto pb-1">
@@ -431,27 +494,38 @@ function ProductPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {similarProducts.map((item) => (
-              <article key={item.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-                <button type="button" onClick={() => goToProduct(item)} className="block w-full text-left">
-                  <div className="overflow-hidden bg-slate-50">
-                    <img
-                      src={getProductImage(item, item.colors?.[0]) || item.image}
-                      alt={item.name}
-                      className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="space-y-2 p-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">{item.category}</p>
-                    <h3 className="text-base font-semibold text-slate-900">{item.name}</h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-orange-500 font-bold">{formatEur(Number(item.price || 0))}</span>
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">{item.colors?.length || 1} colors</span>
+            {similarProducts.map((item) => {
+              const itemImage = getProductImage(item, item.colors?.[0]) || item.image;
+
+              return (
+                <article key={getProductId(item)} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+                  <button type="button" onClick={() => goToProduct(item)} className="block w-full text-left">
+                    <div className="overflow-hidden bg-slate-50">
+                      {itemImage ? (
+                        <img
+                          src={itemImage}
+                          alt={item.name}
+                          className="h-56 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-56 w-full flex-col items-center justify-center gap-3 bg-slate-50 px-4 text-center">
+                          <img src={PRODUCT_PLACEHOLDER_IMAGE} alt="" className="h-16 w-16 rounded-lg object-cover opacity-70" />
+                          <span className="text-xs font-medium text-slate-500">No image available</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </button>
-              </article>
-            ))}
+                    <div className="space-y-2 p-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">{item.category}</p>
+                      <h3 className="text-base font-semibold text-slate-900">{item.name}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-orange-500 font-bold">{formatEur(Number(item.price || 0))}</span>
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">{item.colors?.length || 1} colors</span>
+                      </div>
+                    </div>
+                  </button>
+                </article>
+              );
+            })}
           </div>
         </div>
       </div>

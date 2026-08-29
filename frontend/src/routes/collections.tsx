@@ -142,9 +142,8 @@ function CollectionsPage() {
                 {filtered.map((p) => (
                   <Link
                     key={p.id}
-                    to="/product"
+                    to={`/product/${p.id}`}
                     className="rounded-lg border border-border bg-card p-4"
-                    search={{ id: p.id }}
                   >
                     <p className="font-semibold">{p.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">

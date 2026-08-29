@@ -16,20 +16,21 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvrilAdminRouteImport } from './routes/avril-admin'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CollectionsRouteImport } from './routes/collections'
-import { Route as ConfigureRouteImport } from './routes/configure'
 import { Route as ConfiguratorRouteImport } from './routes/configurator'
-import { Route as ProductRouteImport } from './routes/product'
-import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as ConfigureRouteImport } from './routes/configure'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CustomTemplatesRouteImport } from './routes/custom-templates'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
 import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminDesignsRouteImport } from './routes/admin.designs'
+import { Route as AdminOrderRouteImport } from './routes/admin.order'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as ProductIdRouteImport } from './routes/product.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,29 +67,24 @@ const CollectionsRoute = CollectionsRouteImport.update({
   path: '/collections',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfigureRoute = ConfigureRouteImport.update({
-  id: '/configure',
-  path: '/configure',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConfiguratorRoute = ConfiguratorRouteImport.update({
   id: '/configurator',
   path: '/configurator',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductRoute = ProductRouteImport.update({
-  id: '/product',
-  path: '/product',
+const ConfigureRoute = ConfigureRouteImport.update({
+  id: '/configure',
+  path: '/configure',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ProductIdRoute = ProductIdRouteImport.update({
-  id: '/product/:id',
-  path: ':id',
-  getParentRoute: () => ProductRoute,
 } as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomTemplatesRoute = CustomTemplatesRouteImport.update({
+  id: '/custom-templates',
+  path: '/custom-templates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OffersRoute = OffersRouteImport.update({
@@ -121,6 +117,11 @@ const AdminDesignsRoute = AdminDesignsRouteImport.update({
   path: '/designs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOrderRoute = AdminOrderRouteImport.update({
+  id: '/order',
+  path: '/order',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -136,6 +137,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const ProductIdRoute = ProductIdRouteImport.update({
+  id: '/product/$id',
+  path: '/product/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,19 +151,20 @@ export interface FileRoutesByFullPath {
   '/avril-admin': typeof AvrilAdminRoute
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
-  '/configure': typeof ConfigureRoute
   '/configurator': typeof ConfiguratorRoute
-  '/product': typeof ProductRoute
-  '/product/:id': typeof ProductIdRoute
+  '/configure': typeof ConfigureRoute
   '/contact': typeof ContactRoute
+  '/custom-templates': typeof CustomTemplatesRoute
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
+  '/admin/order': typeof AdminOrderRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -167,18 +174,20 @@ export interface FileRoutesByTo {
   '/avril-admin': typeof AvrilAdminRoute
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
-  '/configure': typeof ConfigureRoute
   '/configurator': typeof ConfiguratorRoute
-  '/product': typeof ProductRoute
+  '/configure': typeof ConfigureRoute
   '/contact': typeof ContactRoute
+  '/custom-templates': typeof CustomTemplatesRoute
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
+  '/admin/order': typeof AdminOrderRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -190,18 +199,20 @@ export interface FileRoutesById {
   '/avril-admin': typeof AvrilAdminRoute
   '/categories': typeof CategoriesRoute
   '/collections': typeof CollectionsRoute
-  '/configure': typeof ConfigureRoute
   '/configurator': typeof ConfiguratorRoute
-  '/product': typeof ProductRoute
+  '/configure': typeof ConfigureRoute
   '/contact': typeof ContactRoute
+  '/custom-templates': typeof CustomTemplatesRoute
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
+  '/admin/order': typeof AdminOrderRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -214,17 +225,20 @@ export interface FileRouteTypes {
     | '/avril-admin'
     | '/categories'
     | '/collections'
-    | '/configure'
     | '/configurator'
+    | '/configure'
     | '/contact'
+    | '/custom-templates'
     | '/offers'
     | '/order-success'
     | '/templates'
     | '/admin/customers'
     | '/admin/designs'
+    | '/admin/order'
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/settings'
+    | '/product/$id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -234,17 +248,20 @@ export interface FileRouteTypes {
     | '/avril-admin'
     | '/categories'
     | '/collections'
-    | '/configure'
     | '/configurator'
+    | '/configure'
     | '/contact'
+    | '/custom-templates'
     | '/offers'
     | '/order-success'
     | '/templates'
     | '/admin/customers'
     | '/admin/designs'
+    | '/admin/order'
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/settings'
+    | '/product/$id'
     | '/admin'
   id:
     | '__root__'
@@ -255,17 +272,20 @@ export interface FileRouteTypes {
     | '/avril-admin'
     | '/categories'
     | '/collections'
-    | '/configure'
     | '/configurator'
+    | '/configure'
     | '/contact'
+    | '/custom-templates'
     | '/offers'
     | '/order-success'
     | '/templates'
     | '/admin/customers'
     | '/admin/designs'
+    | '/admin/order'
     | '/admin/orders'
     | '/admin/payments'
     | '/admin/settings'
+    | '/product/$id'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -277,11 +297,14 @@ export interface RootRouteChildren {
   AvrilAdminRoute: typeof AvrilAdminRoute
   CategoriesRoute: typeof CategoriesRoute
   CollectionsRoute: typeof CollectionsRoute
+  ConfiguratorRoute: typeof ConfiguratorRoute
   ConfigureRoute: typeof ConfigureRoute
   ContactRoute: typeof ContactRoute
+  CustomTemplatesRoute: typeof CustomTemplatesRoute
   OffersRoute: typeof OffersRoute
   OrderSuccessRoute: typeof OrderSuccessRoute
   TemplatesRoute: typeof TemplatesRoute
+  ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,13 +358,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/configure': {
-      id: '/configure'
-      path: '/configure'
-      fullPath: '/configure'
-      preLoaderRoute: typeof ConfigureRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/configurator': {
       id: '/configurator'
       path: '/configurator'
@@ -349,12 +365,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguratorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configure': {
+      id: '/configure'
+      path: '/configure'
+      fullPath: '/configure'
+      preLoaderRoute: typeof ConfigureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
-    id: '/contact'
-    path: '/contact'
-    fullPath: '/contact'
-    preLoaderRoute: typeof ContactRouteImport
-    parentRoute: typeof rootRouteImport
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-templates': {
+      id: '/custom-templates'
+      path: '/custom-templates'
+      fullPath: '/custom-templates'
+      preLoaderRoute: typeof CustomTemplatesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/offers': {
       id: '/offers'
@@ -398,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDesignsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/order': {
+      id: '/admin/order'
+      path: '/order'
+      fullPath: '/admin/order'
+      preLoaderRoute: typeof AdminOrderRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/orders': {
       id: '/admin/orders'
       path: '/orders'
@@ -419,12 +456,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/product/$id': {
+      id: '/product/$id'
+      path: '/product/$id'
+      fullPath: '/product/$id'
+      preLoaderRoute: typeof ProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDesignsRoute: typeof AdminDesignsRoute
+  AdminOrderRoute: typeof AdminOrderRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -434,6 +479,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCustomersRoute: AdminCustomersRoute,
   AdminDesignsRoute: AdminDesignsRoute,
+  AdminOrderRoute: AdminOrderRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
@@ -450,12 +496,14 @@ const rootRouteChildren: RootRouteChildren = {
   AvrilAdminRoute: AvrilAdminRoute,
   CategoriesRoute: CategoriesRoute,
   CollectionsRoute: CollectionsRoute,
-  ConfigureRoute: ConfigureRoute,
   ConfiguratorRoute: ConfiguratorRoute,
+  ConfigureRoute: ConfigureRoute,
   ContactRoute: ContactRoute,
+  CustomTemplatesRoute: CustomTemplatesRoute,
   OffersRoute: OffersRoute,
   OrderSuccessRoute: OrderSuccessRoute,
   TemplatesRoute: TemplatesRoute,
+  ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

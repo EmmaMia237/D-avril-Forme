@@ -16,7 +16,7 @@ import { useState, useRef, useEffect, type FormEvent, type ReactNode } from "rea
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CartProvider, useCart } from "@/lib/cart";
+import { useCart } from "@/lib/cart";
 import { CartDrawer } from "@/components/cart-drawer";
 
 const nav = [
@@ -412,13 +412,11 @@ export function StoreLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <CartProvider>
-      <div className="flex min-h-screen flex-col bg-background">
-        <StoreHeader />
-        <main className="flex-1">{children}</main>
-        <StoreFooter />
-        <CartDrawer />
-      </div>
-    </CartProvider>
+    <div className="flex min-h-screen flex-col bg-background">
+      <StoreHeader />
+      <main className="flex-1">{children}</main>
+      <StoreFooter />
+      <CartDrawer />
+    </div>
   );
 }

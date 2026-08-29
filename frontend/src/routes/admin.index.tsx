@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api-client";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/admin/")({
   component: function AdminIndexRedirect() {
     if (typeof window !== "undefined") {
       window.location.href = "/avril-admin";
