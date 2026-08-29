@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { useCart, writeOrderSnapshot } from "@/lib/cart";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { toast } from "sonner";
 
 export function CartDrawer() {
@@ -183,7 +184,7 @@ export function CartDrawer() {
               <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] gap-3">
                 {it.image && (
                   <img
-                    src={it.image}
+                    src={getOptimizedImageUrl(it.image)}
                     alt={it.name}
                     className="h-[72px] w-[72px] rounded-md object-cover"
                   />

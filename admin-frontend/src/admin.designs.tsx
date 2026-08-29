@@ -113,6 +113,7 @@ function DesignsPage() {
    salePrice: undefined,
    stock: 0,
    status: "Draft",
+   productType: "pre-designed",
    theme: "",
    description: "",
    images: [] as Array<{ id: string; url: string; role?: string }>,
@@ -174,6 +175,7 @@ function DesignsPage() {
       salePrice: undefined,
       stock: 0,
       status: "Draft",
+      productType: "pre-designed",
       theme: "",
       description: "",
       images: [],
@@ -193,6 +195,7 @@ function DesignsPage() {
       salePrice: p.salePrice,
       stock: p.stock || 0,
       status: p.status || "Draft",
+      productType: p.productType || "pre-designed",
       theme: normalizeThemeValue(p.theme),
       description: p.description || "",
       images: (p.images || p.previewPaths || []).map((u: any, i: number) => ({
@@ -260,6 +263,7 @@ function DesignsPage() {
         stock: Number(form.stock) || 0,
         // No separate status control in the UI: products saved as Published by default
         status: 'Published',
+        productType: form.productType || 'pre-designed',
         theme: form.theme ? normalizeThemeValue(form.theme) : undefined,
         images: images.map((im: any) => ({ url: im.url, role: im.role, variantLabel: im.variantLabel })),
         is_customizable: !!form.is_customizable,
@@ -722,6 +726,18 @@ function DesignsPage() {
               <div>
                 <Label>Inventory</Label>
                 <Input type="number" value={form.stock} onChange={(e) => setForm((s:any) => ({ ...s, stock: Number((e.target as HTMLInputElement).value || 0) }))} />
+
+                <div className="mt-3 grid gap-2">
+                  <Label>Product Type</Label>
+                  <select
+                    className="w-full rounded border p-2"
+                    value={form.productType || 'pre-designed'}
+                    onChange={(e) => setForm((s:any) => ({ ...s, productType: (e.target as HTMLSelectElement).value }))}
+                  >
+                    <option value="pre-designed">Pre-designed</option>
+                    <option value="blank">Blank / Customizable Template</option>
+                  </select>
+                </div>
 
                 <div className="mt-3">
                   <label className="flex items-center gap-2 text-sm">

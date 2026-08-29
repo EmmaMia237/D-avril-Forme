@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export const Route = createFileRoute("/custom-templates")({
   head: () => ({
@@ -103,10 +104,11 @@ function CustomTemplatesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {visible.map((p) => {
               const id = p._id || p.id;
-              const img =
+              const img = getOptimizedImageUrl(
                 (p.images && p.images[0] && (p.images[0].url || p.images[0])) ||
-                p.image ||
-                "/placeholder-product.png";
+                  p.image ||
+                  "/placeholder-product.png",
+              );
               const basePrice =
                 p.price || p.basePrice || (p.variants && p.variants[0] && p.variants[0].price) || 0;
               const colors =

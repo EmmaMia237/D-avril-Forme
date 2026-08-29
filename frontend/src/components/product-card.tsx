@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import type { Product } from "@/lib/shop-data";
 import { useCart } from "@/lib/cart";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export function Stars({ rating, reviews }: { rating: number; reviews?: number }) {
   const r = Math.max(0, Math.min(5, Number(rating || 0)));
@@ -36,11 +37,12 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
   const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
 
-  const imageSrc =
+  const imageSrc = getOptimizedImageUrl(
     (product.images && product.images[0]?.url) ||
-    product.image ||
-    (product.previewPaths && product.previewPaths[0]) ||
-    "";
+      product.image ||
+      (product.previewPaths && product.previewPaths[0]) ||
+      "",
+  );
   const shortDescription = product.description
     ? String(product.description).slice(0, 80) +
       (String(product.description).length > 80 ? "…" : "")

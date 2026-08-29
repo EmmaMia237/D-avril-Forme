@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { apiFetch } from "@/lib/api-client";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { products as fallbackProducts, type Product } from "@/lib/shop-data";
 
 const PRODUCT_PLACEHOLDER_IMAGE = "/images/printing-image.png";
@@ -50,7 +51,7 @@ function getProductImage(product?: Product | null, colorOverride?: string) {
     (product as any)?.images?.[0]?.url ||
     (product as any)?.previewPaths?.[0] ||
     "";
-  return directImage;
+  return getOptimizedImageUrl(directImage);
 }
 
 function getProductId(product?: Product | null) {
@@ -198,7 +199,7 @@ function ProductPage() {
       .filter(Boolean)
       .map((item) => String(item));
 
-    images.forEach((image) => set.add(image));
+    images.forEach((image) => set.add(getOptimizedImageUrl(image)));
     return Array.from(set).slice(0, 6);
   }, [product, selectedColor]);
 

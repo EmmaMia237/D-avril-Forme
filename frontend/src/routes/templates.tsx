@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { templateCategories } from "@/lib/shop-data";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export const Route = createFileRoute("/templates")({
   head: () => ({
@@ -103,10 +104,11 @@ function TemplatesPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {popular.map((p) => {
               const id = p._id || p.id;
-              const img =
+              const img = getOptimizedImageUrl(
                 (p.images && p.images[0] && (p.images[0].url || p.images[0])) ||
-                p.image ||
-                "/placeholder-product.png";
+                  p.image ||
+                  "/placeholder-product.png",
+              );
               return (
                 <article
                   key={id}

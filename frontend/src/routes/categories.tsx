@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { apiFetch } from "@/lib/api-client";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
@@ -267,7 +268,9 @@ function CategoriesPage() {
                   className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-[120px_minmax(0,1fr)_auto]"
                 >
                   <img
-                    src={p.image}
+                    src={getOptimizedImageUrl(
+                      p.image || p.images?.[0]?.url || p.previewPaths?.[0] || "",
+                    )}
                     alt={`${p.name} mockup`}
                     loading="lazy"
                     width={800}

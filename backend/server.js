@@ -65,6 +65,7 @@ app.use(cookieParser());
 // Cloudinary + multer setup for server-side image uploads (memory storage to avoid writing into project files)
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
+const rateLimit = require('express-rate-limit');
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -72,6 +73,34 @@ cloudinary.config({
 });
 
 const uploadMemory = multer({ storage: multer.memoryStorage() });
+const customerUploadMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
+const customerUploadExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+const customerUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const customerUploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter: (req, file, cb) => {
+    const originalName = String(file.originalname || '').toLowerCase();
+    const hasAllowedExtension = customerUploadExtensions.some((extension) =>
+      originalName.endsWith(extension),
+    );
+
+    if (customerUploadMimeTypes.has(file.mimetype) && hasAllowedExtension) {
+      cb(null, true);
+      return;
+    }
+
+    cb(new Error('Only PNG, JPG, JPEG, and WEBP images are allowed'));
+  },
+});
 
 app.post('/api/admin/upload', uploadMemory.array('files', 10), async (req, res) => {
   try {
@@ -83,7 +112,14 @@ app.post('/api/admin/upload', uploadMemory.array('files', 10), async (req, res) 
     const uploaded = [];
     for (const f of files) {
       const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream({ folder: 'avril-forme' }, (err, result) => {
+        const stream = cloudinary.uploader.upload_stream({
+          folder: 'avril-forme',
+          transformation: [
+            { width: 1600, height: 1600, crop: 'limit' },
+            { quality: 'auto' },
+            { fetch_format: 'auto' },
+          ],
+        }, (err, result) => {
           if (err) return reject(err);
           resolve(result);
         });
@@ -101,6 +137,51 @@ app.post('/api/admin/upload', uploadMemory.array('files', 10), async (req, res) 
     console.error('Upload error', err);
     return res.status(500).json({ ok: false, error: 'Upload failed' });
   }
+});
+
+app.post('/api/customer-upload', customerUploadLimiter, (req, res) => {
+  customerUploadMemory.single('file')(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      const isSizeLimit = uploadErr instanceof multer.MulterError && uploadErr.code === 'LIMIT_FILE_SIZE';
+      return res.status(400).json({
+        ok: false,
+        error: isSizeLimit ? 'File is too large. Maximum upload size is 10MB.' : uploadErr.message || 'Upload rejected',
+      });
+    }
+
+    try {
+      const file = req.file;
+      if (!file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
+
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({
+          folder: 'avril-forme/customer-uploads',
+          resource_type: 'image',
+          transformation: [
+            { width: 1600, height: 1600, crop: 'limit' },
+            { quality: 'auto' },
+            { fetch_format: 'auto' },
+          ],
+        }, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+        stream.end(file.buffer);
+      });
+
+      return res.json({
+        ok: true,
+        file: {
+          url: (uploadResult && (uploadResult.secure_url || uploadResult.url)) || null,
+          public_id: uploadResult && uploadResult.public_id,
+          original_filename: uploadResult && uploadResult.original_filename,
+        },
+      });
+    } catch (err) {
+      console.error('Customer upload error', err);
+      return res.status(500).json({ ok: false, error: 'Upload failed' });
+    }
+  });
 });
 
 function getToken(req) {
@@ -294,11 +375,15 @@ app.get('/api/products', async (req, res) => {
         // If caller requests a lightweight summary (no images), return minimal fields quickly
         const summary = req.query && (String(req.query.summary) === '1' || String(req.query.summary).toLowerCase() === 'true');
         if (summary) {
-          const products = await Product.find(q).select('name sku price stock status theme createdAt').limit(limit).sort({ createdAt: -1 }).lean();
+          const products = await Product.find(q).select('name sku price stock status theme createdAt productType is_customizable colors').limit(limit).sort({ createdAt: -1 }).lean();
+          products.forEach(p => {
+            p.customizable = p.is_customizable === true;
+            p.configurable = p.is_customizable === true;
+          });
           return res.json({ ok: true, products, truncated: products.length >= limit });
         }
 
-        let products = await Product.find(q).select('name sku price images stock status theme createdAt previewPaths').limit(limit).sort({ createdAt: -1 }).lean();
+        let products = await Product.find(q).select('name sku price images stock status theme createdAt previewPaths productType is_customizable colors').limit(limit).sort({ createdAt: -1 }).lean();
         // Strip large data URLs from image previews to keep list responses small
         products = products.map(p => {
           if (Array.isArray(p.images)) {
@@ -307,6 +392,8 @@ app.get('/api/products', async (req, res) => {
           if (Array.isArray(p.previewPaths)) {
             p.previewPaths = p.previewPaths.map(pp => (String(pp).startsWith('data:') ? '' : pp));
           }
+          p.customizable = p.is_customizable === true;
+          p.configurable = p.is_customizable === true;
           return p;
         });
         return res.json({ ok: true, products, truncated: products.length >= limit });

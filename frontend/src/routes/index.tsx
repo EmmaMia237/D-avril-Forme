@@ -8,6 +8,7 @@ import { categories as fallbackCategories } from "@/lib/shop-data";
 const heroImage = "/images/hero-image.png";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -365,13 +366,14 @@ function HomePage() {
                   const catName = (cat.name || "").toString();
                   return p.category && (p.category === catName || p.category === cat.slug);
                 });
-                const imgSrc =
+                const imgSrc = getOptimizedImageUrl(
                   (representative &&
                     ((representative.images && representative.images[0]?.url) ||
                       representative.image ||
                       (representative.previewPaths && representative.previewPaths[0]))) ||
-                  cat.image ||
-                  heroImage;
+                    cat.image ||
+                    heroImage,
+                );
 
                 return (
                   <Link
