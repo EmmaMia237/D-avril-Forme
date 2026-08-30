@@ -19,6 +19,7 @@ const productSchema = new mongoose.Schema(
     productType: { type: String, trim: true, enum: ['pre-designed', 'blank'], default: 'pre-designed' },
     // Whether this product is available as a blank/customizable template for the configurator
     is_customizable: { type: Boolean, default: false },
+    material: { type: String, trim: true, default: '' },
     colors: { type: [String], default: [] },
     // Theme slug for Collections (kids, halloween, autumn, anime)
     theme: {

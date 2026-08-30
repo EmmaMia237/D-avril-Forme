@@ -109,6 +109,7 @@ function DesignsPage() {
    name: "",
    sku: "",
    category: "",
+   material: "",
    price: 0,
    salePrice: undefined,
    stock: 0,
@@ -171,6 +172,7 @@ function DesignsPage() {
       name: "",
       sku: "",
       category: firstCategory,
+      material: "",
       price: 0,
       salePrice: undefined,
       stock: 0,
@@ -191,6 +193,7 @@ function DesignsPage() {
       name: p.name || "",
       sku: p.sku || p._id || "",
       category: productCategory,
+      material: p.material || "",
       price: p.price || 0,
       salePrice: p.salePrice,
       stock: p.stock || 0,
@@ -257,6 +260,7 @@ function DesignsPage() {
         name: form.name,
         sku: form.sku,
         category: form.category,
+        material: form.material || '',
         description: form.description,
         price: Number(form.price) || 0,
         salePrice: form.salePrice ? Number(form.salePrice) : undefined,
@@ -699,6 +703,14 @@ function DesignsPage() {
                     <option value="" disabled>No categories found — create one first</option>
                   )}
                 </select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Material</Label>
+                <Input
+                  placeholder="e.g. 100% Cotton, Ceramic, Ring-spun cotton blend"
+                  value={form.material || ""}
+                  onChange={(e) => setForm((s:any) => ({ ...s, material: (e.target as HTMLInputElement).value }))}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>Theme (optional)</Label>

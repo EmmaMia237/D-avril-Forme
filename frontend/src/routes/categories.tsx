@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { LayoutGrid, List, Filter, X } from "lucide-react";
+import { LayoutGrid, List, Filter } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { ProductCard, Stars } from "@/components/product-card";
@@ -7,6 +7,14 @@ import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Pagination,
   PaginationContent,
@@ -29,13 +37,13 @@ import { getOptimizedImageUrl } from "@/lib/cloudinary";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Print Categories — D'avril Forme Custom Printing" },
+      { title: "Print Categories — OsanPrints Custom Printing" },
       {
         name: "description",
         content:
-          "Browse D'avril Forme print categories: apparel, mugs, phone cases, stickers and stationery. Filter by material, colour and price.",
+          "Browse OsanPrints print categories: apparel, mugs, phone cases, stickers and stationery. Filter by material, colour and price.",
       },
-      { property: "og:title", content: "Print Categories — D'avril Forme" },
+      { property: "og:title", content: "Print Categories — OsanPrints" },
       {
         property: "og:description",
         content: "Filter custom print products by category, material, colour and price range.",
@@ -45,35 +53,8 @@ export const Route = createFileRoute("/categories")({
   component: CategoriesPage,
 });
 
-const catFilters = [
-  "Apparel",
-  "Mugs",
-  "T-Shirts",
-  "Tote Bags",
-  "Drinkware",
-  "Phone Cases",
-  "Hoodies",
-  "Wall Art",
-  "Keychains",
-  "Caps",
-  "Stationery",
-  "Kids",
-  "Corporate Merch",
-];
-const materials = [
-  "100% Cotton",
-  "Ceramic",
-  "Matte Plastic",
-  "Recycled Paper",
-  "Stainless Steel",
-  "Cotton Blend",
-  "Canvas",
-  "Acrylic",
-  "Paper",
-];
-const colorFilters = ["Cream", "Maroon", "Charcoal", "Nude", "White", "Black", "Navy", "Pink"];
-
 function CategoriesPage() {
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -104,6 +85,34 @@ function CategoriesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    async function loadCategories() {
+      try {
+        const res = await apiFetch("/api/categories");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !active) return;
+
+        const categories = Array.isArray(data?.categories) ? data.categories : [];
+        const mapped = categories
+          .map((category: any) => {
+            const value = category.name || category.slug || "";
+            if (!value) return null;
+            return { value, label: category.name || category.slug || value };
+          })
+          .filter(Boolean) as Array<{ value: string; label: string }>;
+
+        setCategoryOptions(mapped);
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadCategories();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const toggle = (list: string[], setList: (v: string[]) => void, value: string) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
@@ -125,14 +134,57 @@ function CategoriesPage() {
     return () => window.removeEventListener("popstate", setFromSearch);
   }, []);
 
+  const normalizeFilterValue = (value: string | null | undefined) =>
+    String(value ?? "").trim().toLowerCase();
+
+  const materialOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          productsList.flatMap((product) => {
+            const value = String(product?.material ?? "").trim();
+            return value ? [value] : [];
+          }),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [productsList],
+  );
+
+  const colorOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          productsList.flatMap((product) =>
+            Array.isArray(product?.colors)
+              ? product.colors
+                  .map((color: string) => String(color ?? "").trim())
+                  .filter(Boolean)
+              : [],
+          ),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [productsList],
+  );
+
   const filtered = useMemo(() => {
     const source = productsList || [];
     const result = source.filter((p) => {
-      const matchesCat = !selectedCats.length || selectedCats.includes(p.category);
-      const matchesMaterial = !selectedMaterials.length || selectedMaterials.includes(p.material);
+      const matchesCat =
+        !selectedCats.length ||
+        selectedCats.some(
+          (selected) => normalizeFilterValue(p.category) === normalizeFilterValue(selected),
+        );
+      const matchesMaterial =
+        !selectedMaterials.length ||
+        selectedMaterials.some(
+          (selected) => normalizeFilterValue(p.material) === normalizeFilterValue(selected),
+        );
       const matchesColor =
         !selectedColors.length ||
-        (Array.isArray(p.colors) && p.colors.some((c) => selectedColors.includes(c)));
+        (Array.isArray(p.colors) &&
+          p.colors.some((c) =>
+            selectedColors.some((selected) => normalizeFilterValue(c) === normalizeFilterValue(selected)),
+          ));
       const matchesPrice = (p.price || 0) <= maxPrice;
       const q = (query ?? "").trim().toLowerCase();
       const matchesQuery =
@@ -147,6 +199,78 @@ function CategoriesPage() {
     return [...result].sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
   }, [productsList, selectedCats, selectedMaterials, selectedColors, maxPrice, sort, query]);
 
+  const activeFilterCount = useMemo(
+    () =>
+      selectedCats.length +
+      selectedMaterials.length +
+      selectedColors.length +
+      (maxPrice < 80 ? 1 : 0),
+    [selectedCats.length, selectedMaterials.length, selectedColors.length, maxPrice],
+  );
+
+  const filterPanel = (
+    <>
+      <FilterGroup title="Category">
+        {categoryOptions.length > 0 ? (
+          categoryOptions.map((c) => (
+            <FilterCheck
+              key={c.value}
+              id={`cat-${c.value}-${mobileFilterOpen ? "mobile" : "desktop"}`}
+              label={c.label}
+              checked={selectedCats.includes(c.value)}
+              onChange={() => toggle(selectedCats, setSelectedCats, c.value)}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No categories available yet.</p>
+        )}
+      </FilterGroup>
+
+      <FilterGroup title={`Price range — up to $${maxPrice}`}>
+        <Slider
+          value={[maxPrice]}
+          min={10}
+          max={80}
+          step={1}
+          onValueChange={(v) => setMaxPrice(v[0] ?? 80)}
+          aria-label="Maximum price"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Material">
+        {materialOptions.length > 0 ? (
+          materialOptions.map((m) => (
+            <FilterCheck
+              key={m}
+              id={`mat-${m}-${mobileFilterOpen ? "mobile" : "desktop"}`}
+              label={m}
+              checked={selectedMaterials.includes(m)}
+              onChange={() => toggle(selectedMaterials, setSelectedMaterials, m)}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No material data available yet.</p>
+        )}
+      </FilterGroup>
+
+      <FilterGroup title="Colour" last>
+        {colorOptions.length > 0 ? (
+          colorOptions.map((c) => (
+            <FilterCheck
+              key={c}
+              id={`col-${c}-${mobileFilterOpen ? "mobile" : "desktop"}`}
+              label={c}
+              checked={selectedColors.includes(c)}
+              onChange={() => toggle(selectedColors, setSelectedColors, c)}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No colours available yet.</p>
+        )}
+      </FilterGroup>
+    </>
+  );
+
   return (
     <StoreLayout>
       <div className="border-b border-border bg-nude">
@@ -158,73 +282,39 @@ function CategoriesPage() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 lg:grid-cols-[25%_minmax(0,1fr)] lg:px-8">
-        <aside className="hidden h-fit rounded-lg border border-border bg-card p-5 lg:block">
-          <FilterGroup title="Category">
-            {catFilters.map((c) => (
-              <FilterCheck
-                key={c}
-                id={`cat-${c}`}
-                label={c}
-                checked={selectedCats.includes(c)}
-                onChange={() => toggle(selectedCats, setSelectedCats, c)}
-              />
-            ))}
-          </FilterGroup>
-
-          <FilterGroup title={`Price range — up to $${maxPrice}`}>
-            <Slider
-              value={[maxPrice]}
-              min={10}
-              max={80}
-              step={1}
-              onValueChange={(v) => setMaxPrice(v[0] ?? 80)}
-              aria-label="Maximum price"
-            />
-          </FilterGroup>
-
-          <FilterGroup title="Material">
-            {materials.map((m) => (
-              <FilterCheck
-                key={m}
-                id={`mat-${m}`}
-                label={m}
-                checked={selectedMaterials.includes(m)}
-                onChange={() => toggle(selectedMaterials, setSelectedMaterials, m)}
-              />
-            ))}
-          </FilterGroup>
-
-          <FilterGroup title="Colour" last>
-            {colorFilters.map((c) => (
-              <FilterCheck
-                key={c}
-                id={`col-${c}`}
-                label={c}
-                checked={selectedColors.includes(c)}
-                onChange={() => toggle(selectedColors, setSelectedColors, c)}
-              />
-            ))}
-          </FilterGroup>
-        </aside>
-
-        <section>
+      <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+        <section className="min-w-0">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-nude px-4 py-3">
             <div className="flex items-center gap-2">
               <p className="truncate text-sm text-muted-foreground">
                 {filtered.length} products available{query.trim() ? ` for "${query.trim()}"` : ""}
               </p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setMobileFilterOpen(true)}
-                aria-label="Open filters"
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant={activeFilterCount > 0 ? "default" : "outline"}
+                    size="sm"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[90vw] overflow-y-auto p-4 sm:max-w-md">
+                  <SheetHeader className="mb-6 text-left">
+                    <SheetTitle>Filters</SheetTitle>
+                    <SheetDescription>
+                      Refine products by category, price, material and colour.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="space-y-0">{filterPanel}</div>
+                  <Button size="lg" className="mt-6 w-full" onClick={() => setMobileFilterOpen(false)}>
+                    Apply Filters
+                  </Button>
+                </SheetContent>
+              </Sheet>
               <Select value={sort} onValueChange={setSort}>
                 <SelectTrigger className="w-44 bg-card">
                   <SelectValue />
@@ -331,82 +421,6 @@ function CategoriesPage() {
           </Pagination>
         </section>
       </div>
-
-      {/* Mobile Filter Drawer */}
-      {mobileFilterOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-            onClick={() => setMobileFilterOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-40 max-h-[85vh] overflow-y-auto rounded-t-lg border-t border-border bg-card lg:hidden">
-            <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card px-4 py-3">
-              <h2 className="font-semibold">Filters</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileFilterOpen(false)}
-                aria-label="Close filters"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <FilterGroup title="Category">
-                {catFilters.map((c) => (
-                  <FilterCheck
-                    key={c}
-                    id={`cat-${c}-mobile`}
-                    label={c}
-                    checked={selectedCats.includes(c)}
-                    onChange={() => toggle(selectedCats, setSelectedCats, c)}
-                  />
-                ))}
-              </FilterGroup>
-
-              <FilterGroup title={`Price range — up to $${maxPrice}`}>
-                <Slider
-                  value={[maxPrice]}
-                  min={10}
-                  max={80}
-                  step={1}
-                  onValueChange={(v) => setMaxPrice(v[0] ?? 80)}
-                  aria-label="Maximum price"
-                />
-              </FilterGroup>
-
-              <FilterGroup title="Material">
-                {materials.map((m) => (
-                  <FilterCheck
-                    key={m}
-                    id={`mat-${m}-mobile`}
-                    label={m}
-                    checked={selectedMaterials.includes(m)}
-                    onChange={() => toggle(selectedMaterials, setSelectedMaterials, m)}
-                  />
-                ))}
-              </FilterGroup>
-
-              <FilterGroup title="Colour">
-                {colorFilters.map((c) => (
-                  <FilterCheck
-                    key={c}
-                    id={`col-${c}-mobile`}
-                    label={c}
-                    checked={selectedColors.includes(c)}
-                    onChange={() => toggle(selectedColors, setSelectedColors, c)}
-                  />
-                ))}
-              </FilterGroup>
-
-              <Button size="lg" className="mt-4 w-full" onClick={() => setMobileFilterOpen(false)}>
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
     </StoreLayout>
   );
 }

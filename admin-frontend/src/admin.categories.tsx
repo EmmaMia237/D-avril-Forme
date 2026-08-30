@@ -37,7 +37,7 @@ export default function CategoriesAdminPage() {
   useEffect(() => { load(); }, []);
 
   function openNew() {
-    setForm({ id: null, slug: '', name: '', description: '', imageUrl: '', isPublished: false, items: 0 });
+    setForm({ id: null, slug: '', name: '', description: '', imageUrl: '', isPublished: true, items: 0 });
     setShowModal(true);
   }
 
