@@ -9,13 +9,13 @@ import { getOptimizedImageUrl } from "@/lib/cloudinary";
 export const Route = createFileRoute("/templates")({
   head: () => ({
     meta: [
-      { title: "Custom Design Templates — D'avril Forme" },
+      { title: "Custom Design Templates — OsanPrints" },
       {
         name: "description",
         content:
-          "Start from an editable D'avril Forme design template — birthday, corporate branding, typography, minimalist art and holiday artwork — or upload your own.",
+          "Start from an editable OsanPrints design template — birthday, corporate branding, typography, minimalist art and holiday artwork — or upload your own.",
       },
-      { property: "og:title", content: "Custom Design Templates — D'avril Forme" },
+      { property: "og:title", content: "Custom Design Templates — OsanPrints" },
       {
         property: "og:description",
         content: "Editable print templates for t-shirts, mugs, cases and stationery.",

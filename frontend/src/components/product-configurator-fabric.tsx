@@ -1024,7 +1024,7 @@ function DesignPanel({
 }
 
 function TextPanel() {
-  const [text, setText] = useState("Avril Forme");
+  const [text, setText] = useState("OsanPrints");
 
   return (
     <div className="space-y-5">

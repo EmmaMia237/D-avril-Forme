@@ -8,7 +8,7 @@ import { getOptimizedImageUrl } from "@/lib/cloudinary";
 export const Route = createFileRoute("/custom-templates")({
   head: () => ({
     meta: [
-      { title: "Custom Templates — D'avril Forme" },
+      { title: "Custom Templates — OsanPrints" },
       { name: "description", content: "Choose a product to customize in our Web-to-Print studio." },
     ],
   }),

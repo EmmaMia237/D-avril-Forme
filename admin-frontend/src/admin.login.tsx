@@ -72,14 +72,14 @@ export default function AdminLogin() {
             <div className="flex items-center justify-center rounded-[18px] border border-[#3b2724] bg-[#2d1f1c] p-2.5 shadow-[0_10px_24px_rgba(56,34,31,0.16)]">
               <img
                 src="/images/logo.png"
-                alt="D'avril Forme"
+                alt="OsanPrints"
                 className="h-14 w-auto max-w-full object-contain drop-shadow-[0_10px_18px_rgba(255,255,255,0.06)]"
                 onError={(e: any) => { e.currentTarget.style.display = 'none'; }}
               />
             </div>
           </div>
 
-          <h2 className="text-center text-2xl font-semibold text-[#2a1f1d] mb-1">D’avril Forme – Admin</h2>
+          <h2 className="text-center text-2xl font-semibold text-[#2a1f1d] mb-1">OsanPrints – Admin</h2>
           <p className="text-center text-sm text-[#6b4e4a] mb-6">Secure access to the management console</p>
 
           <form onSubmit={submit} className="space-y-4">

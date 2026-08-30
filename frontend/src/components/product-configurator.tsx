@@ -133,7 +133,7 @@ export function ProductConfigurator({
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState("Standard");
   const [quantity, setQuantity] = useState(1);
-  const [text, setText] = useState("D'AVRIL");
+  const [text, setText] = useState("OsanPrints");
   const [fontSize, setFontSize] = useState(32);
   const [fontFamily, setFontFamily] = useState("sans-serif");
   const [textColor, setTextColor] = useState("#1E1D1B");

@@ -454,7 +454,7 @@ export const templates: Template[] = [
   {
     id: "t2",
     title: "Monogram Crest",
-    creator: "Avril Forme",
+    creator: "OsanPrints",
     category: "Corporate Branding",
     fits: "Fits Polos & Notebooks",
     image: stationery,
@@ -478,7 +478,7 @@ export const templates: Template[] = [
   {
     id: "t5",
     title: "Festive Wine Wreath",
-    creator: "Avril Forme",
+    creator: "OsanPrints",
     category: "Holidays",
     fits: "Fits Mugs & Cards",
     image: stationery,
@@ -486,7 +486,7 @@ export const templates: Template[] = [
   {
     id: "t6",
     title: "Team Launch Kit",
-    creator: "Avril Forme",
+    creator: "OsanPrints",
     category: "Corporate Branding",
     fits: "Fits Corporate Packages",
     image: corporate,

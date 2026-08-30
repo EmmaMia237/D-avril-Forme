@@ -60,9 +60,9 @@ export default function AdminLayout() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
         <Link to="/admin" className="flex items-center gap-2">
-          <img src="/images/logo.png" alt="D’avril Forme" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
+          <img src="/images/logo.png" alt="OsanPrints" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
           <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-semibold">D’avril Forme</span>
+            <span className="block truncate font-display text-lg font-semibold">OsanPrints</span>
             <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">Admin portal</span>
           </span>
         </Link>
@@ -116,9 +116,9 @@ export default function AdminLayout() {
           <aside className="relative z-50 w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground">
             <div className="mb-4 flex items-center justify-between">
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <img src="/images/logo.png" alt="D’avril Forme" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
+                <img src="/images/logo.png" alt="OsanPrints" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-lg font-semibold">D’avril Forme</span>
+                  <span className="block truncate font-display text-lg font-semibold">OsanPrints</span>
                 </span>
               </Link>
               <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-[var(--accent)] p-2 rounded-md">
@@ -165,7 +165,7 @@ export default function AdminLayout() {
               <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-md p-2 text-[var(--accent)] lg:hidden" aria-label="Toggle menu">
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <h1 className="text-lg font-display">D’avril Forme</h1>
+              <h1 className="text-lg font-display">OsanPrints</h1>
             </div>
 
             <div className="hidden flex-1 items-center justify-center px-4 md:flex">

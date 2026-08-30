@@ -155,7 +155,7 @@ function SettingsPage() {
           >
             <div>
               <Label htmlFor="store">Store name</Label>
-              <Input id="store" defaultValue="Avril Forme" className="mt-1.5" />
+              <Input id="store" defaultValue="OsanPrints" className="mt-1.5" />
             </div>
             <div>
               <Label htmlFor="support">Support email</Label>

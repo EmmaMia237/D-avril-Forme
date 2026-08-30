@@ -35,11 +35,11 @@ export function StoreHeader() {
           <Link to="/" className="flex min-w-0 shrink-0 items-center gap-2">
             <img
               src="/images/logo.png"
-              alt="D'avril Forme Logo"
+              alt="OsanPrints Logo"
               className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent"
             />
             <span className="hidden truncate font-display text-xl font-semibold tracking-wide sm:inline">
-              D'avril Forme
+              OsanPrints
             </span>
           </Link>
           <nav className="hidden items-center gap-5 text-sm xl:flex">
@@ -214,7 +214,7 @@ export function StoreFooter() {
       </div>
       <div className="bg-primary-deep">
         <div className="mx-auto max-w-7xl px-4 py-5 text-xs text-primary-foreground/90 lg:px-8">
-          © {new Date().getFullYear()} Avril Forme. All rights reserved.
+          © {new Date().getFullYear()} OsanPrints. All rights reserved.
         </div>
       </div>
     </footer>

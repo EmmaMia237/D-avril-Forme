@@ -1,7 +1,7 @@
 {
-  "name": "D'Avril Forme Admin",
-  "short_name": "DF Admin",
-  "description": "D'Avril Forme administration dashboard",
+  "name": "OsanPrints Admin",
+  "short_name": "OsanPrints Admin",
+  "description": "OsanPrints administration dashboard",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

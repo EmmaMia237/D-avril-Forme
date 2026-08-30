@@ -6,7 +6,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { apiFetch } from "@/lib/api-client";
 
 export const Route = createFileRoute("/configure")({
-  head: () => ({ meta: [{ title: "Product Configurator - D'avril Forme" }] }),
+  head: () => ({ meta: [{ title: "Product Configurator - OsanPrints" }] }),
   component: ConfiguratorPage,
 });
 

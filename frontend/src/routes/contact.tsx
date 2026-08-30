@@ -20,13 +20,13 @@ import { faqs } from "@/lib/shop-data";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact & Help — D'avril Forme Support" },
+      { title: "Contact & Help — OsanPrints Support" },
       {
         name: "description",
         content:
-          "Reach the D'avril Forme print studio: support email, phone, opening hours and answers on artwork files, shipping timelines and returns.",
+          "Reach the OsanPrints print studio: support email, phone, opening hours and answers on artwork files, shipping timelines and returns.",
       },
-      { property: "og:title", content: "Contact & Help — D'avril Forme" },
+      { property: "og:title", content: "Contact & Help — OsanPrints" },
       {
         property: "og:description",
         content: "Send an enquiry or read our print, shipping and returns FAQ.",

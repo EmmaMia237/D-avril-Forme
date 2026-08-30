@@ -7,7 +7,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/order-success")({
-  head: () => ({ meta: [{ title: "Order Confirmed - Avril Forme" }] }),
+  head: () => ({ meta: [{ title: "Order Confirmed - OsanPrints" }] }),
   component: OrderSuccessPage,
 });
 

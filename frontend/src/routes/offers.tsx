@@ -19,13 +19,13 @@ import { apiFetch } from "@/lib/api-client";
 export const Route = createFileRoute("/offers")({
   head: () => ({
     meta: [
-      { title: "Offers & Bulk Print Deals — Avril Forme" },
+      { title: "Offers & Bulk Print Deals — OsanPrints" },
       {
         name: "description",
         content:
           "Seasonal print sale coupons and bulk order discount tiers — copy a coupon code or view active bulk discounts.",
       },
-      { property: "og:title", content: "Offers & Bulk Print Deals — Avril Forme" },
+      { property: "og:title", content: "Offers & Bulk Print Deals — OsanPrints" },
       {
         property: "og:description",
         content: "Copy a coupon code and unlock tiered bulk print discounts.",

@@ -4,7 +4,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { ProductConfigurator } from "@/components/product-configurator";
 
 export const Route = createFileRoute("/configurator")({
-  head: () => ({ meta: [{ title: "Product Configurator — Avril Forme" }] }),
+  head: () => ({ meta: [{ title: "Product Configurator — OsanPrints" }] }),
   component: ConfiguratorPage,
 });
 

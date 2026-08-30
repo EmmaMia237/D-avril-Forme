@@ -9,13 +9,13 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About D'avril Forme — Craft Printing Studio" },
+      { title: "About OsanPrints — Craft Printing Studio" },
       {
         name: "description",
         content:
-          "D'avril Forme is a craft printing studio built on ink durability, eco-friendly fabrics and precision colour matching for every custom order.",
+          "OsanPrints is a craft printing studio built on ink durability, eco-friendly fabrics and precision colour matching for every custom order.",
       },
-      { property: "og:title", content: "About D'avril Forme — Craft Printing Studio" },
+      { property: "og:title", content: "About OsanPrints — Craft Printing Studio" },
       {
         property: "og:description",
         content: "Meet the studio behind the press: quality pillars and our production workflow.",
@@ -78,7 +78,7 @@ function AboutPage() {
             </h1>
             <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
               <p>
-                Where everyday items become your canvas. At D’avril Forme, we believe the things you
+                Where everyday items become your canvas. At OsanPrints, we believe the things you
                 carry, wear, and use every day should feel like a reflection of you. From cozy
                 graphic tees and statement hoodies to protective phone cases, everyday tote bags,
                 and your morning coffee mug — we bring thoughtful design to life on high-quality
@@ -86,7 +86,7 @@ function AboutPage() {
               </p>
               <p>
                 Whether you love minimalist aesthetic prints, retro typography, or custom
-                personalized pieces, D’avril Forme adds form, function, and personality to your
+                personalized pieces, OsanPrints adds form, function, and personality to your
                 daily routine. Designed to inspire. Printed to last.
               </p>
               <p>
@@ -109,7 +109,7 @@ function AboutPage() {
 
       <section className="bg-nude/60">
         <div className="mx-auto max-w-7xl px-4 py-14 lg:px-8">
-          <h2 className="font-display text-3xl font-semibold mb-4">Why shop D'avril Forme</h2>
+          <h2 className="font-display text-3xl font-semibold mb-4">Why shop OsanPrints</h2>
           <div className="grid gap-5 md:grid-cols-3 mb-8">
             {[
               {

@@ -1,10 +1,9 @@
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="200" height="200" fill="transparent"/>
-  <circle cx="76" cy="73" r="42" fill="#C85A32" fill-opacity="0.12"/>
-  <path d="M55 44.5H98.5C111.478 44.5 122 55.022 122 68V68C122 80.978 111.478 91.5 98.5 91.5H82.5V116H55V44.5ZM82.5 68H94.5C98.553 68 102 64.553 102 60.5V60.5C102 56.447 98.553 53 94.5 53H82.5V68Z" fill="#C85A32"/>
-  <path d="M138 44.5H161V116H138V44.5Z" fill="#1E1D1B"/>
-  <path d="M120.5 44.5H126V116H120.5V44.5Z" fill="#1E1D1B"/>
-  <path d="M145.5 44.5H161V116H145.5V44.5Z" fill="#1E1D1B"/>
-  <text x="100" y="146" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700" fill="#1E1D1B">D’avril Forme</text>
-  <text x="100" y="172" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" letter-spacing="2" fill="#C85A32">CUSTOM PRINT STUDIO</text>
+<svg width='200' height='200' viewBox='0 0 200 200' fill='none' xmlns='http://www.w3.org/2000/svg'>
+  <rect width='200' height='200' fill='transparent'/>
+  <circle cx='78' cy='74' r='42' fill='#C85A32' fill-opacity='0.12'/>
+  <path d='M52 43H98.5C111.478 43 122 53.522 122 66.5V66.5C122 79.478 111.478 90 98.5 90H82V116H52V43ZM82 66.5H94.5C98.553 66.5 102 63.053 102 59V59C102 54.947 98.553 51.5 94.5 51.5H82V66.5Z' fill='#C85A32'/>
+  <path d='M137 43H163V116H137V43Z' fill='#1E1D1B'/>
+  <path d='M120.5 43H125.5V116H120.5V43Z' fill='#1E1D1B'/>
+  <text x='100' y='146' text-anchor='middle' font-family='Georgia, 'Times New Roman', serif' font-size='22' font-weight='700' fill='#1E1D1B'>OsanPrints</text>
+  <text x='100' y='172' text-anchor='middle' font-family='Arial, sans-serif' font-size='10' letter-spacing='2' fill='#C85A32'>CUSTOM PRINT STUDIO</text>
 </svg>

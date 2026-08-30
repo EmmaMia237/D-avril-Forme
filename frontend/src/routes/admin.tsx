@@ -61,10 +61,10 @@ function AdminLayout() {
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
         <Link to="/admin" className="flex items-center gap-2">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm bg-nude font-display text-lg font-bold text-primary">
-            A
+            O
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-semibold">Avril Forme</span>
+            <span className="block truncate font-display text-lg font-semibold">OsanPrints</span>
             <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">
               Admin portal
             </span>

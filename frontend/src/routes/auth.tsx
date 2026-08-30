@@ -13,16 +13,16 @@ const heroImage = "/images/hero-image.png";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign In or Register — Avril Forme Account" },
+      { title: "Sign In or Register — OsanPrints Account" },
       {
         name: "description",
         content:
-          "Create an Avril Forme account or sign in to track custom print orders, saved designs and shipping addresses.",
+          "Create an OsanPrints account or sign in to track custom print orders, saved designs and shipping addresses.",
       },
-      { property: "og:title", content: "Sign In or Register — Avril Forme" },
+      { property: "og:title", content: "Sign In or Register — OsanPrints" },
       {
         property: "og:description",
-        content: "Access your Avril Forme customer account, orders and saved artwork.",
+        content: "Access your OsanPrints customer account, orders and saved artwork.",
       },
     ],
   }),
@@ -148,7 +148,7 @@ function AuthPage() {
         style={{ backgroundImage: "var(--gradient-maroon)" }}
       >
         <Link to="/" className="font-display text-2xl font-semibold">
-          Avril Forme
+          OsanPrints
         </Link>
         <div>
           <img
@@ -166,12 +166,12 @@ function AuthPage() {
             Save artwork, reorder in a click and follow production status from press to doorstep.
           </p>
         </div>
-        <p className="text-xs opacity-60">© {new Date().getFullYear()} Avril Forme</p>
+        <p className="text-xs opacity-60">© {new Date().getFullYear()} OsanPrints</p>
       </aside>
 
       <main className="flex items-center justify-center bg-background px-4 py-16">
         <div className="w-full max-w-md">
-          <h1 className="font-display text-3xl font-semibold">Welcome to Avril Forme</h1>
+          <h1 className="font-display text-3xl font-semibold">Welcome to OsanPrints</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign in to continue, or create an account in under a minute.
           </p>

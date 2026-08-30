@@ -75,14 +75,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "D'avril Forme — Custom Printing Studio" },
+      { title: "OsanPrints — Custom Printing Studio" },
       {
         name: "description",
         content:
           "Custom printing for apparel, drinkware, phone cases, stationery and corporate merch.",
       },
-      { name: "author", content: "D'avril Forme" },
-      { property: "og:title", content: "D'avril Forme — Custom Printing Studio" },
+      { name: "author", content: "OsanPrints" },
+      { property: "og:title", content: "OsanPrints — Custom Printing Studio" },
       {
         property: "og:description",
         content: "Custom printed t-shirts, mugs, cases, stationery and corporate merchandise.",
