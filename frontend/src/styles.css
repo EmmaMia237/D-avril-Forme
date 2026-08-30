@@ -62,92 +62,99 @@
   --color-nude-deep: var(--nude-deep);
   --color-primary-deep: var(--primary-deep);
   --color-primary-light: var(--primary-light);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-gold: var(--brand-gold);
   --font-display: var(--font-display);
   --font-sans: var(--font-body);
 }
 
 :root {
   --radius: 0.5rem;
-  /* Avril Forme brand system - updated palette */
-  --background: #faf6f0; /* Linen / Off-White (page background) */
-  --foreground: #1e1d1b; /* Deep Ink Black (primary text & headings) */
-  --card: #ffffff; /* Pure White (cards, product mockups) */
-  --card-foreground: #1e1d1b;
-  --popover: #ffffff;
-  --popover-foreground: #1e1d1b;
-  --primary: #3a3a3d; /* Charcoal Grey / Soft Black (primary UI) */
-  --primary-deep: #2b2b2d; /* Deeper charcoal used for strong primary surfaces (e.g., footer background) */
-  --primary-foreground: #ffffff;
-  --secondary: #f4ece1; /* Warm Cream / Nude */
-  --secondary-foreground: #1e1d1b;
-  --nude: #f4ece1;
-  --nude-deep: #c49a6c;
-  --muted: #e8c5b2; /* Dusty Rose for muted accents */
-  --muted-foreground: #708063; /* Earthy Olive for contrast */
-  --accent: #c85a32; /* Warm Terracotta */
-  --accent-foreground: #ffffff;
-  --accent-2: #a28647; /* Muted Mustard */
-  --accent-3: #708063; /* Earthy Olive */
-  --accent-4: #e8c5b2; /* Dusty Rose */
-  --wood: #c49a6c; /* Natural Wood / Tan */
-  --destructive: #c85a32;
-  --destructive-foreground: #ffffff;
-  --border: #ede7e0;
-  --input: #ffffff;
-  --ring: #3a3a3d;
-  --chart-1: #3a3a3d;
-  --chart-2: #c85a32;
-  --chart-3: #a28647;
-  --chart-4: #708063;
-  --chart-5: #e8c5b2;
-  --sidebar: #3a3a3d;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #c85a32;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #a28647;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #ede7e0;
-  --sidebar-ring: #c85a32;
-  --gradient-hero: linear-gradient(135deg, #3a3a3d 0%, #c85a32 45%, #f4ece1 100%);
-  --gradient-maroon: linear-gradient(120deg, #3a3a3d, #a28647);
+  /* OsanPrints brand system - warm, artisanal palette */
+  --background: #F0E6D2; /* Deep cream/beige (page background) */
+  --foreground: #1A1613; /* Near-black (primary text & headings) */
+  --card: #FEFCF8; /* Off-white cream (cards) */
+  --card-foreground: #1A1613;
+  --popover: #FEFCF8;
+  --popover-foreground: #1A1613;
+  --primary: #3F2A1D; /* Deep coffee brown (primary UI, headers) */
+  --primary-deep: #2D1F18; /* Darker brown for strong surfaces */
+  --primary-foreground: #F0E6D2;
+  --secondary: #1A1613; /* Near-black (nav, secondary elements) */
+  --secondary-foreground: #F0E6D2;
+  --nude: #F0E6D2;
+  --nude-deep: #C9A76B;
+  --muted: #D9CCBD; /* Muted warm tan */
+  --muted-foreground: #5A4A3D; /* Muted brown text */
+  --accent: #7A2436; /* Maroon (tertiary highlight) */
+  --accent-foreground: #F0E6D2;
+  --accent-2: #B8956A; /* Warm gold-tan */
+  --accent-3: #8B6F47; /* Earthy brown */
+  --accent-4: #D9CCBD; /* Soft tan */
+  --wood: #C9A76B; /* Natural wood/tan */
+  --destructive: #7A2436;
+  --destructive-foreground: #F0E6D2;
+  --border: #E8DCC8;
+  --input: #FEFCF8;
+  --ring: #3F2A1D;
+  --chart-1: #3F2A1D;
+  --chart-2: #7A2436;
+  --chart-3: #B8956A;
+  --chart-4: #8B6F47;
+  --chart-5: #D9CCBD;
+  --sidebar: #3F2A1D;
+  --sidebar-foreground: #F0E6D2;
+  --sidebar-primary: #7A2436;
+  --sidebar-primary-foreground: #F0E6D2;
+  --sidebar-accent: #B8956A;
+  --sidebar-accent-foreground: #1A1613;
+  --sidebar-border: #E8DCC8;
+  --sidebar-ring: #7A2436;
+  --brand-orange: #F97316;
+  --brand-pink: #EC4899;
+  --brand-gold: #C9A227;
+  --gradient-hero: linear-gradient(135deg, #3F2A1D 0%, #7A2436 45%, #F0E6D2 100%);
+  --gradient-maroon: linear-gradient(120deg, #3F2A1D, #B8956A);
   --shadow-soft: 0 12px 32px -18px rgba(0, 0, 0, 0.08);
   --shadow-lift: 0 24px 48px -24px rgba(0, 0, 0, 0.12);
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-body: "Karla", system-ui, sans-serif;
+  --primary-light: #5C4033;
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --background: oklch(0.11 0.04 45); /* Very dark brown tint */
+  --foreground: oklch(0.92 0.01 45); /* Light cream */
+  --card: oklch(0.18 0.04 45); /* Dark brown-tinted */
+  --card-foreground: oklch(0.92 0.01 45);
+  --popover: oklch(0.18 0.04 45);
+  --popover-foreground: oklch(0.92 0.01 45);
+  --primary: oklch(0.85 0.02 45); /* Light warm tone for primary */
+  --primary-foreground: oklch(0.18 0.04 45); /* Dark background */
+  --secondary: oklch(0.15 0.02 45); /* Dark secondary */
+  --secondary-foreground: oklch(0.92 0.01 45); /* Light text */
+  --muted: oklch(0.35 0.04 45); /* Muted dark */
+  --muted-foreground: oklch(0.72 0.03 45); /* Lighter muted */
+  --accent: oklch(0.38 0.07 30); /* Maroon-ish accent */
+  --accent-foreground: oklch(0.92 0.01 45); /* Cream text */
+  --destructive: oklch(0.56 0.18 20); /* Red-toned destructive */
+  --destructive-foreground: oklch(0.92 0.01 45);
+  --border: oklch(0.25 0.01 45 / 30%); /* Subtle warm borders */
+  --input: oklch(0.25 0.01 45 / 40%);
+  --ring: oklch(0.60 0.12 30); /* Warm ring color */
+  --chart-1: oklch(0.50 0.10 45); /* Warm chart colors */
+  --chart-2: oklch(0.55 0.15 20);
+  --chart-3: oklch(0.65 0.12 50);
+  --chart-4: oklch(0.48 0.10 45);
+  --chart-5: oklch(0.70 0.08 45);
+  --sidebar: oklch(0.18 0.04 45);
+  --sidebar-foreground: oklch(0.92 0.01 45);
+  --sidebar-primary: oklch(0.55 0.15 20); /* Maroon primary */
+  --sidebar-primary-foreground: oklch(0.92 0.01 45);
+  --sidebar-accent: oklch(0.65 0.10 50); /* Gold accent */
+  --sidebar-accent-foreground: oklch(0.18 0.04 45);
+  --sidebar-border: oklch(0.25 0.01 45 / 30%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 

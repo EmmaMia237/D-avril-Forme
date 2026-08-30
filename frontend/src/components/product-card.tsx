@@ -49,7 +49,7 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
     : product.options || "";
 
   return (
-    <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-lift)]">
+    <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] active:translate-y-0">
       <div className="relative h-40 w-full overflow-hidden bg-nude">
         {imageSrc ? (
           <img

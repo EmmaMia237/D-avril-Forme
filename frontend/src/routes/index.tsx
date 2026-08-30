@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { BadgeCheck, Boxes, Truck, UploadCloud, ArrowRight } from "lucide-react";
 
 import { ProductCard } from "@/components/product-card";
@@ -13,13 +14,13 @@ import { getOptimizedImageUrl } from "@/lib/cloudinary";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "D'avril Forme — Custom Printing for Apparel, Mugs & Merch" },
+      { title: "OsanPrints — Custom Printing for Apparel, Mugs & Merch" },
       {
         name: "description",
         content:
-          "D'avril Forme prints custom t-shirts, mugs, phone cases, stationery and corporate merch. Single items or bulk runs with fast shipping.",
+          "OsanPrints prints custom t-shirts, mugs, phone cases, stationery and corporate merch. Single items or bulk runs with fast shipping.",
       },
-      { property: "og:title", content: "D'avril Forme — Custom Printing Studio" },
+      { property: "og:title", content: "OsanPrints — Custom Printing Studio" },
       {
         property: "og:description",
         content:
@@ -38,6 +39,9 @@ const trust = [
 ];
 
 function HomePage() {
+  const prefersReducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, -28]);
   const [productsList, setProductsList] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
   // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
@@ -271,12 +275,27 @@ function HomePage() {
 
   return (
     <StoreLayout>
-      <section
+      <motion.section
         className="hero-section relative overflow-hidden"
         style={{ backgroundImage: "var(--gradient-hero)" }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
       >
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-2 lg:px-8 lg:py-20 min-h-[560px]">
-          <div className="hero-content text-primary-foreground">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-16 top-10 h-72 w-72 rounded-full bg-[rgba(255,255,255,0.08)] blur-3xl" />
+          <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-[#c9a76b]/20 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#1a1613]/10 to-transparent" />
+        </div>
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-2 lg:px-8 lg:py-20 min-h-[560px]">
+          <motion.div
+            className="hero-content text-primary-foreground"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -20 }}
+            whileInView={prefersReducedMotion ? {} : { opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
             <p className="text-xs font-semibold tracking-[0.28em] text-accent uppercase">
               Custom printing studio
             </p>
@@ -288,57 +307,89 @@ function HomePage() {
               deep-pigment ink, packed with care, shipped fast.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              >
-                <Link to="/categories">
-                  Shop Prints Now <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-nude bg-transparent text-primary-foreground transition-all duration-300 hover:bg-primary-light hover:text-primary-foreground hover:scale-105"
-              >
-                <Link to="/templates">Explore Categories</Link>
-              </Button>
+              <motion.div whileHover={prefersReducedMotion ? {} : { scale: 1.02 }} whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  <Link to="/categories">
+                    Shop Prints Now <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={prefersReducedMotion ? {} : { scale: 1.02 }} whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="border-nude bg-transparent text-primary-foreground transition-all duration-300 hover:bg-primary-light hover:text-primary-foreground hover:scale-105"
+                >
+                  <Link to="/templates">Explore Categories</Link>
+                </Button>
+              </motion.div>
             </div>
-          </div>
-          <div className="hero-image relative flex items-center justify-center order-first lg:order-none">
-            {/* Render a single floating hero image from public/images/hero-image.png. z-10 ensures it overlays any background/mockup elements. */}
-            <img
-              src={heroSrc}
-              alt="Hero artwork"
-              width={1600}
-              height={1200}
-              className="w-full max-w-[1100px] rounded-lg object-contain transition-transform duration-700 floating-image relative z-10 mx-auto"
-              style={{ mixBlendMode: "normal" }}
-            />
-          </div>
+          </motion.div>
+          <motion.div
+            className="hero-image relative z-10 order-first flex items-center justify-center lg:order-none lg:-mr-8"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
+            whileInView={prefersReducedMotion ? {} : { opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            style={{ y: heroParallaxY }}
+          >
+            <div className="relative w-full max-w-[1100px]">
+              <div className="absolute inset-x-8 inset-y-6 rounded-[2rem] border border-white/15 bg-white/5 shadow-[0_30px_80px_rgba(26,22,19,0.18)] backdrop-blur-[1px]" />
+              <img
+                src={heroSrc}
+                alt="Hero artwork"
+                width={1600}
+                height={1200}
+                className="relative z-10 mx-auto w-full max-w-[1100px] rounded-[1.5rem] object-contain transition-transform duration-700 floating-image"
+                style={{ mixBlendMode: "normal" }}
+              />
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="bg-background">
-        <div className="mx-auto grid max-w-7xl gap-4 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      <motion.section
+        className="bg-background"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
+        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
           {trust.map((item, index) => (
-            <div
+            <motion.div
               key={item.title}
-              className="trust-item rounded-lg border border-border bg-nude p-5 transition-all duration-300 hover:shadow-[var(--shadow-lift)] hover:border-accent/30"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className={`trust-item flex items-start gap-3 rounded-2xl p-3 transition-all duration-300 sm:p-4 ${index % 2 === 1 ? "sm:mt-6" : ""}`}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+              whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <item.icon className="h-6 w-6 text-accent transition-colors duration-300" />
-              <h3 className="mt-3 text-base font-semibold">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{item.text}</p>
-            </div>
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-nude text-accent shadow-[inset_0_0_0_1px_rgba(122,36,54,0.08)]">
+                <item.icon className="h-5 w-5 transition-colors duration-300" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold leading-snug">{item.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{item.text}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      <section className="bg-nude/60">
+      <motion.section
+        className="bg-nude/60"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         <div className="mx-auto max-w-7xl px-4 py-14 lg:px-8">
           <SectionHead
             eyebrow="Categories"
@@ -348,7 +399,6 @@ function HomePage() {
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {categoriesList
               .filter((cat) => {
-                // Only show categories that have at least one product in the live product list
                 const count = productsList.filter((p) => {
                   const catName = (cat.name || "").toString();
                   return p.category && (p.category === catName || p.category === cat.slug);
@@ -356,12 +406,12 @@ function HomePage() {
                 return count > 0;
               })
               .map((cat, index) => {
+                const featured = index % 4 === 0 || index % 4 === 2;
                 const count = productsList.filter((p) => {
                   const catName = (cat.name || "").toString();
                   return p.category && (p.category === catName || p.category === cat.slug);
                 }).length;
 
-                // Pick a representative product image for the category when available
                 const representative = productsList.find((p) => {
                   const catName = (cat.name || "").toString();
                   return p.category && (p.category === catName || p.category === cat.slug);
@@ -376,100 +426,147 @@ function HomePage() {
                 );
 
                 return (
-                  <Link
+                  <motion.div
                     key={cat.slug}
-                    to={`/categories?category=${encodeURIComponent(cat.slug || cat.name)}`}
-                    className="group micro-fade-in overflow-hidden rounded-lg border border-border bg-card transition-all duration-300 hover:border-accent hover:shadow-[var(--shadow-lift)]"
-                    style={{ animationDelay: `${index * 0.05}s` }}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.97 }}
+                    whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.42, delay: index * 0.06, ease: "easeOut" }}
                   >
-                    <div className="aspect-4/3 overflow-hidden bg-nude">
-                      <img
-                        src={imgSrc}
-                        alt={`${cat.name} printing mockup`}
-                        loading="lazy"
-                        width={800}
-                        height={800}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">
-                        {cat.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">{cat.blurb}</p>
-                      <p className="mt-2 text-[11px] tracking-wide text-accent uppercase">
-                        {count} product{count !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </Link>
+                    <Link
+                      to={`/categories?category=${encodeURIComponent(cat.slug || cat.name)}`}
+                      className={`group block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[var(--shadow-lift)] ${featured ? "lg:col-span-2" : ""}`}
+                    >
+                      <div className={`overflow-hidden bg-nude ${featured ? "aspect-[1.4/1]" : "aspect-4/3"}`}>
+                        <img
+                          src={imgSrc}
+                          alt={`${cat.name} printing mockup`}
+                          loading="lazy"
+                          width={800}
+                          height={800}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-accent">
+                          {cat.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">{cat.blurb}</p>
+                        <p className="mt-2 text-[11px] tracking-wide text-accent uppercase">
+                          {count} product{count !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
                 );
               })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Two-row horizontal swipe area */}
-      <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+      <motion.div
+        className="mx-auto max-w-7xl px-4 py-8 lg:px-8"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         <SectionHead eyebrow="Featured" title="Curated picks" />
         <TwoRowCarousel items={shuffled} />
-      </div>
+      </motion.div>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 lg:px-8">
+      <motion.section
+        className="mx-auto max-w-7xl px-4 py-14 lg:px-8"
+        initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, scale: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         <div
-          className="grid items-center gap-6 rounded-lg p-8 text-primary-foreground sm:p-12 lg:grid-cols-[minmax(0,1fr)_auto]"
+          className="relative overflow-hidden rounded-[1.75rem] p-8 text-primary-foreground sm:p-12"
           style={{ backgroundImage: "var(--gradient-maroon)" }}
         >
-          <div>
-            <p className="text-xs font-semibold tracking-[0.24em] text-accent uppercase">
-              Bulk print offer
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Up to 30% OFF bulk print orders
-            </h2>
-            <p className="mt-3 max-w-xl text-sm opacity-85">
-              Team merch, event kits and corporate packages. Tiered pricing applies automatically
-              from 10 items upward.
-            </p>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_45%,rgba(255,255,255,0.04))]" />
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full border border-white/15 bg-white/5" />
+          <div className="absolute bottom-0 right-0 h-32 w-32 rotate-12 border-l border-t border-white/10 bg-white/5" />
+          <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.24em] text-accent uppercase">
+                Bulk print offer
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+                Up to 30% OFF bulk print orders
+              </h2>
+              <p className="mt-3 max-w-xl text-sm opacity-85">
+                Team merch, event kits and corporate packages. Tiered pricing applies automatically
+                from 10 items upward.
+              </p>
+            </div>
+            <motion.div
+              whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+              whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+              animate={prefersReducedMotion ? {} : { boxShadow: ["0 0 0 rgba(255,255,255,0)", "0 0 18px rgba(255,255,255,0.12)", "0 0 0 rgba(255,255,255,0)"] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Button asChild size="lg" variant="secondary" className="relative overflow-hidden">
+                <Link to="/offers">See Offer Tiers</Link>
+              </Button>
+            </motion.div>
           </div>
-          <Button asChild size="lg" variant="secondary">
-            <Link to="/offers">See Offer Tiers</Link>
-          </Button>
         </div>
-      </section>
+      </motion.section>
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         {Object.keys(themesMap)
           .filter((t) => t && t !== "other")
-          .map((t) => (
-            <SimpleCarousel
+          .map((t, idx) => (
+            <motion.div
               key={t}
-              title={t.charAt(0).toUpperCase() + t.slice(1)}
-              products={themesMap[t]}
-              themeSlug={t}
-            />
+              className={idx % 2 === 0 ? "rounded-[1.5rem] bg-background/80 py-2" : "rounded-[1.5rem] bg-nude/40 py-2"}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+              whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            >
+              <SimpleCarousel
+                title={t.charAt(0).toUpperCase() + t.slice(1)}
+                products={themesMap[t]}
+                themeSlug={t}
+              />
+            </motion.div>
           ))}
       </div>
 
-      <section className="bg-nude/60">
+      <motion.section
+        className="bg-nude/60"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
         <div className="mx-auto max-w-7xl px-4 py-14 lg:px-8">
           <SectionHead
             eyebrow="Most loved"
             title="Best sellers"
             action={{ to: "/categories", label: "Shop all prints" }}
           />
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {productsList.slice(0, 5).map((p, index) => (
-              <div
+              <motion.div
                 key={p.id}
-                className="product-card-animated w-64 mx-auto"
-                style={{ animationDelay: `${index * 0.08}s` }}
+                className="mx-auto w-full max-w-[220px] sm:max-w-none"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+                whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.38, delay: index * 0.08, ease: "easeOut" }}
               >
                 <ProductCard product={p} cta="Customize" />
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
     </StoreLayout>
   );
 }
@@ -483,11 +580,35 @@ export function SectionHead({
   title: string;
   action?: { to: string; label: string };
 }) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
+    <motion.div
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+      whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.5 }}
+      transition={{ duration: 0.38, ease: "easeOut" }}
+    >
       <div className="min-w-0">
-        <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">{eyebrow}</p>
-        <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">{title}</h2>
+        <motion.p
+          className="text-xs font-semibold tracking-[0.24em] text-primary uppercase"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+          whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.7 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          {eyebrow}
+        </motion.p>
+        <motion.h2
+          className="mt-2 font-display text-3xl font-semibold sm:text-4xl"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+          whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.7 }}
+          transition={{ duration: 0.4, delay: 0.04, ease: "easeOut" }}
+        >
+          {title}
+        </motion.h2>
       </div>
       {action && (
         <Link
@@ -497,6 +618,6 @@ export function SectionHead({
           {action.label}
         </Link>
       )}
-    </div>
+    </motion.div>
   );
 }

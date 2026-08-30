@@ -47,11 +47,11 @@ export function StoreHeader() {
           <Link to="/" className="flex min-w-0 shrink-0 items-center gap-2">
             <img
               src="/images/logo.png"
-              alt="D'avril Forme Logo"
+              alt="OsanPrints Logo"
               className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent"
             />
             <span className="hidden truncate font-display text-xl font-semibold tracking-wide sm:inline">
-              D'avril Forme
+              OsanPrints
             </span>
           </Link>
           <nav className="hidden items-center gap-5 text-sm xl:flex">
@@ -252,9 +252,9 @@ export function StoreFooter() {
       <div className="bg-primary-deep text-primary-foreground">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
           <div>
-            <p className="font-display text-2xl">D'avril Forme</p>
+            <p className="font-display text-2xl">OsanPrints</p>
             <p className="mt-3 max-w-xs text-sm text-primary-foreground/85">
-              Where everyday items become your canvas. At D’avril Forme, we turn essentials into
+              Where everyday items become your canvas. At OsanPrints, we turn essentials into
               personal, meaningful pieces for daily life.
             </p>
             <div className="mt-4 text-sm text-primary-foreground/85">
@@ -321,7 +321,7 @@ export function StoreFooter() {
         </div>
         <div className="border-t border-primary-light/40">
           <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-primary-foreground/90 lg:px-8">
-            © {new Date().getFullYear()} Avril Forme. All rights reserved.
+            © {new Date().getFullYear()} OsanPrints. All rights reserved.
           </p>
         </div>
       </div>

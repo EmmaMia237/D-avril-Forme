@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { StoreLayout } from "@/components/store-layout";
+import { ProductCard } from "@/components/product-card";
 import { templates, templateCategories } from "@/lib/shop-data";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -8,8 +9,8 @@ import { apiFetch } from "@/lib/api-client";
 export const Route = createFileRoute("/collections")({
   head: () => ({
     meta: [
-      { title: "Collections — D'avril Forme" },
-      { property: "og:title", content: "Collections — D'avril Forme" },
+      { title: "Collections — OsanPrints" },
+      { property: "og:title", content: "Collections — OsanPrints" },
     ],
   }),
   component: CollectionsPage,
@@ -138,18 +139,9 @@ function CollectionsPage() {
                 No products assigned to this theme yet.
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                 {filtered.map((p) => (
-                  <Link
-                    key={p.id}
-                    to={`/product/${p.id}`}
-                    className="rounded-lg border border-border bg-card p-4"
-                  >
-                    <p className="font-semibold">{p.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {p.category} · ${p.price}
-                    </p>
-                  </Link>
+                  <ProductCard key={p.id} product={p} cta="Customize" />
                 ))}
               </div>
             )}
