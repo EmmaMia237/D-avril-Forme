@@ -43,6 +43,7 @@ function HomePage() {
   const { scrollYProgress } = useScroll();
   const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, -28]);
   const [productsList, setProductsList] = useState<any[]>([]);
+  const [threeDPrints, setThreeDPrints] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
   // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
   const [heroSrc, setHeroSrc] = useState<string>("/images/hero-image.png");
@@ -142,6 +143,30 @@ function HomePage() {
       window.removeEventListener("product-created", onCreated as any);
       window.removeEventListener("product-updated", onUpdated as any);
       window.removeEventListener("product-deleted", onDeleted as any);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function loadThreeDPrints() {
+      try {
+        const res = await apiFetch(`/api/products?category=${encodeURIComponent("3D Prints")}&limit=1000`);
+        const data = await res.json().catch(() => ({}));
+        if (active && res.ok) {
+          setThreeDPrints(
+            Array.isArray(data.products)
+              ? data.products.map((product: any) => ({ ...product, id: product.id || product._id }))
+              : [],
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load 3D prints", error);
+        if (active) setThreeDPrints([]);
+      }
+    }
+    loadThreeDPrints();
+    return () => {
+      active = false;
     };
   }, []);
 
@@ -494,6 +519,27 @@ function HomePage() {
         <SectionHead eyebrow="Featured" title="Curated picks" />
         <TwoRowCarousel items={shuffled} />
       </motion.div>
+
+      <motion.section
+        className="mx-auto max-w-7xl px-4 py-8 lg:px-8"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+        whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      >
+        <SectionHead
+          eyebrow="Made in three dimensions"
+          title="3D Prints"
+          action={{ to: "/categories/3D-Prints", label: "View More 3D Prints" }}
+        />
+        {threeDPrints.length > 0 ? (
+          <TwoRowCarousel items={threeDPrints} />
+        ) : (
+          <div className="mt-6 rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+            3D prints coming soon
+          </div>
+        )}
+      </motion.section>
 
       <motion.section
         className="mx-auto max-w-7xl px-4 py-14 lg:px-8"
