@@ -23,6 +23,7 @@ import { Route as CustomTemplatesRouteImport } from './routes/custom-templates'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as OrderSuccessRouteImport } from './routes/order-success'
 import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminDesignsRouteImport } from './routes/admin.designs'
@@ -103,6 +104,11 @@ const TemplatesRoute = TemplatesRouteImport.update({
   path: '/templates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountOrdersRoute = AccountOrdersRouteImport.update({
+  id: '/account/orders',
+  path: '/account/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
   '/admin/order': typeof AdminOrderRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
   '/admin/order': typeof AdminOrderRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/offers': typeof OffersRoute
   '/order-success': typeof OrderSuccessRoute
   '/templates': typeof TemplatesRoute
+  '/account/orders': typeof AccountOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/designs': typeof AdminDesignsRoute
   '/admin/order': typeof AdminOrderRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/order-success'
     | '/templates'
+    | '/account/orders'
     | '/admin/customers'
     | '/admin/designs'
     | '/admin/order'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/order-success'
     | '/templates'
+    | '/account/orders'
     | '/admin/customers'
     | '/admin/designs'
     | '/admin/order'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/offers'
     | '/order-success'
     | '/templates'
+    | '/account/orders'
     | '/admin/customers'
     | '/admin/designs'
     | '/admin/order'
@@ -316,6 +328,7 @@ export interface RootRouteChildren {
   OffersRoute: typeof OffersRoute
   OrderSuccessRoute: typeof OrderSuccessRoute
   TemplatesRoute: typeof TemplatesRoute
+  AccountOrdersRoute: typeof AccountOrdersRoute
   ProductIdRoute: typeof ProductIdRoute
 }
 
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/orders': {
+      id: '/account/orders'
+      path: '/account/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AccountOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -534,6 +554,7 @@ const rootRouteChildren: RootRouteChildren = {
   OffersRoute: OffersRoute,
   OrderSuccessRoute: OrderSuccessRoute,
   TemplatesRoute: TemplatesRoute,
+  AccountOrdersRoute: AccountOrdersRoute,
   ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport

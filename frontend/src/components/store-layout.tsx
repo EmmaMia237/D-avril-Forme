@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/lib/cart";
 import { CartDrawer } from "@/components/cart-drawer";
+import { apiFetch, setAuthToken } from "@/lib/api-client";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -37,8 +38,35 @@ const themes = [
 
 export function StoreHeader() {
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
   const { openCart, items } = useCart();
   const itemCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch("/api/auth/me")
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (active && response.ok && data?.authenticated && data?.user) setUser(data.user);
+      })
+      .catch(() => {
+        if (active) setUser(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const logout = async () => {
+    try {
+      await apiFetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setAuthToken(null);
+      setUser(null);
+      setAccountOpen(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-primary text-primary-foreground">
@@ -70,11 +98,42 @@ export function StoreHeader() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <SearchBox />
-          <Button asChild variant="ghost" size="icon" className="hover:bg-primary-light">
-            <Link to="/auth" aria-label="Account sign in">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
+          {user ? (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                className="max-w-36 gap-2 px-2 hover:bg-primary-light"
+                onClick={() => setAccountOpen((value) => !value)}
+                aria-expanded={accountOpen}
+              >
+                <User className="h-5 w-5 shrink-0" />
+                <span className="hidden truncate sm:inline">{user.name || user.email}</span>
+              </Button>
+              {accountOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-md border border-border bg-card p-2 text-foreground shadow-lg">
+                  <Link to="/auth" className="block rounded-md px-3 py-2 text-sm hover:bg-nude/60">
+                    My Account
+                  </Link>
+                  <Link to="/account/orders" className="block rounded-md px-3 py-2 text-sm hover:bg-nude/60">
+                    My Orders
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-nude/60"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Button asChild variant="ghost" size="icon" className="hover:bg-primary-light">
+              <Link to="/auth" aria-label="Account sign in">
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
           <button
             className="relative inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-accent px-3 text-sm font-semibold text-accent-foreground"
             aria-label="Shopping cart"
@@ -118,6 +177,31 @@ export function StoreHeader() {
                   {item.label}
                 </Link>
               ))}
+              {user && (
+                <div className="mt-2 border-t border-primary-light pt-3">
+                  <div className="mb-2 flex items-center gap-2 px-2 text-sm text-primary-foreground/80">
+                    <User className="h-4 w-4" />
+                    <span className="truncate">{user.name || user.email}</span>
+                  </div>
+                  <Link
+                    to="/account/orders"
+                    onClick={() => setOpen(false)}
+                    className="block rounded-md px-2 py-2 opacity-90 transition-colors hover:bg-primary-light hover:opacity-100"
+                  >
+                    My Orders
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      logout();
+                    }}
+                    className="w-full rounded-md px-2 py-2 text-left opacity-90 transition-colors hover:bg-primary-light hover:opacity-100"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
             </div>
           </nav>
         </>

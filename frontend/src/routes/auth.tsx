@@ -3,11 +3,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { apiFetch, setAuthToken } from "@/lib/api-client";
+import { readStoredCart, syncCartToServer } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 const heroImage = "/images/hero-image.png";
 
 export const Route = createFileRoute("/auth")({
@@ -31,113 +33,70 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const [mode, setMode] = useState("login");
+  const [emailOptIn, setEmailOptIn] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.currentTarget as HTMLFormElement;
     const fd = new FormData(form);
 
-    const saveCustomerSession = (email: string, name: string) => {
-      const profile = { email, name, lastLogin: new Date().toISOString() };
-      window.localStorage.setItem("af_customer_current", JSON.stringify(profile));
-      const accounts = JSON.parse(window.localStorage.getItem("af_customer_accounts") || "[]");
-      const index = accounts.findIndex((entry: any) => entry.email === email);
-      if (index >= 0) {
-        accounts[index] = { ...accounts[index], ...profile };
-      } else {
-        accounts.push(profile);
-      }
-      window.localStorage.setItem("af_customer_accounts", JSON.stringify(accounts));
-      setAuthToken("local-session-token");
-    };
-
-    const saveLead = (email: string, name?: string) => {
-      const leads = JSON.parse(window.localStorage.getItem("af_marketing_leads") || "[]");
-      const next = [
-        {
-          email,
-          name: name || "Customer",
-          source: "registration",
-          createdAt: new Date().toISOString(),
-        },
-        ...leads,
-      ];
-      window.localStorage.setItem("af_marketing_leads", JSON.stringify(next.slice(0, 200)));
-    };
-
     try {
       if (mode === "login") {
         const email = String(fd.get("login-email") ?? "");
         const password = String(fd.get("login-password") ?? "");
 
-        try {
-          const res = await apiFetch("/api/auth/login", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (res.ok && data?.ok === true) {
-            if (data?.token) setAuthToken(data.token);
-            if (email) saveCustomerSession(email, data?.name || email.split("@")[0]);
-            toast.success("Signed in");
-            window.location.href = "/";
-            return;
+        const res = await apiFetch("/api/auth/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.ok === true && data?.token) {
+          setAuthToken(data.token);
+          const guestCart = readStoredCart();
+          if (guestCart.length > 0) {
+            try {
+              await syncCartToServer(guestCart);
+              window.localStorage.removeItem("af_cart_items");
+            } catch {
+              // keep the session active even if the background sync fails
+            }
           }
-        } catch {
-          // fallback below
-        }
-
-        const accounts = JSON.parse(window.localStorage.getItem("af_customer_accounts") || "[]");
-        const match = accounts.find(
-          (entry: any) => entry.email === email && entry.password === password,
-        );
-        if (match) {
-          saveCustomerSession(match.email, match.name || match.email.split("@")[0]);
           toast.success("Signed in");
           window.location.href = "/";
           return;
         }
-
-        return toast.error("Login failed");
+        return toast.error(data?.error || "Login failed. Please check your details.");
       } else if (mode === "register") {
         const name = String(fd.get("reg-name") ?? "");
         const email = String(fd.get("reg-email") ?? "");
         const password = String(fd.get("reg-password") ?? "");
         const address = String(fd.get("reg-address") ?? "");
-
-        try {
-          const res = await apiFetch("/api/auth/register", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ name, email, password, address }),
-          });
-          const data = await res.json().catch(() => ({}));
-          if (res.ok && data?.ok === true) {
-            if (data?.token) setAuthToken(data.token);
-            saveCustomerSession(email, name);
-            saveLead(email, name);
-            toast.success("Account created and signed in");
-            window.location.href = "/";
-            return;
+        const res = await apiFetch("/api/auth/register", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name, email, password, address, emailOptIn }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.ok === true && data?.token) {
+          setAuthToken(data.token);
+          const guestCart = readStoredCart();
+          if (guestCart.length > 0) {
+            try {
+              await syncCartToServer(guestCart);
+              window.localStorage.removeItem("af_cart_items");
+            } catch {
+              // keep the session active even if the background sync fails
+            }
           }
-        } catch {
-          // fallback below
+          toast.success("Account created and signed in");
+          window.location.href = "/";
+          return;
         }
-
-        const accounts = JSON.parse(window.localStorage.getItem("af_customer_accounts") || "[]");
-        const exists = accounts.some((entry: any) => entry.email === email);
-        if (exists) return toast.error("An account with that email already exists");
-        const profile = { email, name, password, address };
-        window.localStorage.setItem("af_customer_accounts", JSON.stringify([...accounts, profile]));
-        saveCustomerSession(email, name);
-        saveLead(email, name);
-        toast.success("Account created and signed in");
-        window.location.href = "/";
-        return;
+        return toast.error(data?.error || "Something went wrong, please try again.");
       }
-    } catch (err: any) {
-      toast.error(err?.message || String(err));
+    } catch {
+      toast.error("Something went wrong, please try again.");
     }
   };
 
@@ -240,31 +199,22 @@ function AuthPage() {
                     required
                   />
                 </div>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="reg-email-opt-in"
+                    checked={emailOptIn}
+                    onCheckedChange={(checked) => setEmailOptIn(checked === true)}
+                  />
+                  <Label htmlFor="reg-email-opt-in" className="text-sm font-normal leading-5">
+                    Receive emails about new products and offers
+                  </Label>
+                </div>
                 <Button type="submit" size="lg">
                   Create Account
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-
-          <div className="my-6 flex items-center gap-3 text-xs tracking-widest text-muted-foreground uppercase">
-            <span className="h-px flex-1 bg-border" /> or continue with
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button
-              variant="outline"
-              onClick={() => toast.info("Social login pending backend setup.")}
-            >
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => toast.info("Social login pending backend setup.")}
-            >
-              Apple
-            </Button>
-          </div>
 
           <p className="mt-8 text-center text-xs text-muted-foreground">
             <Link to="/" className="underline underline-offset-4">

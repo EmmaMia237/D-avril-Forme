@@ -20,6 +20,32 @@ import { products as fallbackProducts, type Product } from "@/lib/shop-data";
 
 const PRODUCT_PLACEHOLDER_IMAGE = "/images/printing-image.png";
 
+type ProductReview = {
+  id: string;
+  isMine?: boolean;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt?: string;
+};
+
+function ReviewStars({ rating, interactive = false, onSelect }: { rating: number; interactive?: boolean; onSelect?: (value: number) => void }) {
+  return (
+    <div className="flex items-center gap-1" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((star) => {
+        const icon = <Star className={`h-4 w-4 ${star <= Math.round(rating) ? "fill-current text-accent" : "text-muted-foreground"}`} />;
+        return interactive ? (
+          <button key={star} type="button" aria-label={`Rate ${star} out of 5`} onClick={() => onSelect?.(star)}>
+            {icon}
+          </button>
+        ) : (
+          <span key={star}>{icon}</span>
+        );
+      })}
+    </div>
+  );
+}
+
 const STOP_WORDS = new Set([
   "a",
   "an",
@@ -73,8 +99,9 @@ function normalizeProduct(raw: any): Product {
     material: raw?.material || "Premium print-ready material",
     colors: Array.isArray(raw?.colors) ? raw.colors : [],
     price: Number(raw?.price || 0),
-    rating: Number(raw?.rating || 4.8),
-    reviews: Number(raw?.reviews || 0),
+    rating: Number(raw?.rating ?? 0),
+    reviews: Number(raw?.reviewCount ?? raw?.reviews ?? 0),
+    reviewCount: Number(raw?.reviewCount ?? raw?.reviews ?? 0),
     options: raw?.options || "",
     image,
     sizes: Array.isArray(raw?.sizes) ? raw.sizes : [],
@@ -131,8 +158,15 @@ function ProductPage() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("M");
   const [activeImage, setActiveImage] = useState<string>("");
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [expandedSection, setExpandedSection] = useState<"details" | "care" | "shipping">("details");
   const [liked, setLiked] = useState(false);
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewUserId, setReviewUserId] = useState<string | null>(null);
+  const [hasPurchased, setHasPurchased] = useState(false);
 
   // Use router params for the id
   const productId = id ?? "";
@@ -178,12 +212,61 @@ function ProductPage() {
   }, [productId]);
 
   useEffect(() => {
+    if (!productId || !window.localStorage.getItem("af_auth_token")) return;
+    let active = true;
+    apiFetch("/api/favorites")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (active && Array.isArray(data?.productIds)) setLiked(data.productIds.includes(productId));
+      })
+      .catch((error) => console.error("Failed to load favorite state", error));
+    return () => {
+      active = false;
+    };
+  }, [productId]);
+
+  useEffect(() => {
+    if (!productId) return;
+    let active = true;
+    async function loadReviewAccess() {
+      try {
+        const reviewResponse = await apiFetch(`/api/reviews?productId=${encodeURIComponent(productId)}`);
+        const reviewData = await reviewResponse.json().catch(() => ({}));
+        if (!active) return;
+        setReviews(Array.isArray(reviewData?.reviews) ? reviewData.reviews : []);
+
+        const meResponse = await apiFetch("/api/auth/me");
+        const me = await meResponse.json().catch(() => ({}));
+        const userId = me?.authenticated && me?.user?.id ? String(me.user.id) : null;
+        setReviewUserId(userId);
+        if (!userId) return;
+
+        const ordersResponse = await apiFetch("/api/my-orders");
+        const ordersData = await ordersResponse.json().catch(() => ({}));
+        setHasPurchased(
+          Array.isArray(ordersData?.orders) &&
+            ordersData.orders.some((order: any) =>
+              order.items?.some((item: any) => String(item.productId || "") === String(productId)),
+            ),
+        );
+      } catch (error) {
+        console.error("Failed to load product reviews", error);
+      }
+    }
+    loadReviewAccess();
+    return () => {
+      active = false;
+    };
+  }, [productId]);
+
+  useEffect(() => {
     if (!product) return;
     const nextColor = product.colors?.[0] || "";
     setSelectedColor(nextColor);
     setSelectedSize(product.sizes?.[0] || "M");
     const initialImage = getProductImage(product, nextColor) || product.image || "";
     setActiveImage(initialImage);
+    setImageLoadFailed(false);
   }, [product]);
 
   const galleryImages = useMemo(() => {
@@ -206,6 +289,7 @@ function ProductPage() {
   useEffect(() => {
     if (galleryImages.length === 0) return;
     if (!galleryImages.includes(activeImage)) setActiveImage(galleryImages[0] ?? "");
+    setImageLoadFailed(false);
   }, [galleryImages, activeImage]);
 
   const currentProduct = product ?? null;
@@ -246,6 +330,62 @@ function ProductPage() {
   const discountValue = Math.max(10, Math.round(((listPrice - Number(currentProduct?.price || 0)) / listPrice) * 100));
   const similarProducts = useMemo(() => getSimilarProducts(currentProduct, allProducts), [currentProduct, allProducts]);
   const mainImage = currentProduct ? activeImage || getProductImage(currentProduct, selectedColor) || currentProduct.image : "";
+  const existingReview = reviews.find((review) => review.isMine);
+
+  async function toggleFavorite() {
+    if (!productId) return;
+    if (!window.localStorage.getItem("af_auth_token")) {
+      toast("Log in to save favorites");
+      navigate({ to: "/auth" });
+      return;
+    }
+    try {
+      const response = await apiFetch(`/api/favorites/${encodeURIComponent(productId)}`, { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error(data?.error || "Unable to update wishlist");
+        return;
+      }
+      setLiked(Boolean(data.favorited));
+      toast.success(data.favorited ? "Added to wishlist" : "Removed from wishlist");
+    } catch (error) {
+      console.error("Failed to update favorite", error);
+      toast.error("Unable to update wishlist");
+    }
+  }
+
+  async function submitReview() {
+    if (!reviewRating || reviewSubmitting) return;
+    setReviewSubmitting(true);
+    try {
+      const response = await apiFetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, rating: reviewRating, comment: reviewComment }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error(data?.error || "Unable to submit review");
+        return;
+      }
+      setReviews((current) => [data.review, ...current]);
+      setProduct((current) => {
+        if (!current) return current;
+        const nextCount = Number(current.reviewCount ?? current.reviews ?? 0) + 1;
+        const nextRating =
+          (Number(current.rating ?? 0) * (nextCount - 1) + Number(data.review.rating)) / nextCount;
+        return { ...current, rating: Number(nextRating.toFixed(2)), reviews: nextCount, reviewCount: nextCount };
+      });
+      setReviewRating(0);
+      setReviewComment("");
+      toast.success("Review submitted");
+    } catch (error) {
+      console.error("Submit review failed", error);
+      toast.error("Unable to submit review");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
 
   const handleAddToCart = () => {
     if (!currentProduct) return;
@@ -288,11 +428,11 @@ function ProductPage() {
     <StoreLayout>
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
         <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <Link to="/" className="font-medium text-slate-600 hover:text-orange-500">
+          <Link to="/" className="font-medium text-muted-foreground hover:text-accent">
             Home
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <Link to="/categories" className="font-medium text-slate-600 hover:text-orange-500">
+          <Link to="/categories" className="font-medium text-muted-foreground hover:text-accent">
             Categories
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -310,26 +450,27 @@ function ProductPage() {
 
         <div className="grid w-full grid-cols-1 gap-8 pb-24 md:pb-10 lg:grid-cols-2">
           <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-700 backdrop-blur-sm">
                 SKU {getProductId(currentProduct)}
               </div>
-              {mainImage ? (
+              {mainImage && !imageLoadFailed ? (
                 <img
                   src={mainImage}
                   alt={currentProduct.name}
-                  className="h-[420px] w-full object-cover transition-transform duration-300 md:h-[560px]"
+                  className="block h-auto min-h-[280px] w-full object-cover transition-transform duration-300 sm:h-[420px] md:h-[560px]"
+                  onError={() => setImageLoadFailed(true)}
                 />
               ) : (
-                <div className="flex h-[420px] w-full flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center md:h-[560px]">
+                <div className="flex min-h-[280px] w-full flex-col items-center justify-center gap-4 bg-muted px-6 text-center sm:h-[420px] md:h-[560px]">
                   <img
                     src={PRODUCT_PLACEHOLDER_IMAGE}
                     alt=""
                     className="h-28 w-28 rounded-xl object-cover opacity-70"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-slate-700">No product image available</p>
-                    <p className="mt-1 text-xs text-slate-500">Image pending</p>
+                    <p className="text-sm font-semibold text-foreground">No product image available</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Image pending</p>
                   </div>
                 </div>
               )}
@@ -341,7 +482,7 @@ function ProductPage() {
                   key={image}
                   type="button"
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border transition-all ${
-                    activeImage === image ? "border-orange-500 ring-2 ring-orange-200" : "border-slate-200 hover:border-orange-300"
+                    activeImage === image ? "border-accent ring-2 ring-accent/20" : "border-border hover:border-accent"
                   }`}
                   onClick={() => setActiveImage(image)}
                 >
@@ -353,18 +494,14 @@ function ProductPage() {
 
           <div className="space-y-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-500">{currentProduct.category}</p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-black md:text-4xl">{currentProduct.name}</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">{currentProduct.category}</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">{currentProduct.name}</h1>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-slate-500">
-              <div className="flex items-center gap-1 text-yellow-500">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="h-4 w-4 fill-current" />
-                ))}
-              </div>
-              <span className="font-medium text-black">{Number(currentProduct.rating || 4.8).toFixed(1)}</span>
-              <span>({currentProduct.reviews || 0} reviews)</span>
+              <ReviewStars rating={Number(currentProduct.rating ?? 0)} />
+              <span className="font-medium text-foreground">{Number(currentProduct.rating ?? 0).toFixed(1)}</span>
+              <span>({currentProduct.reviewCount ?? currentProduct.reviews ?? 0} reviews)</span>
             </div>
 
             <div className="flex items-end gap-3">
@@ -379,7 +516,7 @@ function ProductPage() {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold text-black">Size</p>
-                  <button type="button" className="text-xs font-medium text-orange-500 hover:text-orange-600">
+                  <button type="button" className="text-xs font-medium text-accent hover:text-primary">
                     Size chart
                   </button>
                 </div>
@@ -391,8 +528,8 @@ function ProductPage() {
                       onClick={() => setSelectedSize(size)}
                       className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-all ${
                         selectedSize === size
-                          ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-orange-400 hover:text-orange-500"
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border bg-card text-foreground hover:border-accent hover:text-accent"
                       }`}
                     >
                       {size}
@@ -416,7 +553,7 @@ function ProductPage() {
                         setActiveImage(nextImage);
                       }}
                       className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
-                        selectedColor === color ? "border-orange-500 ring-2 ring-orange-200" : "border-slate-200"
+                        selectedColor === color ? "border-accent ring-2 ring-accent/20" : "border-border"
                       }`}
                     >
                       <span
@@ -432,7 +569,7 @@ function ProductPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 py-3.5 font-semibold text-white shadow-md transition-all hover:bg-orange-600 active:scale-[0.99]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary-deep active:scale-[0.99]"
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="h-4 w-4" />
@@ -441,25 +578,25 @@ function ProductPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3.5 text-slate-800 hover:bg-slate-50"
-                onClick={() => setLiked((value) => !value)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-border px-5 py-3.5 text-foreground hover:bg-muted"
+                onClick={toggleFavorite}
               >
-                <Heart className={`h-4 w-4 ${liked ? "fill-pink-500 text-pink-500" : "text-slate-700"}`} />
+                <Heart className={`h-4 w-4 ${liked ? "fill-current text-primary" : "text-slate-700"}`} />
                 Wishlist
               </Button>
             </div>
 
             <div className="grid gap-3 border-t border-slate-200 pt-4 text-sm text-slate-600 sm:grid-cols-3">
               <div className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-orange-500" />
+                <Truck className="h-4 w-4 text-accent" />
                 <span>Fast shipping</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-orange-500" />
+                <ShieldCheck className="h-4 w-4 text-accent" />
                 <span>Protected quality</span>
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-orange-500" />
+                <Sparkles className="h-4 w-4 text-accent" />
                 <span>Print ready</span>
               </div>
             </div>
@@ -484,9 +621,44 @@ function ProductPage() {
                 </button>
                 {expandedSection === section.key && <p className="mt-3 text-sm leading-6 text-slate-600">{section.content}</p>}
               </div>
+
             ))}
           </div>
         </div>
+
+        <section className="border-t border-border pt-8">
+          <h2 className="text-2xl font-bold text-foreground">Reviews</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {reviews.length ? `${reviews.length} customer review${reviews.length === 1 ? "" : "s"}` : "No reviews yet"}
+          </p>
+          {reviewUserId && hasPurchased && !existingReview ? (
+            <div className="my-6 rounded-2xl border border-border bg-card p-5">
+              <h3 className="font-semibold text-foreground">Write a Review</h3>
+              <div className="mt-3"><ReviewStars rating={reviewRating} interactive onSelect={setReviewRating} /></div>
+              <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Tell other customers what you think (optional)" className="mt-4 min-h-24 w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none focus:border-primary" />
+              <Button className="mt-3" disabled={!reviewRating || reviewSubmitting} onClick={submitReview}>
+                {reviewSubmitting ? "Submitting..." : "Submit review"}
+              </Button>
+            </div>
+          ) : !reviewUserId ? (
+            <p className="my-6 rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+              <Link to="/auth" className="font-semibold text-primary hover:underline">Log in</Link> to leave a review.
+            </p>
+          ) : existingReview ? (
+            <p className="my-6 rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">You have already reviewed this product.</p>
+          ) : null}
+          <div className="grid gap-4">
+            {reviews.map((review) => (
+              <article key={review.id} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div><p className="font-semibold text-foreground">{review.userName}</p><ReviewStars rating={review.rating} /></div>
+                  <time className="text-xs text-muted-foreground">{review.createdAt ? new Intl.DateTimeFormat("en-IE", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(review.createdAt)) : "—"}</time>
+                </div>
+                {review.comment ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{review.comment}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
 
         <div className="border-t border-slate-200 pt-8">
           <div className="mb-6 flex items-center justify-between gap-3">
@@ -516,10 +688,10 @@ function ProductPage() {
                       )}
                     </div>
                     <div className="space-y-2 p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-500">{item.category}</p>
-                      <h3 className="text-base font-semibold text-slate-900">{item.name}</h3>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">{item.category}</p>
+                      <h3 className="text-base font-semibold text-foreground">{item.name}</h3>
                       <div className="flex items-center justify-between">
-                        <span className="text-orange-500 font-bold">{formatEur(Number(item.price || 0))}</span>
+                        <span className="font-bold text-accent">{formatEur(Number(item.price || 0))}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600">{item.colors?.length || 1} colors</span>
                       </div>
                     </div>
@@ -533,11 +705,11 @@ function ProductPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm md:hidden">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => setLiked((value) => !value)}>
-            <Heart className={`mr-2 h-4 w-4 ${liked ? "fill-pink-500 text-pink-500" : "text-slate-700"}`} />
+          <Button variant="outline" className="flex-1" onClick={toggleFavorite}>
+            <Heart className={`mr-2 h-4 w-4 ${liked ? "fill-current text-primary" : "text-slate-700"}`} />
             Save
           </Button>
-          <Button className="flex-1 bg-orange-500 text-white hover:bg-orange-600" onClick={handleAddToCart}>
+          <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary-deep" onClick={handleAddToCart}>
             <ShoppingCart className="mr-2 h-4 w-4" />
             Add
           </Button>

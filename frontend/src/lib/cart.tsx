@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { Product } from "./shop-data";
+import { apiFetch, getAuthToken } from "./api-client";
 
 const CART_STORAGE_KEY = "af_cart_items";
 const ORDER_STORAGE_KEY = "af_admin_order_snapshots";
@@ -100,6 +101,8 @@ type CartItem = {
   currency?: string;
   image?: string;
   customization?: any;
+  size?: string;
+  color?: string;
 };
 
 type CartContextType = {
@@ -116,13 +119,84 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | null>(null);
 
+function normalizeCartItem(item: Partial<CartItem> | null | undefined): CartItem | null {
+  if (!item || !item.productId) return null;
+  const quantity = Number(item.quantity || 1);
+  return {
+    cartId: String(item.cartId || `${item.productId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+    productId: String(item.productId),
+    name: String(item.name || "Custom item"),
+    price: Number(item.price || 0),
+    quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    currency: item.currency || "usd",
+    image: item.image || "",
+    customization: item.customization ?? undefined,
+    size: item.size || "",
+    color: item.color || "",
+  };
+}
+
+function mergeCartItems(existing: CartItem[], incoming: CartItem[]) {
+  const map = new Map<string, CartItem>();
+  const all = [...existing, ...incoming].map((item) => normalizeCartItem(item)).filter(Boolean) as CartItem[];
+
+  for (const item of all) {
+    const key = `${item.productId}|${JSON.stringify(item.customization || null)}|${item.size || ""}|${item.color || ""}`;
+    const current = map.get(key);
+    if (current) {
+      current.quantity += item.quantity;
+      current.price = current.price || item.price;
+      current.image = current.image || item.image;
+      current.name = current.name || item.name;
+      current.customization = current.customization || item.customization;
+    } else {
+      map.set(key, { ...item, cartId: item.cartId || `${item.productId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` });
+    }
+  }
+
+  return Array.from(map.values()).map((item) => ({
+    ...item,
+    quantity: Math.max(1, Number(item.quantity) || 1),
+  }));
+}
+
+export async function fetchServerCart(): Promise<CartItem[]> {
+  if (!getAuthToken()) return [];
+  try {
+    const response = await apiFetch("/api/cart");
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(data.items)) return [];
+    return data.items.map((item) => normalizeCartItem(item)).filter(Boolean) as CartItem[];
+  } catch {
+    return [];
+  }
+}
+
+export async function syncCartToServer(nextItems: CartItem[]) {
+  if (!getAuthToken()) return false;
+  try {
+    const response = await apiFetch("/api/cart/sync", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items: nextItems.map((item) => normalizeCartItem(item)).filter(Boolean) }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data?.error || "Unable to sync cart");
+    }
+    return Array.isArray(data.items) ? data.items.map((item) => normalizeCartItem(item)).filter(Boolean) as CartItem[] : nextItems;
+  } catch {
+    return false;
+  }
+}
+
 export function readStoredCart(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map((item) => normalizeCartItem(item)).filter(Boolean) as CartItem[] : [];
   } catch {
     return [];
   }
@@ -150,12 +224,37 @@ export function writeOrderSnapshot(order: any) {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => readStoredCart());
   const [open, setOpen] = useState(false);
+  const hydratedFromServer = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const compacted = items.map(compactCartItem);
       storeJsonSafely(CART_STORAGE_KEY, compacted, 10);
     }
+  }, [items]);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    let active = true;
+    void (async () => {
+      const serverItems = await fetchServerCart();
+      if (!active) return;
+      const localItems = readStoredCart();
+      const merged = mergeCartItems(serverItems, localItems);
+      setItems(merged);
+      hydratedFromServer.current = true;
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!getAuthToken() || !hydratedFromServer.current) return;
+    void syncCartToServer(items.map(compactCartItem));
   }, [items]);
 
   const openCart = () => setOpen(true);

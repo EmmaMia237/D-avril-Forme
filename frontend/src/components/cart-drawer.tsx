@@ -42,7 +42,11 @@ export function CartDrawer() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           code: promoCode.trim(),
-          items: items.map((it) => ({ amount: it.price, quantity: it.quantity })),
+          items: items.map((it) => ({
+            productId: it.productId || it.id || it.cartId || "",
+            amount: it.price,
+            quantity: it.quantity,
+          })),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -104,11 +108,14 @@ export function CartDrawer() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             items: items.map((it) => ({
+              productId: it.productId || it.id || it.cartId || "",
               name: it.name,
               amount: it.price,
               quantity: it.quantity,
               currency: it.currency,
               customization: it.customization,
+              size: it.size,
+              color: it.color,
             })),
             promoCode: appliedOffer ? appliedOffer.code : promoCode || undefined,
             success_url: `${origin}/order-success?session_id={CHECKOUT_SESSION_ID}`,

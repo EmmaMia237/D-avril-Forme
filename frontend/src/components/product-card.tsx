@@ -1,11 +1,13 @@
-import { Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import type { Product } from "@/lib/shop-data";
 import { useCart } from "@/lib/cart";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { apiFetch } from "@/lib/api-client";
 
 export function Stars({ rating, reviews }: { rating: number; reviews?: number }) {
   const r = Math.max(0, Math.min(5, Number(rating || 0)));
@@ -36,6 +38,8 @@ export function ProductCard({ product }: { product: Product }) {
     new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
+  const [liked, setLiked] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   const isConfigurable =
     product.productType === "blank" || product.customizable === true || product.configurable === true;
 
@@ -50,9 +54,60 @@ export function ProductCard({ product }: { product: Product }) {
       (String(product.description).length > 80 ? "…" : "")
     : product.options || "";
 
+  const productId = String(product.id || product._id || "");
+
+  useEffect(() => {
+    if (!productId || !window.localStorage.getItem("af_auth_token")) return;
+    let active = true;
+    apiFetch("/api/favorites")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (active && Array.isArray(data?.productIds)) setLiked(data.productIds.includes(productId));
+      })
+      .catch((error) => console.error("Failed to load favorite state", error));
+    return () => {
+      active = false;
+    };
+  }, [productId]);
+
+  async function toggleFavorite() {
+    if (!productId) return;
+    if (!window.localStorage.getItem("af_auth_token")) {
+      toast("Log in to save favorites");
+      navigate({ to: "/auth" });
+      return;
+    }
+    if (favoriteLoading) return;
+    setFavoriteLoading(true);
+    try {
+      const response = await apiFetch(`/api/favorites/${encodeURIComponent(productId)}`, { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error(data?.error || "Unable to update wishlist");
+        return;
+      }
+      setLiked(Boolean(data.favorited));
+      toast.success(data.favorited ? "Added to wishlist" : "Removed from wishlist");
+    } catch (error) {
+      console.error("Failed to update favorite", error);
+      toast.error("Unable to update wishlist");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
+
   return (
     <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] active:translate-y-0">
       <div className="relative h-40 w-full overflow-hidden bg-nude">
+        <button
+          type="button"
+          aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={toggleFavorite}
+          disabled={favoriteLoading}
+          className="absolute right-3 top-3 z-10 rounded-full bg-background/90 p-2 text-primary shadow-sm transition hover:bg-background"
+        >
+          <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
+        </button>
         {imageSrc ? (
           <img
             src={imageSrc}
@@ -76,7 +131,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.category}
         </p>
         <h3 className="text-base leading-snug font-semibold">{product.name}</h3>
-        <Stars rating={product.rating ?? 0} reviews={product.reviews ?? 0} />
+        <Stars rating={product.rating ?? 0} reviews={product.reviewCount ?? product.reviews ?? 0} />
         <p className="text-sm text-muted-foreground">{shortDescription}</p>
 
         <div className="flex min-w-0 items-center justify-between gap-3 pt-2">

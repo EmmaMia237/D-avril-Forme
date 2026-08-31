@@ -96,8 +96,9 @@ export type Product = {
   material: string;
   colors: string[];
   price: number;
-  rating: number;
-  reviews: number;
+  rating?: number;
+  reviews?: number;
+  reviewCount?: number;
   options: string;
   image: string;
   badge?: string;

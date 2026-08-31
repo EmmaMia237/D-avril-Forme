@@ -7,6 +7,7 @@ const { signToken, verifyToken, hashPassword, comparePassword } = require('./aut
 const User = require('./models/User');
 const Product = require('./models/Product');
 const Order = require('./models/Order');
+const Review = require('./models/Review');
 const Offer = require('./models/Offer');
 const Category = require('./models/Category');
 
@@ -15,6 +16,26 @@ const mongoose = require('mongoose');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // Allow a comma-separated list of allowed origins via env (e.g. "https://davril-forme.vercel.app,https://davrilforme.vercel.app")
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+async function addReviewStats(products) {
+  const list = Array.isArray(products) ? products : [products];
+  const ids = list.filter(Boolean).map((product) => String(product._id));
+  if (!ids.length) return products;
+  const stats = await Review.aggregate([
+    { $match: { productId: { $in: ids } } },
+    { $group: { _id: '$productId', rating: { $avg: '$rating' }, reviewCount: { $sum: 1 } } },
+  ]);
+  const byProduct = new Map(stats.map((entry) => [String(entry._id), entry]));
+  const enrich = (product) => {
+    if (!product) return product;
+    const stat = byProduct.get(String(product._id));
+    product.rating = stat ? Number(Number(stat.rating).toFixed(2)) : 0;
+    product.reviewCount = stat ? stat.reviewCount : 0;
+    product.reviews = product.reviewCount;
+    return product;
+  };
+  return Array.isArray(products) ? products.map(enrich) : enrich(products);
+}
 
 // Simple SSE (Server-Sent Events) support for product updates
 const sseClients = new Set();
@@ -214,6 +235,51 @@ async function getUserFromToken(req) {
   return user ? { user, tokenPayload: decoded } : null;
 }
 
+function normalizeCartItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const quantity = Number(item.quantity || 1);
+  const productId = item.productId || item.id || '';
+  if (!productId) return null;
+  return {
+    productId: String(productId),
+    cartId: item.cartId || `${String(productId)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: String(item.name || 'Custom item'),
+    price: Number(item.price || 0),
+    quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    currency: item.currency || 'usd',
+    image: item.image || '',
+    size: item.size || '',
+    color: item.color || '',
+    customization: item.customization ?? null,
+  };
+}
+
+function mergeCartItems(existingItems, incomingItems) {
+  const merged = new Map();
+  const allItems = [...(Array.isArray(existingItems) ? existingItems : []), ...(Array.isArray(incomingItems) ? incomingItems : [])]
+    .map((item) => normalizeCartItem(item))
+    .filter(Boolean);
+
+  for (const item of allItems) {
+    const key = `${item.productId}|${JSON.stringify(item.customization || null)}|${item.size || ''}|${item.color || ''}`;
+    const current = merged.get(key);
+    if (current) {
+      current.quantity += item.quantity;
+      current.price = current.price || item.price;
+      current.image = current.image || item.image;
+      current.name = current.name || item.name;
+      current.customization = current.customization || item.customization;
+    } else {
+      merged.set(key, { ...item, cartId: item.cartId || `${item.productId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` });
+    }
+  }
+
+  return Array.from(merged.values()).map((item) => ({
+    ...item,
+    quantity: Math.max(1, Number(item.quantity) || 1),
+  }));
+}
+
 app.get('/api/db/status', async (req, res) => {
   try {
     await connectDb();
@@ -241,7 +307,7 @@ app.get('/api/events', (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, address } = req.body || {};
+    const { name, email, password, address, emailOptIn } = req.body || {};
     if (!name || !email || !password) {
       return res.status(400).json({ ok: false, error: 'Missing registration fields' });
     }
@@ -256,11 +322,12 @@ app.post('/api/auth/register', async (req, res) => {
       email: String(email).toLowerCase().trim(),
       passwordHash,
       address: address ? String(address).trim() : null,
+      emailOptIn: emailOptIn === true,
       role: 'user',
     });
     const token = signToken({ sub: String(user._id), role: 'user' });
     createSessionCookie(res, token);
-    return res.status(201).json({ ok: true, token, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, role: user.role } });
+    return res.status(201).json({ ok: true, token, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, emailOptIn: user.emailOptIn, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, error: 'Failed to register user' });
@@ -284,7 +351,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
     const token = signToken({ sub: String(user._id), role: user.role || 'user' });
     createSessionCookie(res, token);
-    return res.json({ ok: true, token, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, role: user.role } });
+    return res.json({ ok: true, token, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, emailOptIn: user.emailOptIn, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, error: 'Login failed' });
@@ -342,10 +409,213 @@ app.get('/api/auth/me', async (req, res) => {
     }
 
     const { user } = auth;
-    return res.json({ ok: true, authenticated: true, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, role: user.role } });
+    return res.json({ ok: true, authenticated: true, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, emailOptIn: user.emailOptIn, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, authenticated: false, error: 'Unable to verify session' });
+  }
+});
+
+app.get('/api/favorites', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    const user = await User.findById(auth.user._id).select('favorites').lean();
+    return res.json({ ok: true, productIds: (user?.favorites || []).map((id) => String(id)) });
+  } catch (err) {
+    console.error('Load favorites error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to load favorites' });
+  }
+});
+
+app.post('/api/favorites/:productId', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    const productId = String(req.params.productId || '').trim();
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid product id' });
+    }
+    const product = await Product.findById(productId).select('_id').lean();
+    if (!product) return res.status(404).json({ ok: false, error: 'Product not found' });
+
+    const user = await User.findById(auth.user._id).select('favorites');
+    if (!user) return res.status(404).json({ ok: false, error: 'User not found' });
+    const alreadyFavorited = (user.favorites || []).some((id) => String(id) === productId);
+    if (alreadyFavorited) {
+      user.favorites = (user.favorites || []).filter((id) => String(id) !== productId);
+    } else {
+      user.favorites = [...(user.favorites || []), product._id];
+    }
+    await user.save();
+    return res.json({ ok: true, productId, favorited: !alreadyFavorited });
+  } catch (err) {
+    console.error('Toggle favorite error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to update favorite' });
+  }
+});
+
+app.get('/api/my-orders', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) {
+      return res.status(401).json({ ok: false, error: 'Authentication required' });
+    }
+
+    await connectDb();
+    const orders = await Order.find({ userId: auth.user._id }).sort({ createdAt: -1 }).lean();
+
+    const normalized = orders.map((order) => ({
+      id: String(order._id),
+      trackingNumber: order.trackingNumber || null,
+      status: order.status || 'Payment Pending',
+      total: Number(order.total || 0),
+      createdAt: order.createdAt || null,
+      updatedAt: order.updatedAt || null,
+      items: Array.isArray(order.items)
+        ? order.items.map((item) => ({
+            productId: item?.productId || item?.id || null,
+            name: item?.name || item?.title || 'Item',
+            price: Number(item?.price ?? item?.amount ?? 0),
+            quantity: Number(item?.quantity || 1),
+            customization: item?.customization ?? null,
+            size: item?.size || '',
+            color: item?.color || '',
+            image: item?.customization?.image || item?.image || null,
+          }))
+        : [],
+    }));
+
+    return res.json({ ok: true, orders: normalized });
+  } catch (err) {
+    console.error('Load my orders error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to load orders' });
+  }
+});
+
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) return res.status(401).json({ ok: false, error: 'Authentication required' });
+
+    const productId = String(req.body?.productId || '').trim();
+    const rating = Number(req.body?.rating);
+    const comment = String(req.body?.comment || '').trim();
+    if (!productId || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ ok: false, error: 'Product and a rating from 1 to 5 are required' });
+    }
+
+    await connectDb();
+    const existing = await Review.findOne({ userId: auth.user._id, productId }).lean();
+    if (existing) {
+      return res.status(409).json({ ok: false, error: 'You have already reviewed this product' });
+    }
+
+    const order = await Order.findOne({
+      userId: auth.user._id,
+      'items.productId': productId,
+      status: { $nin: ['Cancelled', 'Canceled', 'Payment Failed'] },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+    if (!order) {
+      return res.status(403).json({ ok: false, error: "You can only review products you've purchased" });
+    }
+
+    const review = await Review.create({
+      userId: auth.user._id,
+      userName: auth.user.name || auth.user.email,
+      productId,
+      orderId: order._id,
+      rating,
+      comment,
+    });
+    return res.status(201).json({
+      ok: true,
+      review: {
+        id: String(review._id),
+        userId: String(review.userId),
+        userName: review.userName,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+      },
+    });
+  } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(409).json({ ok: false, error: 'You have already reviewed this product' });
+    }
+    console.error('Create review error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to submit review' });
+  }
+});
+
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const productId = String(req.query?.productId || '').trim();
+    if (!productId) return res.status(400).json({ ok: false, error: 'Missing productId' });
+    await connectDb();
+    const auth = await getUserFromToken(req);
+    const reviews = await Review.find({ productId }).sort({ createdAt: -1 }).lean();
+    const total = reviews.length;
+    const average = total ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / total : 0;
+    return res.json({
+      ok: true,
+      reviews: reviews.map((review) => ({
+        id: String(review._id),
+        isMine: Boolean(auth && String(review.userId) === String(auth.user._id)),
+        userName: review.userName,
+        rating: review.rating,
+        comment: review.comment || '',
+        createdAt: review.createdAt,
+      })),
+      rating: Number(average.toFixed(2)),
+      reviewCount: total,
+    });
+  } catch (err) {
+    console.error('Load reviews error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to load reviews' });
+  }
+});
+
+app.get('/api/cart', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) {
+      return res.status(401).json({ ok: false, error: 'Authentication required' });
+    }
+
+    const user = await User.findById(auth.user._id).lean();
+    const items = Array.isArray(user?.cartItems) ? user.cartItems : [];
+    return res.json({ ok: true, items });
+  } catch (err) {
+    console.error('Load cart error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to load cart' });
+  }
+});
+
+app.post('/api/cart/sync', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) {
+      return res.status(401).json({ ok: false, error: 'Authentication required' });
+    }
+
+    const incoming = Array.isArray(req.body?.items) ? req.body.items : [];
+    const user = await User.findById(auth.user._id);
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    const existing = Array.isArray(user.cartItems) ? user.cartItems : [];
+    const merged = mergeCartItems(existing, incoming);
+    user.cartItems = merged;
+    await user.save();
+
+    return res.json({ ok: true, items: user.cartItems || [] });
+  } catch (err) {
+    console.error('Sync cart error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to sync cart' });
   }
 });
 
@@ -375,7 +645,7 @@ app.get('/api/products', async (req, res) => {
         // If caller requests a lightweight summary (no images), return minimal fields quickly
         const summary = req.query && (String(req.query.summary) === '1' || String(req.query.summary).toLowerCase() === 'true');
         if (summary) {
-          const products = await Product.find(q).select('name sku category price stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
+          const products = await addReviewStats(await Product.find(q).select('name sku category price stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
           products.forEach(p => {
             p.customizable = p.is_customizable === true;
             p.configurable = p.is_customizable === true;
@@ -383,7 +653,7 @@ app.get('/api/products', async (req, res) => {
           return res.json({ ok: true, products, truncated: products.length >= limit });
         }
 
-        let products = await Product.find(q).select('name sku category price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
+        let products = await addReviewStats(await Product.find(q).select('name sku category price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
         // Strip large data URLs from image previews to keep list responses small
         products = products.map(p => {
           if (Array.isArray(p.images)) {
@@ -634,6 +904,7 @@ app.get('/api/products/:id', async (req, res) => {
     }
 
     if (!product) return res.status(404).json({ ok: false, error: 'Product not found' });
+    await addReviewStats(product);
     return res.json({ ok: true, product });
   } catch (err) {
     console.error(err);
@@ -828,6 +1099,17 @@ app.post('/api/payment/create-checkout', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Missing redirect URLs' });
     }
 
+    const normalizedItems = items.map((item, index) => ({
+      productId: String(item?.productId || item?.id || item?.cartId || `guest-item-${index}`),
+      name: item?.name || 'Item',
+      amount: Number(item?.amount ?? item?.price ?? 0),
+      quantity: Math.max(1, Number(item?.quantity || 1)),
+      currency: item?.currency || 'eur',
+      customization: item?.customization || null,
+      size: item?.size || '',
+      color: item?.color || '',
+    }));
+
     // Server-side promo validation and application (prevents client-side cheats)
     let appliedOffer = null;
     let discountPercent = 0;
@@ -842,7 +1124,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
         if (appliedOffer.startAt && new Date(appliedOffer.startAt) > now) return res.status(400).json({ ok: false, error: 'This offer is not yet active' });
         if (appliedOffer.endAt && new Date(appliedOffer.endAt) <= now) return res.status(400).json({ ok: false, error: 'This offer has expired' });
         // check quantity thresholds
-        const totalQty = items.reduce((s, it) => s + Number(it.quantity || 0), 0);
+        const totalQty = normalizedItems.reduce((s, it) => s + Number(it.quantity || 0), 0);
 
             // pick tier if available
             let chosenPercent = Number(appliedOffer.discountPercent || 0);
@@ -869,7 +1151,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
         // distribute the target total proportionally across lines and split units when necessary to
         // avoid fractional cents while preserving per-item detail.
         const cents = (n) => Math.round(Number(n || 0) * 100);
-        const subtotalCents = items.reduce((s, it) => s + cents(it.amount) * Math.max(1, Number(it.quantity || 1)), 0);
+        const subtotalCents = normalizedItems.reduce((s, it) => s + cents(it.amount) * Math.max(1, Number(it.quantity || 1)), 0);
         const amountOffCents = discountPercent ? Math.round(subtotalCents * (discountPercent / 100)) : 0;
         const targetTotalCents = Math.max(0, subtotalCents - amountOffCents);
         // final line_items array to send to Stripe
@@ -877,7 +1159,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
 
         // Early fallback: if no discount, build simple line items
         if (!discountPercent) {
-          const simple = items.map((it) => {
+          const simple = normalizedItems.map((it) => {
             const unitAmount = cents(it.amount);
             const compactCustomization = summarizeCustomization(it.customization);
             const description = compactStripeString(summarizeCustomizationText(compactCustomization), 220);
@@ -898,7 +1180,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
           line_items = simple; // eslint-disable-line no-var
         } else {
           // Proportional distribution
-          const rawLineTotals = items.map((it) => ({
+          const rawLineTotals = normalizedItems.map((it) => ({
             item: it,
             qty: Math.max(1, Number(it.quantity || 1)),
             unitCents: cents(it.amount),
@@ -1020,7 +1302,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
     try {
       await connectDb();
       const auth = await getUserFromToken(req);
-      const subtotal = items.reduce((sum, it) => sum + Number(it.amount || 0) * Number(it.quantity || 1), 0);
+      const subtotal = normalizedItems.reduce((sum, it) => sum + Number(it.amount || 0) * Number(it.quantity || 1), 0);
       const amountOff = discountPercent ? Number((subtotal * (discountPercent / 100)).toFixed(2)) : 0;
       await Order.create({
         sessionId: session.id,
@@ -1029,7 +1311,15 @@ app.post('/api/payment/create-checkout', async (req, res) => {
         userEmail: auth?.user?.email || null,
         userName: auth?.user?.name || null,
         paymentMethod: 'Stripe',
-        items,
+        items: normalizedItems.map((it) => ({
+          productId: it.productId,
+          name: it.name,
+          price: Number(it.amount || 0),
+          quantity: Number(it.quantity || 1),
+          customization: it.customization,
+          size: it.size,
+          color: it.color,
+        })),
         total: Math.max(0, subtotal - amountOff),
         status: 'Payment Pending',
       });
