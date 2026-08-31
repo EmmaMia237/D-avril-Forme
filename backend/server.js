@@ -375,7 +375,7 @@ app.get('/api/products', async (req, res) => {
         // If caller requests a lightweight summary (no images), return minimal fields quickly
         const summary = req.query && (String(req.query.summary) === '1' || String(req.query.summary).toLowerCase() === 'true');
         if (summary) {
-          const products = await Product.find(q).select('name sku price stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
+          const products = await Product.find(q).select('name sku category price stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
           products.forEach(p => {
             p.customizable = p.is_customizable === true;
             p.configurable = p.is_customizable === true;
@@ -383,7 +383,7 @@ app.get('/api/products', async (req, res) => {
           return res.json({ ok: true, products, truncated: products.length >= limit });
         }
 
-        let products = await Product.find(q).select('name sku price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
+        let products = await Product.find(q).select('name sku category price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean();
         // Strip large data URLs from image previews to keep list responses small
         products = products.map(p => {
           if (Array.isArray(p.images)) {

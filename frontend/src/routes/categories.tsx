@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { LayoutGrid, List, Filter } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -54,6 +54,9 @@ export const Route = createFileRoute("/categories")({
 });
 
 function CategoriesPage() {
+  const isCategoryDetail = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/categories/"),
+  });
   const [categoryOptions, setCategoryOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
@@ -208,6 +211,8 @@ function CategoriesPage() {
     [selectedCats.length, selectedMaterials.length, selectedColors.length, maxPrice],
   );
 
+  if (isCategoryDetail) return <Outlet />;
+
   const filterPanel = (
     <>
       <FilterGroup title="Category">
@@ -347,52 +352,60 @@ function CategoriesPage() {
           {view === "grid" ? (
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {filtered.map((p) => (
-                <ProductCard key={p.id} product={p} cta="Configure & Order" />
+                <ProductCard key={p.id} product={p} />
               ))}
             </div>
           ) : (
             <div className="mt-6 grid gap-3">
-              {filtered.map((p) => (
-                <article
-                  key={p.id}
-                  className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-[120px_minmax(0,1fr)_auto]"
-                >
-                  <img
-                    src={getOptimizedImageUrl(
-                      p.image || p.images?.[0]?.url || p.previewPaths?.[0] || "",
-                    )}
-                    alt={`${p.name} mockup`}
-                    loading="lazy"
-                    width={800}
-                    height={800}
-                    className="aspect-square w-full rounded-md object-cover"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-[11px] tracking-[0.14em] text-primary uppercase">
-                      {p.category} · {p.material}
-                    </p>
-                    <h3 className="truncate text-base font-semibold">{p.name}</h3>
-                    <Stars rating={p.rating} reviews={p.reviews} />
-                    <p className="mt-1 text-xs text-muted-foreground">{p.options}</p>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-between gap-4 sm:col-span-1 sm:flex-col sm:items-end">
-                    <span className="font-display text-xl font-semibold text-primary">
-                      ${p.price}
-                    </span>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        navigate({
-                          to: "/configure",
-                          search: { id: p.id, color: p.colors?.[0] ?? "" },
-                        })
-                      }
-                    >
-                      Configure &amp; Order
-                    </Button>
-                  </div>
-                </article>
-              ))}
+              {filtered.map((p) => {
+                const isConfigurable =
+                  p.productType === "blank" || p.customizable === true || p.configurable === true;
+                return (
+                  <article
+                    key={p.id}
+                    className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-[120px_minmax(0,1fr)_auto]"
+                  >
+                    <img
+                      src={getOptimizedImageUrl(
+                        p.image || p.images?.[0]?.url || p.previewPaths?.[0] || "",
+                      )}
+                      alt={`${p.name} mockup`}
+                      loading="lazy"
+                      width={800}
+                      height={800}
+                      className="aspect-square w-full rounded-md object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-[11px] tracking-[0.14em] text-primary uppercase">
+                        {p.category} · {p.material}
+                      </p>
+                      <h3 className="truncate text-base font-semibold">{p.name}</h3>
+                      <Stars rating={p.rating} reviews={p.reviews} />
+                      <p className="mt-1 text-xs text-muted-foreground">{p.options}</p>
+                    </div>
+                    <div className="col-span-2 flex items-center justify-between gap-4 sm:col-span-1 sm:flex-col sm:items-end">
+                      <span className="font-display text-xl font-semibold text-primary">
+                        ${p.price}
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (isConfigurable) {
+                            navigate({
+                              to: "/configure",
+                              search: { id: p.id, color: p.colors?.[0] ?? "" },
+                            });
+                            return;
+                          }
+                          navigate({ to: `/product/${encodeURIComponent(String(p.id || p._id))}` });
+                        }}
+                      >
+                        {isConfigurable ? "Configure" : "Details"}
+                      </Button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
 

@@ -31,11 +31,13 @@ export function Stars({ rating, reviews }: { rating: number; reviews?: number })
   );
 }
 
-export function ProductCard({ product, cta = "Add to Cart" }: { product: Product; cta?: string }) {
+export function ProductCard({ product }: { product: Product }) {
   const formatEur = (v: number) =>
     new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
   const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
+  const isConfigurable =
+    product.productType === "blank" || product.customizable === true || product.configurable === true;
 
   const imageSrc = getOptimizedImageUrl(
     (product.images && product.images[0]?.url) ||
@@ -69,7 +71,7 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-4 min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-1 p-4">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
           {product.category}
         </p>
@@ -77,21 +79,19 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
         <Stars rating={product.rating ?? 0} reviews={product.reviews ?? 0} />
         <p className="text-sm text-muted-foreground">{shortDescription}</p>
 
-        <div className="flex items-center justify-between gap-3 pt-2">
-          <div className="flex-1">
+        <div className="flex min-w-0 items-center justify-between gap-3 pt-2">
+          <div className="min-w-0 flex-1">
             <span className="font-display text-xl font-semibold text-primary">
               {formatEur(Number(product.price || 0))}
             </span>
           </div>
 
-          <div className="flex gap-2">
-            {/* Show Configure only for configurable products */}
-            {product.configurable === true ||
-            product.productType === "blank" ||
-            product.customizable === true ? (
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {isConfigurable ? (
               <Button
                 size="sm"
                 variant="outline"
+                className="min-w-0"
                 onClick={() => {
                   const pid = product.id || product._id;
                   if (!pid) {
@@ -112,51 +112,51 @@ export function ProductCard({ product, cta = "Add to Cart" }: { product: Product
                 Configure
               </Button>
             ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  // Go to product detail page
-                  const pid = product.id || product._id;
-                  if (!pid) {
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-0"
+                  onClick={() => {
+                    const pid = product.id || product._id;
+                    if (!pid) {
+                      try {
+                        toast.error("Product details not available");
+                      } catch (e) {
+                        /* ignore */
+                      }
+                      return;
+                    }
                     try {
-                      toast.error("Product details not available");
+                      navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
+                    } catch (e) {
+                      window.location.href = `/product/${encodeURIComponent(String(pid))}`;
+                    }
+                  }}
+                >
+                  Details
+                </Button>
+                <Button
+                  size="sm"
+                  className="min-w-0"
+                  onClick={() => {
+                    addItem(product);
+                    try {
+                      closeCart();
                     } catch (e) {
                       /* ignore */
                     }
-                    return;
-                  }
-                  // Always navigate using path-based canonical URL
-                  try {
-                    navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
-                  } catch (e) {
-                    window.location.href = `/product/${encodeURIComponent(String(pid))}`;
-                  }
-                }}
-              >
-                Details
-              </Button>
+                    try {
+                      toast.success("Added to cart");
+                    } catch (e) {
+                      /* ignore */
+                    }
+                  }}
+                >
+                  Add to Cart
+                </Button>
+              </>
             )}
-
-            <Button
-              size="sm"
-              onClick={() => {
-                // Add to cart in background and show quick feedback; keep user on page and avoid auto-opening cart drawer
-                addItem(product);
-                try {
-                  closeCart();
-                } catch (e) {
-                  /* ignore */
-                }
-                try {
-                  toast.success("Added to cart");
-                } catch (e) {
-                  /* ignore */
-                }
-              }}
-            >
-              {cta || "Add to cart"}
-            </Button>
           </div>
         </div>
       </div>

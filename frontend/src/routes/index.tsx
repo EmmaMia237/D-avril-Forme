@@ -7,7 +7,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { categories as fallbackCategories } from "@/lib/shop-data";
 const heroImage = "/images/hero-image.png";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
@@ -46,6 +46,36 @@ function HomePage() {
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
   // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
   const [heroSrc, setHeroSrc] = useState<string>("/images/hero-image.png");
+
+  const categoryImageBySlug = useMemo(() => {
+    const images: Record<string, string> = {};
+    categoriesList.forEach((category) => {
+      const categoryName = String(category.name || "").trim().toLowerCase();
+      const categorySlug = String(category.slug || "").trim().toLowerCase();
+      const products = productsList.filter((product) => {
+        const productCategory = String(product.category || "").trim().toLowerCase();
+        const image =
+          (product.images && product.images[0]?.url) ||
+          product.image ||
+          (product.previewPaths && product.previewPaths[0]);
+        return (
+          (productCategory === categoryName || productCategory === categorySlug) &&
+          typeof image === "string" &&
+          image.trim().length > 0
+        );
+      });
+      const product = products.length > 0 ? products[Math.floor(Math.random() * products.length)] : null;
+      const productImage =
+        product &&
+        ((product.images && product.images[0]?.url) ||
+          product.image ||
+          (product.previewPaths && product.previewPaths[0]));
+      images[category.slug || category.name] = getOptimizedImageUrl(
+        productImage || category.image || "/images/printing-image.png",
+      );
+    });
+    return images;
+  }, [categoriesList, productsList]);
 
   useEffect(() => {
     let active = true;
@@ -209,12 +239,12 @@ function HomePage() {
             <div key={idx} className="w-64 shrink-0">
               <div className="flex flex-col gap-4">
                 {pair[0] ? (
-                  <ProductCard product={pair[0]} cta="Add to cart" />
+                  <ProductCard product={pair[0]} />
                 ) : (
                   <div className="h-64" />
                 )}
                 {pair[1] ? (
-                  <ProductCard product={pair[1]} cta="Add to cart" />
+                  <ProductCard product={pair[1]} />
                 ) : (
                   <div className="h-64" />
                 )}
@@ -253,7 +283,7 @@ function HomePage() {
           <div className="inline-flex gap-4">
             {products.slice(0, 10).map((p: any) => (
               <div key={p.id || p._id} className="w-64 shrink-0">
-                <ProductCard product={p} cta="Add to cart" />
+                <ProductCard product={p} />
               </div>
             ))}
           </div>
@@ -412,18 +442,7 @@ function HomePage() {
                   return p.category && (p.category === catName || p.category === cat.slug);
                 }).length;
 
-                const representative = productsList.find((p) => {
-                  const catName = (cat.name || "").toString();
-                  return p.category && (p.category === catName || p.category === cat.slug);
-                });
-                const imgSrc = getOptimizedImageUrl(
-                  (representative &&
-                    ((representative.images && representative.images[0]?.url) ||
-                      representative.image ||
-                      (representative.previewPaths && representative.previewPaths[0]))) ||
-                    cat.image ||
-                    heroImage,
-                );
+                const imgSrc = categoryImageBySlug[cat.slug || cat.name] || getOptimizedImageUrl(cat.image || heroImage);
 
                 return (
                   <motion.div
@@ -434,7 +453,7 @@ function HomePage() {
                     transition={{ duration: 0.42, delay: index * 0.06, ease: "easeOut" }}
                   >
                     <Link
-                      to={`/categories?category=${encodeURIComponent(cat.slug || cat.name)}`}
+                      to={`/categories/${encodeURIComponent(cat.slug || cat.name)}`}
                       className={`group block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[var(--shadow-lift)] ${featured ? "lg:col-span-2" : ""}`}
                     >
                       <div className={`overflow-hidden bg-nude ${featured ? "aspect-[1.4/1]" : "aspect-4/3"}`}>
@@ -551,19 +570,21 @@ function HomePage() {
             title="Best sellers"
             action={{ to: "/categories", label: "Shop all prints" }}
           />
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-            {productsList.slice(0, 5).map((p, index) => (
-              <motion.div
-                key={p.id}
-                className="mx-auto w-full max-w-[220px] sm:max-w-none"
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-                whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.38, delay: index * 0.08, ease: "easeOut" }}
-              >
-                <ProductCard product={p} cta="Customize" />
-              </motion.div>
-            ))}
+          <div className="-mx-4 mt-8 overflow-x-auto px-4 lg:overflow-visible lg:px-0">
+            <div className="flex gap-4 lg:grid lg:grid-cols-5 lg:gap-5">
+              {productsList.slice(0, 5).map((p, index) => (
+                <motion.div
+                  key={p.id}
+                  className="w-64 shrink-0 lg:w-auto lg:shrink"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+                  whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.38, delay: index * 0.08, ease: "easeOut" }}
+                >
+                  <ProductCard product={p} />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </motion.section>
