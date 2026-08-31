@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
 import { Clock, Mail, MapPin, Phone, Instagram, Smartphone, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -45,7 +46,11 @@ const inquirySchema = z.object({
 });
 
 function ContactPage() {
+  const prefersReducedMotion = useReducedMotion();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const revealInitial = prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 };
+  const revealInView = { opacity: 1, y: 0 };
+  const revealViewport = { once: true, amount: 0.2 };
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -80,7 +85,13 @@ function ContactPage() {
       </section>
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:px-8">
-        <aside className="grid h-fit gap-4">
+        <motion.aside
+          className="grid h-fit gap-7"
+          initial={revealInitial}
+          whileInView={revealInView}
+          viewport={revealViewport}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
           {[
             { icon: Mail, title: "Email", value: "support@avrilforme.com" },
             {
@@ -95,12 +106,16 @@ function ContactPage() {
               title: "Studio address",
               value: "Custom printing studio • UK-based order support",
             },
-          ].map((c) => (
-            <div
+          ].map((c, i) => (
+            <motion.div
               key={c.title}
-              className="flex items-start gap-3 rounded-lg border border-border bg-nude p-5"
+              className="flex items-start gap-4 border-b border-border/60 pb-7 last:border-b-0 last:pb-0"
+              initial={revealInitial}
+              whileInView={revealInView}
+              viewport={revealViewport}
+              transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.08 }}
             >
-              <c.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <c.icon className="mt-1 h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
                   {c.title}
@@ -118,14 +133,18 @@ function ContactPage() {
                   <p className="mt-1 text-sm break-words">{c.value}</p>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </aside>
+        </motion.aside>
 
-        <form
+        <motion.form
           onSubmit={onSubmit}
           noValidate
-          className="rounded-lg border border-border bg-card p-6 shadow-[var(--shadow-soft)]"
+          className="rounded-lg bg-card p-6 shadow-[var(--shadow-soft)]"
+          initial={revealInitial}
+          whileInView={revealInView}
+          viewport={revealViewport}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <h2 className="font-display text-2xl font-semibold">Send an inquiry</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -144,57 +163,71 @@ function ContactPage() {
           <Button type="submit" size="lg" className="mt-6 w-full sm:w-auto">
             Send Inquiry
           </Button>
-        </form>
+        </motion.form>
       </div>
 
-      <section className="border-b border-border bg-card">
+      <motion.section
+        className="border-b border-border bg-card"
+        initial={revealInitial}
+        whileInView={revealInView}
+        viewport={revealViewport}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
           <h2 className="font-display text-2xl font-semibold">Follow us</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Connect with us on social media for behind-the-scenes updates, new collections, and
             inspiration.
           </p>
-          <div className="mt-6 flex flex-wrap gap-4">
+          <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="https://www.instagram.com/davril_forme?igsh=MTYwZGllOWs5aWFweg=="
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-border bg-nude px-4 py-3 transition-all duration-200 hover:text-accent hover:border-accent"
+              aria-label="Instagram"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-nude text-primary shadow-[var(--shadow-soft)] transition-all duration-200 hover:-translate-y-1 hover:bg-primary hover:text-primary-foreground"
             >
               <Instagram className="h-5 w-5" />
-              <span className="text-sm font-medium">Instagram</span>
             </a>
             <a
               href="https://www.tiktok.com/@atelier_davril"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-border bg-nude px-4 py-3 transition-all duration-200 hover:text-accent hover:border-accent"
+              aria-label="TikTok"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-nude text-primary shadow-[var(--shadow-soft)] transition-all duration-200 hover:-translate-y-1 hover:bg-primary hover:text-primary-foreground"
             >
               <Smartphone className="h-5 w-5" />
-              <span className="text-sm font-medium">TikTok</span>
             </a>
             <a
               href="https://wa.me/447417575436"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-border bg-nude px-4 py-3 transition-all duration-200 hover:text-accent hover:border-accent"
+              aria-label="WhatsApp"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-nude text-primary shadow-[var(--shadow-soft)] transition-all duration-200 hover:-translate-y-1 hover:bg-primary hover:text-primary-foreground"
             >
               <MessageCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">WhatsApp</span>
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <section className="bg-nude/60">
         <div className="mx-auto max-w-3xl px-4 py-14 lg:px-8">
           <h2 className="font-display text-3xl font-semibold">Frequently asked questions</h2>
           <Accordion type="single" collapsible className="mt-6">
             {faqs.map((f, i) => (
-              <AccordionItem key={f.q} value={`item-${i}`}>
-                <AccordionTrigger className="text-left">{f.q}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
-              </AccordionItem>
+              <motion.div
+                key={f.q}
+                initial={revealInitial}
+                whileInView={revealInView}
+                viewport={revealViewport}
+                transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.06 }}
+              >
+                <AccordionItem value={`item-${i}`} className="border-border/60">
+                  <AccordionTrigger className="text-left">{f.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>

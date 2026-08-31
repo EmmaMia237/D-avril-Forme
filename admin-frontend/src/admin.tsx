@@ -1,14 +1,37 @@
 import React from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import { apiFetch, setAuthToken } from "./lib/api-client";
-import { CreditCard, LayoutDashboard, LogOut, Package, Palette, Settings, Users, Tag, Menu, X, ArrowUpRight, User, Search } from "lucide-react";
+import {
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Palette,
+  Settings,
+  Users,
+  Tag,
+  Menu,
+  X,
+  ArrowUpRight,
+  User,
+  Search,
+} from "lucide-react";
 import { Input } from "./components/ui/input";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const storefrontUrl = (import.meta.env.VITE_FRONTEND_URL || 'https://davril-forme.vercel.app').replace(/\/$/, "") + "/";
+  const storefrontUrl =
+    (
+      import.meta.env.VITE_FRONTEND_URL || "https://davril-forme.vercel.app"
+    ).replace(/\/$/, "") + "/";
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -17,9 +40,9 @@ export default function AdminLayout() {
     const next = value ?? "";
     setSearchQuery(next);
     try {
-      window.dispatchEvent(new CustomEvent('adminSearch', { detail: next }));
+      window.dispatchEvent(new CustomEvent("adminSearch", { detail: next }));
     } catch (error) {
-      console.warn('admin search dispatch failed', error);
+      console.warn("admin search dispatch failed", error);
     }
   }, []);
 
@@ -39,20 +62,22 @@ export default function AdminLayout() {
     let mounted = true;
     (async () => {
       try {
-        const res = await apiFetch('/api/auth/me');
+        const res = await apiFetch("/api/auth/me");
         if (!res.ok) {
-          if (mounted) navigate('/admin/login');
+          if (mounted) navigate("/admin/login");
         } else {
           const data = await res.json().catch(() => ({}));
           if (!(data?.authenticated && data?.admin)) {
-            if (mounted) navigate('/admin/login');
+            if (mounted) navigate("/admin/login");
           }
         }
       } catch (e) {
-        if (mounted) navigate('/admin/login');
+        if (mounted) navigate("/admin/login");
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   return (
@@ -60,10 +85,18 @@ export default function AdminLayout() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground lg:flex">
         <Link to="/admin" className="flex items-center gap-2">
-          <img src="/images/logo.png" alt="OsanPrints" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
+          <img
+            src="/images/logo.png"
+            alt="OsanPrints"
+            className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent"
+          />
           <span className="min-w-0">
-            <span className="block truncate font-display text-lg font-semibold">OsanPrints</span>
-            <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">Admin portal</span>
+            <span className="block truncate font-display text-lg font-semibold">
+              OsanPrints
+            </span>
+            <span className="block text-[10px] tracking-[0.16em] text-accent uppercase">
+              Admin portal
+            </span>
           </span>
         </Link>
 
@@ -74,7 +107,9 @@ export default function AdminLayout() {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-medium">Store owner</div>
-            <div className="text-xs text-sidebar-accent">avril@avrilforme.com</div>
+            <div className="text-xs text-sidebar-accent">
+              avril@avrilforme.com
+            </div>
           </div>
         </div>
 
@@ -85,7 +120,9 @@ export default function AdminLayout() {
               to={item.to}
               end={item.to === "/admin"}
               onClick={() => setMobileOpen(false)}
-              className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-200 transition-all duration-200 ease-in-out hover:bg-orange-600/90 hover:text-white ${isActive ? "bg-orange-600 text-white font-semibold shadow-sm" : "text-slate-200"}`}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/85 transition-all duration-200 ease-in-out hover:bg-accent hover:text-accent-foreground ${isActive ? "bg-accent text-accent-foreground font-semibold shadow-sm" : "text-sidebar-foreground/85"}`
+              }
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
@@ -96,11 +133,11 @@ export default function AdminLayout() {
         <button
           onClick={async () => {
             try {
-              await apiFetch('/api/auth/logout', { method: 'POST' });
+              await apiFetch("/api/auth/logout", { method: "POST" });
               setAuthToken(null);
             } finally {
               // Use client navigation to avoid full reload and preserve router behavior
-              navigate('/admin/login');
+              navigate("/admin/login");
             }
           }}
           className="mt-auto flex items-center gap-3 rounded-md px-3 py-2.5 text-sm"
@@ -112,16 +149,33 @@ export default function AdminLayout() {
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative z-50 w-64 shrink-0 flex-col bg-sidebar p-5 text-sidebar-foreground">
+          <div
+            className="fixed inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="relative z-50 flex h-full w-[min(18rem,85vw)] shrink-0 flex-col overflow-y-auto bg-sidebar p-5 text-sidebar-foreground">
             <div className="mb-4 flex items-center justify-between">
-              <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
-                <img src="/images/logo.png" alt="OsanPrints" className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent" />
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2"
+              >
+                <img
+                  src="/images/logo.png"
+                  alt="OsanPrints"
+                  className="h-9 w-9 shrink-0 rounded-sm object-contain bg-transparent"
+                />
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-lg font-semibold">OsanPrints</span>
+                  <span className="block truncate font-display text-lg font-semibold">
+                    OsanPrints
+                  </span>
                 </span>
               </Link>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-[var(--accent)] p-2 rounded-md">
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="text-[var(--accent)] p-2 rounded-md"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -132,7 +186,9 @@ export default function AdminLayout() {
                   to={item.to}
                   end={item.to === "/admin"}
                   onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ease-in-out hover:bg-orange-600/90 hover:text-white ${isActive ? "bg-orange-600 text-white font-semibold shadow-sm" : "text-slate-200"}`}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ease-in-out hover:bg-accent hover:text-accent-foreground ${isActive ? "bg-accent text-accent-foreground font-semibold shadow-sm" : "text-sidebar-foreground/85"}`
+                  }
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span className="truncate">{item.label}</span>
@@ -143,11 +199,11 @@ export default function AdminLayout() {
             <button
               onClick={async () => {
                 try {
-                  await apiFetch('/api/auth/logout', { method: 'POST' });
+                  await apiFetch("/api/auth/logout", { method: "POST" });
                   setAuthToken(null);
                 } finally {
                   setMobileOpen(false);
-                  navigate('/admin/login');
+                  navigate("/admin/login");
                 }
               }}
               className="mt-auto flex items-center gap-3 rounded-md px-3 py-2.5 text-sm"
@@ -161,11 +217,21 @@ export default function AdminLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-card">
           <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="rounded-md p-2 text-[var(--accent)] lg:hidden" aria-label="Toggle menu">
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="rounded-md p-2 text-[var(--accent)] lg:hidden"
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </button>
-              <h1 className="text-lg font-display">OsanPrints</h1>
+              <h1 className="min-w-0 truncate font-display text-base sm:text-lg">
+                OsanPrints
+              </h1>
             </div>
 
             <div className="hidden flex-1 items-center justify-center px-4 md:flex">
@@ -177,22 +243,28 @@ export default function AdminLayout() {
                   className="w-full pl-10"
                   aria-label="Search admin"
                 />
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 aria-label="Open mobile search"
-                className="inline-flex items-center justify-center rounded-md border-0 bg-transparent p-1 text-slate-700 shadow-none md:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border-0 bg-transparent text-accent shadow-none transition-colors hover:bg-nude md:hidden"
                 onClick={() => setMobileSearchOpen((open) => !open)}
               >
                 <Search className="h-4 w-4" />
               </button>
-              <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-auto shrink-0 items-center gap-2 rounded-md border border-transparent px-3 py-1.5 text-sm font-semibold transition hover:bg-[var(--accent)] hover:text-white">
+              <a
+                href={storefrontUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View storefront"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-transparent text-sm font-semibold text-accent transition hover:bg-accent hover:text-accent-foreground sm:w-auto sm:px-3 sm:py-1.5"
+              >
                 <ArrowUpRight className="h-4 w-4" />
-                <span>View storefront</span>
+                <span className="hidden sm:inline">View storefront</span>
               </a>
             </div>
           </div>
@@ -200,7 +272,7 @@ export default function AdminLayout() {
           {mobileSearchOpen && (
             <div className="border-t border-border px-4 py-3 md:hidden">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchQuery}
                   onChange={(event) => {
