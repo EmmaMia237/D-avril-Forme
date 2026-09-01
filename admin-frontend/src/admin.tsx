@@ -30,7 +30,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const storefrontUrl =
     (
-      import.meta.env.VITE_FRONTEND_URL || "https://davril-forme.vercel.app"
+      import.meta.env.VITE_FRONTEND_URL || "https://www.osanprints.com"
     ).replace(/\/$/, "") + "/";
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);

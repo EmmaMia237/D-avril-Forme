@@ -14,7 +14,7 @@ const Category = require('./models/Category');
 const app = express();
 const mongoose = require('mongoose');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-// Allow a comma-separated list of allowed origins via env (e.g. "https://davril-forme.vercel.app,https://davrilforme.vercel.app")
+// Allow a comma-separated list of allowed origins via env (for example: "https://www.osanprints.com,https://admin.osanprints.com")
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 async function addReviewStats(products) {
@@ -68,8 +68,8 @@ app.use(
       if (origin === FRONTEND_URL) return callback(null, true);
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) return callback(null, true);
 
-      // allow Vercel preview and production domains heuristically
-      if (origin.includes('vercel.app') || origin.includes('onrender.com')) return callback(null, true);
+      // allow Vercel preview, Render, and live OsanPrints domains heuristically
+      if (origin.includes('vercel.app') || origin.includes('onrender.com') || origin.includes('osanprints.com')) return callback(null, true);
 
       return callback(new Error('Not allowed by CORS: ' + origin));
     },
