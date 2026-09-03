@@ -13,9 +13,15 @@ const Category = require('./models/Category');
 
 const app = express();
 const mongoose = require('mongoose');
+const Stripe = require('stripe');
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // Allow a comma-separated list of allowed origins via env (for example: "https://www.osanprints.com,https://admin.osanprints.com")
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+function getStripeClient() {
+  const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+  return stripeKey ? new Stripe(stripeKey, { apiVersion: '2022-11-15' }) : null;
+}
 
 async function addReviewStats(products) {
   const list = Array.isArray(products) ? products : [products];
@@ -78,6 +84,60 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
+
+// Stripe signs the raw request body, so this route must be registered before express.json().
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+  if (!webhookSecret) {
+    return res.status(500).json({ ok: false, error: 'Stripe webhook secret is not configured' });
+  }
+
+  const stripe = getStripeClient();
+  if (!stripe) {
+    return res.status(500).json({ ok: false, error: 'Stripe is not configured' });
+  }
+
+  let event;
+  try {
+    const signature = req.headers['stripe-signature'];
+    event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
+  } catch (err) {
+    console.error('Stripe webhook signature verification failed:', err.message);
+    return res.status(400).json({ ok: false, error: 'Invalid Stripe webhook signature' });
+  }
+
+  try {
+    const session = event.data.object;
+    const sessionId = session?.id;
+    if (sessionId && [
+      'checkout.session.completed',
+      'checkout.session.async_payment_succeeded',
+      'checkout.session.expired',
+      'checkout.session.async_payment_failed',
+    ].includes(event.type)) {
+      await connectDb();
+      const isPaidEvent = ['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type);
+      const status = isPaidEvent && session.payment_status === 'paid'
+        ? 'Paid'
+        : isPaidEvent
+          ? 'Payment Pending'
+          : 'Payment Failed';
+      const paymentStatus = status === 'Paid' ? 'paid' : status === 'Payment Failed' ? 'failed' : 'pending';
+      const order = await Order.findOne({ sessionId });
+      if (order && order.paymentStatus !== 'paid' && order.status !== 'Paid') {
+        order.status = status;
+        order.paymentStatus = paymentStatus;
+        await order.save();
+      }
+    }
+
+    return res.json({ received: true });
+  } catch (err) {
+    console.error('Stripe webhook processing failed:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to process Stripe webhook' });
+  }
+});
+
 // Increase request body size limits to allow data-URL image uploads in dev (not recommended for production)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -1086,10 +1146,8 @@ function summarizeCustomizationText(customization) {
 
 app.post('/api/payment/create-checkout', async (req, res) => {
   try {
-    const stripeKey = process.env.STRIPE_SECRET_KEY || '';
-    if (!stripeKey) return res.status(500).json({ ok: false, error: 'Stripe is not configured' });
-    const Stripe = require('stripe');
-    const stripe = new Stripe(stripeKey, { apiVersion: '2022-11-15' });
+    const stripe = getStripeClient();
+    if (!stripe) return res.status(500).json({ ok: false, error: 'Stripe is not configured' });
 
     const { items, success_url, cancel_url, promoCode } = req.body || {};
     if (!Array.isArray(items) || items.length === 0) {
@@ -1322,6 +1380,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
         })),
         total: Math.max(0, subtotal - amountOff),
         status: 'Payment Pending',
+        paymentStatus: 'pending',
       });
     } catch (err) {
       console.warn('Failed to create order record:', err);
@@ -1339,9 +1398,24 @@ app.get('/api/orders/session/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     if (!sessionId) return res.status(400).json({ ok: false, error: 'Missing session id' });
     await connectDb();
-    const order = await Order.findOne({ sessionId }).lean();
+    const stripe = getStripeClient();
+    const order = await Order.findOne({ sessionId });
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
-    return res.json({ ok: true, order });
+
+    if (stripe) {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status === 'paid' && order.status !== 'Paid') {
+        order.status = 'Paid';
+        order.paymentStatus = 'paid';
+        await order.save();
+      } else if (session.status === 'expired' && order.status === 'Payment Pending') {
+        order.status = 'Payment Failed';
+        order.paymentStatus = 'failed';
+        await order.save();
+      }
+    }
+
+    return res.json({ ok: true, order: order.toObject() });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, error: 'Failed to load order' });
@@ -1368,7 +1442,9 @@ app.get('/api/admin/orders', async (req, res) => {
               .join(', ')
           : String(order.items || ''),
         status: order.status || 'Payment Pending',
-        payment: order.status?.toLowerCase().includes('paid') ? `Paid (${order.paymentMethod || 'Stripe'})` : `Pending (${order.paymentMethod || 'Stripe'})`,
+        payment: (order.paymentStatus === 'paid' || order.status?.toLowerCase().includes('paid'))
+          ? `Paid (${order.paymentMethod || 'Stripe'})`
+          : `Pending (${order.paymentMethod || 'Stripe'})`,
         total: order.total || 0,
         createdAt: order.createdAt,
       })),
@@ -1437,9 +1513,14 @@ app.get('/api/admin/dashboard', async (req, res) => {
     await connectDb();
     const [orders, products] = await Promise.all([Order.find({}).lean(), Product.find({}).lean()]);
 
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-    const pending = orders.filter((order) => /pending|awaiting|payment/i.test(order.status || '')).length;
-    const readyToPrint = orders.filter((order) => /ready to print/i.test(order.status || '')).length;
+    const isPaid = (order) =>
+      String(order.paymentStatus || '').trim().toLowerCase() === 'paid' ||
+      String(order.status || '').trim().toLowerCase() === 'paid';
+    const totalRevenue = orders
+      .filter(isPaid)
+      .reduce((sum, order) => sum + (order.total || 0), 0);
+    const pending = orders.filter((order) => isPaid(order) && /paid|awaiting/i.test(order.status || '')).length;
+    const readyToPrint = orders.filter((order) => isPaid(order) && /ready to print/i.test(order.status || '')).length;
     const completedShipments = orders.filter((order) => /shipped/i.test(order.status || '')).length;
     const designsUploaded = products.length;
 
@@ -1461,12 +1542,13 @@ app.get('/api/admin/dashboard', async (req, res) => {
       month.setMonth(month.getMonth() - (5 - idx));
       const label = month.toLocaleString('default', { month: 'short' });
       const monthTotal = orders
+        .filter(isPaid)
         .filter((order) => {
           const created = new Date(order.createdAt);
           return created.getMonth() === month.getMonth() && created.getFullYear() === month.getFullYear();
         })
         .reduce((sum, order) => sum + (order.total || 0), 0);
-      const monthOrders = orders.filter((order) => {
+      const monthOrders = orders.filter(isPaid).filter((order) => {
         const created = new Date(order.createdAt);
         return created.getMonth() === month.getMonth() && created.getFullYear() === month.getFullYear();
       }).length;
