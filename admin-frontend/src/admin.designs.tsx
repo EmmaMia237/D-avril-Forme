@@ -118,7 +118,6 @@ function DesignsPage() {
    theme: "",
    description: "",
    images: [] as Array<{ id: string; url: string; role?: string }>,
-   is_customizable: false,
   });
 
   useEffect(() => {
@@ -181,7 +180,6 @@ function DesignsPage() {
       theme: "",
       description: "",
       images: [],
-      is_customizable: false,
     });
     setOpenDialog(true);
   }
@@ -207,7 +205,6 @@ function DesignsPage() {
         role: (u && u.role) ? u.role : (i === 0 ? 'front' : 'gallery'),
         variantLabel: (u && u.variantLabel) ? u.variantLabel : undefined,
       })),
-        is_customizable: !!p.is_customizable,
       });
     setOpenDialog(true);
   }
@@ -270,7 +267,6 @@ function DesignsPage() {
         productType: form.productType || 'pre-designed',
         theme: form.theme ? normalizeThemeValue(form.theme) : undefined,
         images: images.map((im: any) => ({ url: im.url, role: im.role, variantLabel: im.variantLabel })),
-        is_customizable: !!form.is_customizable,
       };
 
       // Try primary API (apiFetch) first
@@ -751,12 +747,6 @@ function DesignsPage() {
                   </select>
                 </div>
 
-                <div className="mt-3">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={!!form.is_customizable} onChange={(e) => setForm((f: any) => ({ ...f, is_customizable: e.target.checked }))} />
-                    <span>Available as a customizable / blank template</span>
-                  </label>
-                </div>
               </div>
             </div>
 

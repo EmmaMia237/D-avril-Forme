@@ -1580,7 +1580,8 @@ app.post('/api/admin/products', async (req, res) => {
     await connectDb();
     // Derive isPublished from incoming status: status === 'Published' -> true, otherwise false
     const isPublishedDerived = String(req.body.status) === 'Published';
-    const productBody = { ...req.body, isPublished: isPublishedDerived, colors: Array.isArray(req.body.colors) ? req.body.colors : [], createdAt: new Date(), updatedAt: new Date() };
+    const productType = String(req.body?.productType || 'pre-designed');
+    const productBody = { ...req.body, productType, is_customizable: productType === 'blank', isPublished: isPublishedDerived, colors: Array.isArray(req.body.colors) ? req.body.colors : [], createdAt: new Date(), updatedAt: new Date() };
     const product = await Product.create(productBody);
     // Broadcast creation event
     try { sendSseEvent('product-created', { product }); } catch (e) {}
@@ -1597,7 +1598,7 @@ app.put('/api/admin/products/:id', async (req, res) => {
     if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
     await connectDb();
     // Derive isPublished from incoming status: status === 'Published' -> true, otherwise false
-    const updates = { ...req.body, updatedAt: new Date() };
+    const productType = String(req.body?.productType ?? existing.productType ?? 'pre-designed');
     updates.isPublished = String(req.body.status) === 'Published';
     const updated = await Product.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!updated) return res.status(404).json({ ok: false, error: 'Product not found' });

@@ -358,8 +358,7 @@ function CategoriesPage() {
           ) : (
             <div className="mt-6 grid gap-3">
               {filtered.map((p) => {
-                const isConfigurable =
-                  p.productType === "blank" || p.customizable === true || p.configurable === true;
+                const isConfigurable = p.productType === "blank";
                 return (
                   <article
                     key={p.id}

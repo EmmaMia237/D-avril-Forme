@@ -34,7 +34,7 @@ function TemplatesPage() {
     async function load() {
       try {
         const res = await fetch(
-          "/api/products?productType=blank&customizable=1&limit=100&summary=1",
+          "/api/products?productType=blank&limit=100&summary=1",
         );
         const data = await res.json().catch(() => ({}));
         if (res.ok && data?.ok)

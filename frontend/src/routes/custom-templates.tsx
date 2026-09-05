@@ -33,7 +33,7 @@ function CustomTemplatesPage() {
     async function load() {
       try {
         // Fetch active/customizable products for use in configurator
-        const res = await fetch("/api/products?active=true&customizable=1&limit=200");
+        const res = await fetch("/api/products?active=true&productType=blank&limit=200");
         const data = await res.json().catch(() => ({}));
         let list = [] as any[];
         if (res.ok) {

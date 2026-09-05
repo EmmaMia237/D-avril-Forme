@@ -55,7 +55,7 @@ export default function ProductConfiguratorContainer({
       try {
         // Query blanks that match the requested type (best-effort)
         const res = await fetch(
-          `/api/products?productType=blank&type=${encodeURIComponent(t)}&customizable=1&limit=1&summary=1`,
+          `/api/products?productType=blank&type=${encodeURIComponent(t)}&limit=1&summary=1`,
         );
         const j = await res.json().catch(() => ({}));
         const p = (j && j.products && j.products[0]) || null;

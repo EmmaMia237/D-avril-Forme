@@ -40,8 +40,7 @@ export function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
-  const isConfigurable =
-    product.productType === "blank" || product.customizable === true || product.configurable === true;
+  const isConfigurable = product.productType === "blank";
 
   const imageSrc = getOptimizedImageUrl(
     (product.images && product.images[0]?.url) ||
