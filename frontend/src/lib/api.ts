@@ -241,7 +241,7 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       const line_items = items.map((it) => {
         const unitAmount = Math.round((Number(it.amount) || 0) * 100);
         if (unitAmount < 50)
-          throw new Error(`${it.name ?? "Item"} must be at least $0.50 for card checkout.`);
+          throw new Error(`${it.name ?? "Item"} must be at least £0.50 for card checkout.`);
         const product_data: any = { name: it.name ?? "Item" };
         if (it.customization) {
           try {
@@ -256,7 +256,7 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         }
         return {
           price_data: {
-            currency: it.currency ?? "usd",
+            currency: it.currency ?? "gbp",
             product_data,
             unit_amount: unitAmount,
           },

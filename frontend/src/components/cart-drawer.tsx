@@ -5,11 +5,11 @@ import { apiFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { useCart, writeOrderSnapshot } from "@/lib/cart";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatPrice } from "@/lib/currency";
 import { toast } from "sonner";
 
 export function CartDrawer() {
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const { items, open, closeCart, removeItem, updateQuantity, clear, totalAmount } = useCart();
   const subtotal = totalAmount();
   const estimatedShipping = items.length && subtotal < 120 ? 8 : 0;

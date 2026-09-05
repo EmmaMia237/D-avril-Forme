@@ -5,6 +5,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { templateCategories } from "@/lib/shop-data";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatPrice } from "@/lib/currency";
 
 export const Route = createFileRoute("/templates")({
   head: () => ({
@@ -134,7 +135,7 @@ function TemplatesPage() {
                   <div className="p-3">
                     <h3 className="text-sm font-semibold">{p.name}</h3>
                     <p className="text-xs text-muted-foreground">
-                      From ${Number(p.price || p.basePrice || 0).toFixed(2)}
+                      From {formatPrice(Number(p.price || p.basePrice || 0))}
                     </p>
                   </div>
                 </article>

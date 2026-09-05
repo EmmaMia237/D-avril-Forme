@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { PageTitle, Panel } from "@/components/admin-ui";
+import { formatPrice } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -21,8 +22,7 @@ export const Route = createFileRoute("/admin/customers")({
 });
 
 function CustomersPage() {
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

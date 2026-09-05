@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/currency";
 import {
   Table,
   TableBody,
@@ -144,7 +145,7 @@ function OffersPage() {
                             <TableCell className="text-primary">
                               {t.discountPercent
                                 ? `${t.discountPercent}% OFF`
-                                : `$${t.discountValue} OFF`}
+                                : `${formatPrice(Number(t.discountValue || 0))} OFF`}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {t.description || "Storewide offer"}

@@ -8,6 +8,7 @@ import type { Product } from "@/lib/shop-data";
 import { useCart } from "@/lib/cart";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { apiFetch } from "@/lib/api-client";
+import { formatPrice } from "@/lib/currency";
 
 export function Stars({ rating, reviews }: { rating: number; reviews?: number }) {
   const r = Math.max(0, Math.min(5, Number(rating || 0)));
@@ -34,8 +35,7 @@ export function Stars({ rating, reviews }: { rating: number; reviews?: number })
 }
 
 export function ProductCard({ product }: { product: Product }) {
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);

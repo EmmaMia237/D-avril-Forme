@@ -18,7 +18,24 @@ import {
   TableRow,
 } from "./components/ui/table";
 import { Badge } from "./components/ui/badge";
+import { formatPrice } from "../../shared/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./components/ui/dialog";
+
+const PRODUCT_SAVE_TIMEOUT_MS = 30_000;
+
+function createProductSaveTimeout() {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), PRODUCT_SAVE_TIMEOUT_MS);
+  return {
+    signal: controller.signal,
+    clear: () => window.clearTimeout(timeoutId),
+  };
+}
+
+function isProductSaveTimeout(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /timeout|timed out|aborted/i.test(message);
+}
 
 function DesignsPage() {
   const [productsList, setProductsList] = useState<any[]>([]);
@@ -229,7 +246,13 @@ function DesignsPage() {
         try {
           const fd = new FormData();
           filesToUpload.forEach((im: any) => fd.append('files', im.file));
-          const upRes = await apiFetch('/api/admin/upload', { method: 'POST', body: fd });
+          const timeout = createProductSaveTimeout();
+          let upRes: Response;
+          try {
+            upRes = await apiFetch('/api/admin/upload', { method: 'POST', body: fd, signal: timeout.signal });
+          } finally {
+            timeout.clear();
+          }
           const upData = await upRes.json().catch(() => ({}));
           if (!upRes.ok || !upData?.ok) {
             toast.error('Image upload failed: ' + (upData?.error || ''));
@@ -247,7 +270,7 @@ function DesignsPage() {
           });
         } catch (upErr) {
           console.error('Upload failed', upErr);
-          toast.error('Image upload failed');
+          toast.error(isProductSaveTimeout(upErr) ? 'Request timed out, please try again' : 'Image upload failed');
           setSaving(false);
           return;
         }
@@ -273,13 +296,26 @@ function DesignsPage() {
       let res: Response | null = null;
       let data: any = null;
       try {
+        const timeout = createProductSaveTimeout();
         if (editing && editing._id) {
-          res = await apiFetch(`/api/admin/products/${editing._id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+          try {
+            res = await apiFetch(`/api/admin/products/${editing._id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: timeout.signal });
+          } finally {
+            timeout.clear();
+          }
         } else {
-          res = await apiFetch('/api/admin/products', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+          try {
+            res = await apiFetch('/api/admin/products', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: timeout.signal });
+          } finally {
+            timeout.clear();
+          }
         }
       } catch (networkErr) {
         console.error('Primary apiFetch failed:', networkErr);
+        if (isProductSaveTimeout(networkErr)) {
+          toast.error('Request timed out, please try again');
+          return;
+        }
       }
 
       if (res) {
@@ -314,7 +350,13 @@ function DesignsPage() {
         const fallbackBase = (import.meta.env.VITE_API_BASE_URL && String(import.meta.env.VITE_API_BASE_URL).trim()) || 'http://localhost:4000';
         const url = editing && editing._id ? `${fallbackBase.replace(/\/$/, '')}/api/admin/products/${editing._id}` : `${fallbackBase.replace(/\/$/, '')}/api/admin/products`;
         console.warn('Attempting fallback POST to', url);
-        const altRes = await fetch(url, { method: editing && editing._id ? 'PUT' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' });
+        const timeout = createProductSaveTimeout();
+        let altRes: Response;
+        try {
+          altRes = await fetch(url, { method: editing && editing._id ? 'PUT' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include', signal: timeout.signal });
+        } finally {
+          timeout.clear();
+        }
         const altData = await altRes.json().catch(() => ({}));
         if (altRes.ok && altData?.ok) {
           toast.success('Saved (via fallback)');
@@ -334,7 +376,7 @@ function DesignsPage() {
         console.error('Fallback response', altRes.status, await (altRes.text().catch(() => '')));
       } catch (err2) {
         console.error('Fallback attempt failed:', err2);
-        toast.error('Save failed: network error contacting API');
+        toast.error(isProductSaveTimeout(err2) ? 'Request timed out, please try again' : 'Save failed: network error contacting API');
       }
     } catch (err) {
       console.error('Unexpected save error:', err);
@@ -540,7 +582,7 @@ function DesignsPage() {
                   }
                 },
                 { key: 'name', title: 'Product / SKU', render: (p:any) => (<div className="font-semibold"><div>{p.name}</div><div className="text-xs text-muted-foreground">{p.sku || p._id}</div></div>) },
-                { key: 'price', title: 'Price', render: (p:any) => (<div>${Number(p.price || 0).toFixed(2)}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale ${Number(p.salePrice || 0).toFixed(2)}</div> : null}</div>) },
+                { key: 'price', title: 'Price', render: (p:any) => (<div>{formatPrice(Number(p.price || 0))}{p.salePrice ? <div className="text-xs text-muted-foreground">Sale {formatPrice(Number(p.salePrice || 0))}</div> : null}</div>) },
                 { key: 'stock', title: 'Inventory', render: (p:any) => ((p.stock || 0) <=0 ? <Badge variant="destructive">Out</Badge> : (p.stock <=5 ? <Badge variant="outline">Low ({p.stock})</Badge> : <Badge variant="secondary">{p.stock}</Badge>)) },
                 { key: 'status', title: 'Status', render: (p:any) => <StatusPill status={p.status || 'Draft'} /> },
                 { key: 'created', title: 'Created', render: (p:any) => new Date(p.createdAt || p.created || p.created_at || Date.now()).toLocaleDateString() },
@@ -603,7 +645,7 @@ function DesignsPage() {
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div>
                     <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Price</span>
-                    <span className="font-semibold text-slate-900">${Number(previewProduct?.price || 0).toFixed(2)}</span>
+                    <span className="font-semibold text-slate-900">{formatPrice(Number(previewProduct?.price || 0))}</span>
                   </div>
                   <div>
                     <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">Stock</span>

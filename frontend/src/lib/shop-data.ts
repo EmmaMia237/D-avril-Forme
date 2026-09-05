@@ -521,7 +521,7 @@ export const templates: Template[] = [
 export const coupons = [
   { code: "PRINT20", label: "20% off your first print order", note: "New customers · min. 1 item" },
   { code: "BULK30", label: "30% off orders of 50+ items", note: "Corporate & team merch" },
-  { code: "SHIPFREE", label: "Free express shipping", note: "Orders above $120" },
+  { code: "SHIPFREE", label: "Free express shipping", note: "Orders above £120" },
   { code: "MUGPAIR", label: "Buy 2 mugs, get 1 free", note: "Drinkware only" },
 ];
 

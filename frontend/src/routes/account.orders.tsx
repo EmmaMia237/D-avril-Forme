@@ -6,6 +6,7 @@ import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api-client";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatPrice } from "@/lib/currency";
 
 type OrderItem = {
   productId?: string | null;
@@ -272,7 +273,7 @@ function MyOrdersPage() {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(value);
+  return formatPrice(value);
 }
 
 function formatDate(value?: string | null) {

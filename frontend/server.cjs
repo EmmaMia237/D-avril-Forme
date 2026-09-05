@@ -171,7 +171,7 @@ app.post("/api/payment/create-checkout", async (req, res) => {
     if (stripe) {
       const line_items = items.map((it) => ({
         price_data: {
-          currency: (it.currency || "usd").toLowerCase(),
+          currency: (it.currency || "gbp").toLowerCase(),
           product_data: { name: it.name },
           unit_amount: Math.round((it.amount ?? it.price ?? 0) * 100),
         },

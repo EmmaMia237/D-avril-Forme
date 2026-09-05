@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api-client";
 import { useCart } from "@/lib/cart";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatPrice } from "@/lib/currency";
 
 const views = ["Front", "Back", "Right Sleeve", "Left Sleeve", "Neck Tag"] as const;
 const defaultSizes = ["S", "M", "L", "XL", "XXL"];
@@ -112,10 +113,6 @@ function constrainArtworkPosition(position: ArtworkPosition, size: number) {
     x: clamp(position.x, -maxOffset, maxOffset),
     y: clamp(position.y, -maxOffset, maxOffset),
   };
-}
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(value);
 }
 
 function normalizeOptionList(options: unknown) {
@@ -1126,5 +1123,3 @@ function StaticSlider({
 }
 
 export default ProductConfigurator;
-
-

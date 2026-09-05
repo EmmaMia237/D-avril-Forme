@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatPrice } from "@/lib/currency";
 
 export const Route = createFileRoute("/custom-templates")({
   head: () => ({
@@ -141,7 +142,7 @@ function CustomTemplatesPage() {
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">{p.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          From ${Number(basePrice || 0).toFixed(2)}
+                          From {formatPrice(Number(basePrice || 0))}
                         </p>
                       </div>
                     </div>

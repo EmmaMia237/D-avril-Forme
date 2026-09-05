@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { CircleDollarSign, Landmark, Receipt } from "lucide-react";
 import { payments, revenueSeries } from "@/lib/shop-data";
+import { formatPrice } from "@/lib/currency";
 
 export const Route = createFileRoute("/admin/payments")({
   component: function AdminPaymentsRedirect() {
@@ -24,8 +25,7 @@ export const Route = createFileRoute("/admin/payments")({
 const ranges = ["Daily", "Weekly", "Monthly"];
 
 function PaymentsPage() {
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const [range, setRange] = useState("Monthly");
   const data =
     range === "Monthly"
@@ -64,7 +64,7 @@ function PaymentsPage() {
         <KpiCard
           icon={Receipt}
           label="Pending settlement"
-          value="$388"
+          value={formatPrice(gross)}
           delta="1 card transaction"
         />
       </div>

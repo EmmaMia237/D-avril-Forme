@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { apiFetch } from "@/lib/api-client";
+import { formatPrice } from "@/lib/currency";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { products as fallbackProducts, type Product } from "@/lib/shop-data";
 
@@ -149,8 +150,7 @@ function getSimilarProducts(currentProduct: Product | null, allProducts: Product
 
 function ProductPage() {
   const { id } = useParams({}) as { id?: string };
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const navigate = useNavigate();
   const { addItem, closeCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
@@ -606,7 +606,13 @@ function ProductPage() {
         <div className="mt-8 mb-10 border-t border-slate-200 pt-8">
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              { key: "details", title: "Product Details", content: `${currentProduct.name} is crafted in ${currentProduct.material}. Designed for a premium everyday feel with a soft finish, vibrant print detail, and a tailored fit for modern gifting and branding needs.` },
+              {
+                key: "details",
+                title: "Product Details",
+                content:
+                  currentProduct.description?.trim() ||
+                  `${currentProduct.name} is crafted in ${currentProduct.material}. Designed for a premium everyday feel with a soft finish, vibrant print detail, and a tailored fit for modern gifting and branding needs.`,
+              },
               { key: "care", title: "Material & Care", content: "Machine wash cold on a gentle cycle. Wash inside out. Tumble dry low or air dry. Avoid bleach and direct high heat to preserve print quality." },
               { key: "shipping", title: "Store & Fulfillment", content: "Every order is proudly printed in-house and shipped with secure packaging. We offer a 14-day return window for eligible products and a satisfaction guarantee on every order." },
             ].map((section) => (

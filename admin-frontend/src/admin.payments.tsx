@@ -14,6 +14,7 @@ import {
 } from "./components/ui/table";
 import { CircleDollarSign, Landmark, Receipt } from "lucide-react";
 import { payments, revenueSeries } from "./lib/shop-data";
+import { formatPrice } from "../../shared/currency";
 
 
 const ranges = ["Daily", "Weekly", "Monthly"];
@@ -24,8 +25,7 @@ function PaymentsPage() {
   const [revenueState, setRevenueState] = useState<Array<Record<string, any>>>(Array.isArray(revenueSeries) ? revenueSeries : []);
   // Confirm dialog for clearing payments
   const [showClearDialog, setShowClearDialog] = useState(false);
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(Number.isFinite(v) ? v : 0);
+  const formatEur = formatPrice;
   const data =
     range === "Monthly"
       ? revenueState

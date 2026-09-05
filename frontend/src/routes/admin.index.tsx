@@ -13,6 +13,7 @@ import {
 
 import { KpiCard, PageTitle, Panel, StatusPill } from "@/components/admin-ui";
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/currency";
 import {
   Table,
   TableBody,
@@ -35,8 +36,7 @@ export const Route = createFileRoute("/admin/")({
 const POLL_MS = 5000;
 
 function AdminOverview() {
-  const formatEur = (v: number) =>
-    new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(v);
+  const formatEur = formatPrice;
   const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

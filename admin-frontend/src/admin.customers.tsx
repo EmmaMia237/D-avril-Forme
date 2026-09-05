@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "./components/ui/table";
 import { apiFetch } from "./lib/api-client";
+import { formatPrice } from "../../shared/currency";
 
 
 function CustomersPage() {
@@ -52,7 +53,7 @@ function CustomersPage() {
               { key: 'name', title: 'Customer', render: (c:any) => c.name },
               { key: 'email', title: 'Email', render: (c:any) => <div className="text-muted-foreground">{c.email}</div> },
               { key: 'orders', title: 'Orders', render: (c:any) => c.orders },
-              { key: 'spend', title: 'Lifetime spend', render: (c:any) => <div className="font-semibold text-primary">${Number(c.spend || 0).toLocaleString()}</div> },
+              { key: 'spend', title: 'Lifetime spend', render: (c:any) => <div className="font-semibold text-primary">{formatPrice(Number(c.spend || 0))}</div> },
               { key: 'since', title: 'Customer since', render: (c:any) => c.since },
             ]}
             rows={customers}

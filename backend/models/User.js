@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
         name: { type: String, default: '' },
         price: { type: Number, default: 0 },
         quantity: { type: Number, default: 1 },
-        currency: { type: String, default: 'usd' },
+        currency: { type: String, default: 'gbp' },
         image: { type: String, default: '' },
         size: { type: String, default: '' },
         color: { type: String, default: '' },

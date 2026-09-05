@@ -128,7 +128,7 @@ function normalizeCartItem(item: Partial<CartItem> | null | undefined): CartItem
     name: String(item.name || "Custom item"),
     price: Number(item.price || 0),
     quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
-    currency: item.currency || "usd",
+    currency: item.currency || "gbp",
     image: item.image || "",
     customization: item.customization ?? undefined,
     size: item.size || "",
@@ -278,7 +278,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         name: p.name,
         price: p.price,
         quantity: qty,
-        currency: "usd",
+        currency: "gbp",
         image: customization?.image || p.image,
         customization,
       };

@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        items: [{ name: 'Test Item', amount: 10.0, quantity: 1, currency: 'usd' }],
+        items: [{ name: 'Test Item', amount: 10.0, quantity: 1, currency: 'gbp' }],
         success_url: 'http://localhost:5174/',
         cancel_url: 'http://localhost:5174/',
       }),

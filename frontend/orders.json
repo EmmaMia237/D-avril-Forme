@@ -41,7 +41,7 @@
           "name": "Ceramic Wrap Mug 11oz",
           "amount": 16,
           "quantity": 1,
-          "currency": "usd",
+          "currency": "gbp",
           "customization": {
             "text": "",
             "fontSize": 32,
@@ -95,13 +95,13 @@
           "name": "Enamel Camp Mug",
           "amount": 20,
           "quantity": 1,
-          "currency": "usd"
+          "currency": "gbp"
         },
         {
           "name": "Enamel Camp Mug",
           "amount": 20,
           "quantity": 1,
-          "currency": "usd",
+          "currency": "gbp",
           "customization": {
             "text": "D'AVRIL",
             "fontSize": 21,
@@ -150,7 +150,7 @@
       "items": [
         {
           "amount": 9.99,
-          "currency": "usd",
+          "currency": "gbp",
           "quantity": 1,
           "name": "Demo Test Tee",
           "customization": {

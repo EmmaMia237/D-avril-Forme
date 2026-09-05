@@ -306,7 +306,7 @@ function normalizeCartItem(item) {
     name: String(item.name || 'Custom item'),
     price: Number(item.price || 0),
     quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
-    currency: item.currency || 'usd',
+    currency: item.currency || 'gbp',
     image: item.image || '',
     size: item.size || '',
     color: item.color || '',
@@ -702,10 +702,10 @@ app.get('/api/products', async (req, res) => {
     const requestedLimit = parseInt(String(req.query.limit || ''), 10);
     const limit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(1000, requestedLimit) : 200;
 
-        // If caller requests a lightweight summary (no images), return minimal fields quickly
+        // If caller requests a lightweight summary, return the fields needed by admin editing quickly
         const summary = req.query && (String(req.query.summary) === '1' || String(req.query.summary).toLowerCase() === 'true');
         if (summary) {
-          const products = await addReviewStats(await Product.find(q).select('name sku category price stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
+          const products = await addReviewStats(await Product.find(q).select('name sku category description price images previewPaths stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
           products.forEach(p => {
             p.customizable = p.is_customizable === true;
             p.configurable = p.is_customizable === true;
@@ -713,7 +713,7 @@ app.get('/api/products', async (req, res) => {
           return res.json({ ok: true, products, truncated: products.length >= limit });
         }
 
-        let products = await addReviewStats(await Product.find(q).select('name sku category price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
+        let products = await addReviewStats(await Product.find(q).select('name sku category description price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
         // Strip large data URLs from image previews to keep list responses small
         products = products.map(p => {
           if (Array.isArray(p.images)) {
@@ -1162,7 +1162,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
       name: item?.name || 'Item',
       amount: Number(item?.amount ?? item?.price ?? 0),
       quantity: Math.max(1, Number(item?.quantity || 1)),
-      currency: item?.currency || 'eur',
+      currency: item?.currency || 'gbp',
       customization: item?.customization || null,
       size: item?.size || '',
       color: item?.color || '',
@@ -1224,7 +1224,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
             const metadata = compactCustomization ? { custom: compactStripeString(summarizeCustomizationText(compactCustomization), 450) } : undefined;
             return {
               price_data: {
-                currency: it.currency || 'eur',
+                currency: it.currency || 'gbp',
                 product_data: {
                   name: it.name || 'Item',
                   description,
@@ -1325,7 +1325,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
               // Note: multiple entries for the same product may exist if splitting was required
               const entry = {
                 price_data: {
-                  currency: r.item.currency || 'eur',
+                  currency: r.item.currency || 'gbp',
                   product_data: {
                     name: r.item.name || 'Item',
                     description,
@@ -1598,10 +1598,20 @@ app.put('/api/admin/products/:id', async (req, res) => {
     if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
     await connectDb();
     // Derive isPublished from incoming status: status === 'Published' -> true, otherwise false
+    const existing = await Product.findById(req.params.id).lean();
+    if (!existing) return res.status(404).json({ ok: false, error: 'Product not found' });
+
     const productType = String(req.body?.productType ?? existing.productType ?? 'pre-designed');
+    const updates = { ...req.body, productType, is_customizable: productType === 'blank', updatedAt: new Date() };
+    const existingHasRealImages = Array.isArray(existing.images) && existing.images.some((image) => {
+      const url = typeof image === 'string' ? image : image?.url;
+      return typeof url === 'string' && url.trim().length > 0;
+    });
+    if (Array.isArray(req.body?.images) && req.body.images.length === 0 && existingHasRealImages) {
+      updates.images = existing.images;
+    }
     updates.isPublished = String(req.body.status) === 'Published';
     const updated = await Product.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!updated) return res.status(404).json({ ok: false, error: 'Product not found' });
     try { sendSseEvent('product-updated', { product: updated }); } catch (e) {}
     return res.json({ ok: true, product: updated });
   } catch (err) {
