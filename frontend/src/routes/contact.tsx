@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { faqs } from "@/lib/shop-data";
+import { apiFetch } from "@/lib/api-client";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -48,6 +49,7 @@ const inquirySchema = z.object({
 function ContactPage() {
   const prefersReducedMotion = useReducedMotion();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const revealInitial = prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 };
   const revealInView = { opacity: 1, y: 0 };
   const revealViewport = { once: true, amount: 0.2 };
@@ -69,8 +71,24 @@ function ContactPage() {
       return;
     }
     setErrors({});
-    e.currentTarget.reset();
-    toast.success("Inquiry sent — our studio replies within one business day.");
+    setSubmitting(true);
+    const formElement = e.currentTarget;
+    void apiFetch("/api/contact/inquiry", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(parsed.data),
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data?.error || "Unable to send inquiry");
+        formElement.reset();
+        toast.success("Inquiry sent — our studio replies within one business day.");
+      })
+      .catch((error) => {
+        console.error("Contact inquiry failed", error);
+        toast.error(error instanceof Error ? error.message : "Unable to send inquiry");
+      })
+      .finally(() => setSubmitting(false));
   };
 
   return (
@@ -93,7 +111,7 @@ function ContactPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           {[
-            { icon: Mail, title: "Email", value: "support@avrilforme.com" },
+            { icon: Mail, title: "Email", value: "info@osanprints.com", href: "mailto:info@osanprints.com" },
             {
               icon: Phone,
               title: "Business & WhatsApp",
@@ -160,8 +178,8 @@ function ContactPage() {
               <p className="mt-1 text-xs text-destructive">{errors["message"]}</p>
             )}
           </div>
-          <Button type="submit" size="lg" className="mt-6 w-full sm:w-auto">
-            Send Inquiry
+          <Button type="submit" size="lg" disabled={submitting} className="mt-6 w-full sm:w-auto">
+            {submitting ? "Sending..." : "Send Inquiry"}
           </Button>
         </motion.form>
       </div>

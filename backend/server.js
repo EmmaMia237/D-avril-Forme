@@ -10,6 +10,8 @@ const Order = require('./models/Order');
 const Review = require('./models/Review');
 const Offer = require('./models/Offer');
 const Category = require('./models/Category');
+const { sendOrderConfirmationEmail, sendPaymentFailedEmail, sendOrderStatusEmail, sendNewProductEmail, sendRecommendationEmail, sendContactInquiryEmail } = require('./email-service');
+const { getRecommendationsForUser } = require('./recommendations');
 
 const app = express();
 const mongoose = require('mongoose');
@@ -125,9 +127,13 @@ app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), asyn
       const paymentStatus = status === 'Paid' ? 'paid' : status === 'Payment Failed' ? 'failed' : 'pending';
       const order = await Order.findOne({ sessionId });
       if (order && order.paymentStatus !== 'paid' && order.status !== 'Paid') {
+        const previousStatus = order.status;
         order.status = status;
         order.paymentStatus = paymentStatus;
         await order.save();
+        if (status === 'Paid') await sendOrderConfirmationEmail(order, event.id);
+        if (status === 'Payment Failed') await sendPaymentFailedEmail(order, event.id);
+        if (status !== previousStatus && !['Paid', 'Payment Failed'].includes(status)) await sendOrderStatusEmail(order, previousStatus);
       }
     }
 
@@ -385,12 +391,34 @@ app.post('/api/auth/register', async (req, res) => {
       emailOptIn: emailOptIn === true,
       role: 'user',
     });
+
     const token = signToken({ sub: String(user._id), role: 'user' });
     createSessionCookie(res, token);
     return res.status(201).json({ ok: true, token, user: { id: String(user._id), email: user.email, name: user.name, address: user.address, emailOptIn: user.emailOptIn, role: user.role } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, error: 'Failed to register user' });
+  }
+});
+
+app.post('/api/contact/inquiry', async (req, res) => {
+  try {
+    const inquiry = {
+      name: String(req.body?.name || '').trim(),
+      email: String(req.body?.email || '').trim().toLowerCase(),
+      orderId: String(req.body?.orderId || '').trim(),
+      subject: String(req.body?.subject || '').trim(),
+      message: String(req.body?.message || '').trim(),
+    };
+    if (!inquiry.name || inquiry.name.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inquiry.email) || inquiry.email.length > 255 || !inquiry.subject || inquiry.subject.length > 150 || inquiry.message.length < 10 || inquiry.message.length > 1000 || inquiry.orderId.length > 32) {
+      return res.status(400).json({ ok: false, error: 'Please provide valid inquiry details' });
+    }
+    const result = await sendContactInquiryEmail(inquiry);
+    if (!result.sent) return res.status(503).json({ ok: false, error: 'Unable to send inquiry right now' });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Contact inquiry failed', err);
+    return res.status(500).json({ ok: false, error: 'Unable to send inquiry' });
   }
 });
 
@@ -454,6 +482,20 @@ app.post('/api/auth/admin-login', async (req, res) => {
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('session', COOKIE_OPTIONS);
   return res.json({ ok: true });
+});
+
+app.put('/api/account/preferences', async (req, res) => {
+  try {
+    const auth = await getUserFromToken(req);
+    if (!auth) return res.status(401).json({ ok: false, error: 'Authentication required' });
+    if (typeof req.body?.emailOptIn !== 'boolean') return res.status(400).json({ ok: false, error: 'emailOptIn must be true or false' });
+    await connectDb();
+    const user = await User.findByIdAndUpdate(auth.user._id, { emailOptIn: req.body.emailOptIn }, { new: true }).lean();
+    return res.json({ ok: true, emailOptIn: user.emailOptIn });
+  } catch (err) {
+    console.error('Update account preferences error', err);
+    return res.status(500).json({ ok: false, error: 'Unable to update email preferences' });
+  }
 });
 
 app.get('/api/auth/me', async (req, res) => {
@@ -1465,8 +1507,20 @@ app.put('/api/admin/orders/:id', async (req, res) => {
     const admin = await getAdminFromToken(req);
     if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
     await connectDb();
-    const updated = await Order.findByIdAndUpdate(req.params.id, { ...req.body, updatedAt: new Date() }, { new: true }).lean();
-    if (!updated) return res.status(404).json({ ok: false, error: 'Order not found' });
+    const existing = await Order.findById(req.params.id);
+    if (!existing) return res.status(404).json({ ok: false, error: 'Order not found' });
+    const previousStatus = existing.status;
+    // Keep the admin update surface compatible with the order model without allowing
+    // identity, payment-session, or timestamp fields to be overwritten.
+    const editableFields = ['trackingNumber', 'userEmail', 'userName', 'paymentMethod', 'items', 'total', 'status', 'paymentStatus'];
+    for (const field of editableFields) {
+      if (Object.prototype.hasOwnProperty.call(req.body || {}, field)) {
+        existing[field] = req.body[field];
+      }
+    }
+    await existing.save();
+    const updated = existing.toObject();
+    if (updated.status !== previousStatus) await sendOrderStatusEmail(updated, previousStatus);
     return res.json({ ok: true, order: updated });
   } catch (err) {
     console.error(err);
@@ -1498,6 +1552,7 @@ app.get('/api/admin/customers', async (req, res) => {
     return res.json({
       ok: true,
       customers: customers.map((entry) => ({
+        id: entry._id.email,
         name: entry._id.name || entry._id.email,
         email: entry._id.email,
         orders: entry.orders,
@@ -1611,6 +1666,47 @@ app.put('/api/admin/products/:id', async (req, res) => {
     const existingHasRealImages = Array.isArray(existing.images) && existing.images.some((image) => {
       const url = typeof image === 'string' ? image : image?.url;
       return typeof url === 'string' && url.trim().length > 0;
+    });
+
+    app.post('/api/admin/products/:id/new-arrival', async (req, res) => {
+      try {
+        const admin = await getAdminFromToken(req);
+        if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
+        await connectDb();
+        const product = await Product.findOne({ _id: req.params.id, isPublished: true }).lean();
+        if (!product) return res.status(404).json({ ok: false, error: 'Published product not found' });
+
+        const purchasedProductIds = (await Product.find({ category: product.category }).select('_id').lean()).map((item) => String(item._id));
+        const orders = await Order.find({ 'items.productId': { $in: purchasedProductIds } }).select('userId userEmail').lean();
+        const eligibleIds = [...new Set(orders.map((order) => String(order.userId || '')).filter(Boolean))];
+        const users = await User.find({ _id: { $in: eligibleIds }, emailOptIn: true }).select('name email').lean();
+        const results = await Promise.all(users.map((user) => sendNewProductEmail(user, product)));
+        return res.json({ ok: true, attempted: results.length, sent: results.filter((result) => result.sent).length });
+      } catch (err) {
+        console.error('New arrival campaign failed', err);
+        return res.status(500).json({ ok: false, error: 'Unable to send new arrival campaign' });
+      }
+    });
+
+    app.post('/api/admin/customers/:id/recommendations', async (req, res) => {
+      try {
+        const admin = await getAdminFromToken(req);
+        if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
+        await connectDb();
+        const customerKey = String(req.params.id || '');
+        const userQuery = mongoose.Types.ObjectId.isValid(customerKey)
+          ? { _id: customerKey, emailOptIn: true }
+          : { email: customerKey.toLowerCase(), emailOptIn: true };
+        const user = await User.findOne(userQuery).select('name email').lean();
+        if (!user) return res.status(404).json({ ok: false, error: 'Subscribed customer not found' });
+        const products = await getRecommendationsForUser(user._id);
+        if (!products.length) return res.json({ ok: true, attempted: 0, sent: 0 });
+        const result = await sendRecommendationEmail(user, products);
+        return res.json({ ok: true, attempted: 1, sent: result.sent ? 1 : 0 });
+      } catch (err) {
+        console.error('Recommendation email failed', err);
+        return res.status(500).json({ ok: false, error: 'Unable to send recommendation email' });
+      }
     });
     if (Array.isArray(req.body?.images) && req.body.images.length === 0 && existingHasRealImages) {
       updates.images = existing.images;

@@ -142,7 +142,7 @@ export default function AdminLogin() {
 
             <div className="pt-4 border-t border-[#f0d9d5] mt-3">
               <div className="flex items-center justify-between text-xs text-[#6b4e4a] mt-3">
-                <span>Need support? <a href="mailto:ops@avrilforme.com" className="text-[#3f2a29] underline">ops@avrilforme.com</a></span>
+                <span>Need support? <a href="mailto:info@osanprints.com" className="text-[#3f2a29] underline">info@osanprints.com</a></span>
                 <a href={storefrontUrl} target="_blank" rel="noopener noreferrer" className="text-[#3f2a29] underline">View storefront</a>
               </div>
             </div>

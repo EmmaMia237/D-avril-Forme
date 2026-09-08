@@ -37,7 +37,7 @@ function SettingsPage() {
             </div>
             <div>
               <Label htmlFor="support">Support email</Label>
-              <Input id="support" defaultValue="support@avrilforme.com" className="mt-1.5" />
+              <Input id="support" defaultValue="info@osanprints.com" className="mt-1.5" />
             </div>
             <div>
               <Label htmlFor="hours">Operating hours</Label>

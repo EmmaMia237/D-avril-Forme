@@ -47,6 +47,8 @@ function MyOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
+  const [emailOptIn, setEmailOptIn] = useState(false);
+  const [savingEmailPreference, setSavingEmailPreference] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,7 +91,6 @@ function MyOrdersPage() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!orders.length) return;
     let active = true;
     async function loadReviewedProducts() {
       try {
@@ -97,6 +98,7 @@ function MyOrdersPage() {
         const me = await meResponse.json().catch(() => ({}));
         const userId = me?.authenticated && me?.user?.id ? String(me.user.id) : null;
         if (!userId) return;
+        setEmailOptIn(me.user.emailOptIn === true);
         const productIds = [...new Set(orders.flatMap((order) => (order.items || []).map((item) => item.productId).filter(Boolean) as string[]))];
         const reviewed = await Promise.all(
           productIds.map(async (productId) => {
@@ -116,6 +118,24 @@ function MyOrdersPage() {
     };
   }, [orders]);
 
+  async function updateEmailPreference(nextValue: boolean) {
+    setEmailOptIn(nextValue);
+    setSavingEmailPreference(true);
+    try {
+      const response = await apiFetch("/api/account/preferences", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ emailOptIn: nextValue }),
+      });
+      if (!response.ok) throw new Error("Unable to save email preference");
+    } catch (error) {
+      console.error("Email preference update failed", error);
+      setEmailOptIn(!nextValue);
+    } finally {
+      setSavingEmailPreference(false);
+    }
+  }
+
   const totalOrderCount = useMemo(() => orders.length, [orders.length]);
 
   return (
@@ -125,6 +145,22 @@ function MyOrdersPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Customer account</p>
             <h1 className="mt-2 font-display text-4xl font-semibold text-foreground">My Orders</h1>
+          </div>
+
+          <div className="mb-5 rounded-lg border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+            <label className="flex items-start gap-3 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={emailOptIn}
+                disabled={savingEmailPreference}
+                onChange={(event) => updateEmailPreference(event.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                <span className="font-medium">Receive OsanPrints email updates</span>
+                <span className="mt-1 block text-xs text-muted-foreground">New product arrivals, recommendations and special offers. Essential order emails are always sent.</span>
+              </span>
+            </label>
           </div>
           <Button asChild variant="secondary" className="w-fit">
             <Link to="/categories">Continue shopping</Link>
