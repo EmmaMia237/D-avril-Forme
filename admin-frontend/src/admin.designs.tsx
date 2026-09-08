@@ -393,7 +393,7 @@ function DesignsPage() {
         name: `${p.name || 'Product'} (Copy)`,
         _id: undefined,
         id: undefined,
-        category: p.category || categoriesList[0]?.name || categoriesList[0]?.slug || '',
+        category: p.category || categoriesList[0]?.slug || categoriesList[0]?.name || '',
       };
       delete payload._id;
       delete payload.id;

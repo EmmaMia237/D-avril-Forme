@@ -150,7 +150,7 @@ function HomePage() {
     let active = true;
     async function loadThreeDPrints() {
       try {
-        const res = await apiFetch(`/api/products?category=${encodeURIComponent("3D Prints")}&limit=1000`);
+        const res = await apiFetch(`/api/products?category=${encodeURIComponent("3D-Prints")}&limit=1000`);
         const data = await res.json().catch(() => ({}));
         if (active && res.ok) {
           setThreeDPrints(
@@ -261,7 +261,7 @@ function HomePage() {
       <div className="-mx-4 mt-6 overflow-x-auto px-4">
         <div className="inline-flex gap-4">
           {cols.map((pair, idx) => (
-            <div key={idx} className="w-64 shrink-0">
+            <div key={idx} className="w-[calc((100vw-3rem)/2)] max-w-64 shrink-0">
               <div className="flex flex-col gap-4">
                 {pair[0] ? (
                   <ProductCard product={pair[0]} />
@@ -274,6 +274,20 @@ function HomePage() {
                   <div className="h-64" />
                 )}
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function SingleRowCarousel({ items }: { items: any[] }) {
+    return (
+      <div className="-mx-4 mt-6 overflow-x-auto px-4">
+        <div className="flex gap-4">
+          {items.map((item) => (
+            <div key={item.id || item._id} className="w-[calc((100vw-3rem)/2)] max-w-64 shrink-0">
+              <ProductCard product={item} />
             </div>
           ))}
         </div>
@@ -307,7 +321,7 @@ function HomePage() {
         <div className="-mx-4 mt-4 overflow-x-auto px-4">
           <div className="inline-flex gap-4">
             {products.slice(0, 10).map((p: any) => (
-              <div key={p.id || p._id} className="w-64 shrink-0">
+              <div key={p.id || p._id} className="w-[calc((100vw-3rem)/2)] max-w-64 shrink-0">
                 <ProductCard product={p} />
               </div>
             ))}
@@ -533,7 +547,7 @@ function HomePage() {
           action={{ to: "/categories/3D-Prints", label: "View More 3D Prints" }}
         />
         {threeDPrints.length > 0 ? (
-          <TwoRowCarousel items={threeDPrints} />
+          <SingleRowCarousel items={threeDPrints} />
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
             3D prints coming soon
@@ -621,7 +635,7 @@ function HomePage() {
               {productsList.slice(0, 5).map((p, index) => (
                 <motion.div
                   key={p.id}
-                  className="w-64 shrink-0 lg:w-auto lg:shrink"
+                  className="w-[calc((100vw-3rem)/2)] max-w-64 shrink-0 lg:w-auto lg:shrink"
                   initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
                   whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.3 }}

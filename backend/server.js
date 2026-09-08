@@ -687,9 +687,14 @@ app.get('/api/products', async (req, res) => {
     if (req.query && req.query.theme) {
       q.theme = String(req.query.theme);
     }
-    // Allow simple category filtering via ?category=Apparel
+    // Match category names/slugs case-insensitively, treating spaces and hyphens as equivalent.
     if (req.query && req.query.category) {
-      q.category = String(req.query.category);
+      const categoryValue = String(req.query.category).trim();
+      const categoryPattern = categoryValue
+        .split(/[\s-]+/)
+        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('[ -]+');
+      q.category = { $regex: `^${categoryPattern}$`, $options: 'i' };
     }
     // Allow filtering for customizable (blank) products via ?customizable=1 or ?productType=blank
     if (req.query && (String(req.query.customizable) === '1' || String(req.query.customizable).toLowerCase() === 'true')) {

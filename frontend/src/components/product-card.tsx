@@ -95,13 +95,42 @@ export function ProductCard({ product }: { product: Product }) {
     }
   }
 
+  const openProductDetails = () => {
+    const pid = product.id || product._id;
+    if (!pid) {
+      toast.error("Product details not available");
+      return;
+    }
+    try {
+      navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
+    } catch (error) {
+      window.location.href = `/product/${encodeURIComponent(String(pid))}`;
+    }
+  };
+
   return (
     <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] active:translate-y-0">
-      <div className="relative h-40 w-full overflow-hidden bg-nude">
+      <div
+        className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        onClick={openProductDetails}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openProductDetails();
+          }
+        }}
+        role="link"
+        tabIndex={0}
+        aria-label={`View details for ${product.name}`}
+      >
+        <div className="relative h-32 w-full overflow-hidden bg-nude sm:h-40">
         <button
           type="button"
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={toggleFavorite}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleFavorite();
+          }}
           disabled={favoriteLoading}
           className="absolute right-3 top-3 z-10 rounded-full bg-background/90 p-2 text-primary shadow-sm transition hover:bg-background"
         >
@@ -124,8 +153,8 @@ export function ProductCard({ product }: { product: Product }) {
             {product.badge}
           </span>
         )}
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1 p-4">
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-1 p-4">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
           {product.category}
         </p>
@@ -140,79 +169,45 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-            {isConfigurable ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="min-w-0"
-                onClick={() => {
-                  const pid = product.id || product._id;
-                  if (!pid) {
-                    try {
-                      toast.error("Product details not available");
-                    } catch (e) {
-                      /* ignore */
-                    }
-                    return;
-                  }
-                  try {
-                    navigate({ to: "/configure", search: { id: pid } });
-                  } catch (e) {
-                    window.location.href = `/configure?id=${encodeURIComponent(pid)}`;
-                  }
-                }}
-              >
-                Configure
-              </Button>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="min-w-0"
-                  onClick={() => {
-                    const pid = product.id || product._id;
-                    if (!pid) {
-                      try {
-                        toast.error("Product details not available");
-                      } catch (e) {
-                        /* ignore */
-                      }
-                      return;
-                    }
-                    try {
-                      navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
-                    } catch (e) {
-                      window.location.href = `/product/${encodeURIComponent(String(pid))}`;
-                    }
-                  }}
-                >
-                  Details
-                </Button>
-                <Button
-                  size="sm"
-                  className="min-w-0"
-                  onClick={() => {
-                    addItem(product);
-                    try {
-                      closeCart();
-                    } catch (e) {
-                      /* ignore */
-                    }
-                    try {
-                      toast.success("Added to cart");
-                    } catch (e) {
-                      /* ignore */
-                    }
-                  }}
-                >
-                  Add to Cart
-                </Button>
-              </>
-            )}
-          </div>
         </div>
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-col items-stretch justify-end gap-2 p-4 pt-0 sm:flex-row sm:items-center">
+        {isConfigurable ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full min-w-0 sm:w-auto"
+            onClick={(event) => {
+              event.stopPropagation();
+              const pid = product.id || product._id;
+              if (!pid) {
+                toast.error("Product details not available");
+                return;
+              }
+              try {
+                navigate({ to: "/configure", search: { id: pid } });
+              } catch (error) {
+                window.location.href = `/configure?id=${encodeURIComponent(pid)}`;
+              }
+            }}
+          >
+            Configure
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="w-full min-w-0 sm:w-auto"
+            onClick={(event) => {
+              event.stopPropagation();
+              addItem(product);
+              closeCart();
+              toast.success("Added to cart");
+            }}
+          >
+            Add to Cart
+          </Button>
+        )}
       </div>
     </article>
   );

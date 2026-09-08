@@ -99,7 +99,7 @@ function CategoriesPage() {
         const categories = Array.isArray(data?.categories) ? data.categories : [];
         const mapped = categories
           .map((category: any) => {
-            const value = category.name || category.slug || "";
+            const value = category.slug || category.name || "";
             if (!value) return null;
             return { value, label: category.name || category.slug || value };
           })

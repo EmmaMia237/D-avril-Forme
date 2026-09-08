@@ -39,6 +39,7 @@ const themes = [
 export function StoreHeader() {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
   const { openCart, items } = useCart();
   const itemCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
@@ -82,7 +83,7 @@ export function StoreHeader() {
               OsanPrints
             </span>
           </Link>
-          <nav className="hidden items-center gap-5 text-sm xl:flex">
+          <nav className="hidden items-center gap-4 text-sm lg:flex">
             {nav.map((item) => (
               <Link
                 key={item.to}
@@ -97,7 +98,7 @@ export function StoreHeader() {
           </nav>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <SearchBox />
+          <SearchBox open={searchOpen} onOpenChange={setSearchOpen} />
           {user ? (
             <div className="relative">
               <Button
@@ -150,7 +151,7 @@ export function StoreHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="xl:hidden hover:bg-primary-light"
+            className="lg:hidden hover:bg-primary-light"
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle navigation"
           >
@@ -161,11 +162,11 @@ export function StoreHeader() {
       {open && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/50 xl:hidden"
+            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <nav className="fixed left-0 right-0 top-12 z-40 max-h-[calc(100vh-48px)] overflow-y-auto border-t border-primary-light bg-primary text-primary-foreground transition-all duration-300 xl:hidden">
+          <nav className="fixed left-0 right-0 top-12 z-40 max-h-[calc(100vh-48px)] overflow-y-auto border-t border-primary-light bg-primary text-primary-foreground transition-all duration-300 lg:hidden">
             <div className="grid gap-1 px-4 py-4 text-sm">
               {nav.map((item) => (
                 <Link
@@ -177,6 +178,7 @@ export function StoreHeader() {
                   {item.label}
                 </Link>
               ))}
+              <ThemesDropdown mobile />
               {user && (
                 <div className="mt-2 border-t border-primary-light pt-3">
                   <div className="mb-2 flex items-center gap-2 px-2 text-sm text-primary-foreground/80">
@@ -210,7 +212,7 @@ export function StoreHeader() {
   );
 }
 
-function ThemesDropdown() {
+function ThemesDropdown({ mobile = false }: { mobile?: boolean }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -228,10 +230,10 @@ function ThemesDropdown() {
   }, [open]);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative${mobile ? " mt-1 border-t border-primary-light pt-1" : ""}`} ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 cursor-pointer rounded-md px-2 py-1 hover:bg-primary-light transition-colors"
+        className={`inline-flex items-center gap-1 cursor-pointer rounded-md px-2 py-1 hover:bg-primary-light transition-colors${mobile ? " w-full justify-between" : ""}`}
       >
         <span className="text-sm text-primary-foreground opacity-90">Themes</span>
         <ChevronDown
@@ -239,7 +241,7 @@ function ThemesDropdown() {
         />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-48 rounded-md border border-border bg-card p-2 shadow-lg z-50">
+        <div className={`absolute left-0 top-full mt-2 w-48 rounded-md border border-border bg-card p-2 shadow-lg z-50${mobile ? " static mt-1 w-full" : ""}`}>
           {themes.map((t) => (
             <Link
               key={t.slug}
@@ -264,7 +266,7 @@ function ThemesDropdown() {
   );
 }
 
-function SearchBox() {
+function SearchBox({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
 
@@ -293,23 +295,34 @@ function SearchBox() {
   };
 
   return (
-    <form onSubmit={onSearch} className="relative hidden items-center md:flex">
-      <Input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search prints, mugs, templates..."
-        className="h-9 w-52 rounded-r-none bg-nude text-foreground lg:w-64"
-        aria-label="Search products"
-      />
+    <>
       <Button
-        type="submit"
+        variant="ghost"
         size="icon"
-        className="h-9 rounded-l-none bg-accent text-accent-foreground hover:bg-accent/90"
-        aria-label="Search"
+        className="hover:bg-primary-light"
+        onClick={() => onOpenChange(true)}
+        aria-label="Open search"
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-5 w-5" />
       </Button>
-    </form>
+      {open && (
+        <div className="fixed inset-0 z-50 grid place-items-start bg-black/50 p-4 pt-20" onClick={() => onOpenChange(false)}>
+          <form onSubmit={onSearch} onClick={(event) => event.stopPropagation()} className="flex w-full max-w-xl items-center rounded-lg bg-card p-3 shadow-xl">
+            <Input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search prints, mugs, templates..."
+              className="h-10 rounded-r-none bg-nude text-foreground"
+              aria-label="Search products"
+            />
+            <Button type="submit" size="icon" className="h-10 rounded-l-none" aria-label="Search">
+              <Search className="h-4 w-4" />
+            </Button>
+          </form>
+        </div>
+      )}
+    </>
   );
 }
 
