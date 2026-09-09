@@ -303,7 +303,8 @@ async function getUserFromToken(req) {
 
 function normalizeCartItem(item) {
   if (!item || typeof item !== 'object') return null;
-  const quantity = Number(item.quantity || 1);
+  const quantity = Number(item.quantity);
+  const maxCartQuantity = 99;
   const productId = item.productId || item.id || '';
   if (!productId) return null;
   return {
@@ -311,7 +312,7 @@ function normalizeCartItem(item) {
     cartId: item.cartId || `${String(productId)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: String(item.name || 'Custom item'),
     price: Number(item.price || 0),
-    quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    quantity: Number.isFinite(quantity) && quantity > 0 ? Math.min(maxCartQuantity, quantity) : 1,
     currency: item.currency || 'gbp',
     image: item.image || '',
     size: item.size || '',
@@ -342,7 +343,7 @@ function mergeCartItems(existingItems, incomingItems) {
 
   return Array.from(merged.values()).map((item) => ({
     ...item,
-    quantity: Math.max(1, Number(item.quantity) || 1),
+    quantity: Math.min(99, Math.max(1, Number(item.quantity) || 1)),
   }));
 }
 
@@ -709,9 +710,10 @@ app.post('/api/cart/sync', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'User not found' });
     }
 
-    const existing = Array.isArray(user.cartItems) ? user.cartItems : [];
-    const merged = mergeCartItems(existing, incoming);
-    user.cartItems = merged;
+    const normalizedIncoming = incoming.map((item) => normalizeCartItem(item)).filter(Boolean);
+    user.cartItems = req.body?.mergeGuestCart === true
+      ? mergeCartItems(user.cartItems, normalizedIncoming)
+      : mergeCartItems([], normalizedIncoming);
     await user.save();
 
     return res.json({ ok: true, items: user.cartItems || [] });

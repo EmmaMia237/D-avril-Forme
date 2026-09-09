@@ -41,7 +41,7 @@ export function StoreHeader() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
-  const { openCart, items } = useCart();
+  const { openCart, items, clear } = useCart();
   const itemCount = items.reduce((s, it) => s + (it.quantity || 0), 0);
 
   useEffect(() => {
@@ -64,6 +64,7 @@ export function StoreHeader() {
       await apiFetch("/api/auth/logout", { method: "POST" });
     } finally {
       setAuthToken(null);
+      clear();
       setUser(null);
       setAccountOpen(false);
     }

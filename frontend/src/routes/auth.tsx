@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { apiFetch, setAuthToken } from "@/lib/api-client";
-import { readStoredCart, syncCartToServer } from "@/lib/cart";
+import { isGuestCart, readStoredCart, syncCartToServer } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,11 +53,14 @@ function AuthPage() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data?.ok === true && data?.token) {
           setAuthToken(data.token);
-          const guestCart = readStoredCart();
+          const guestCart = isGuestCart() ? readStoredCart() : [];
           if (guestCart.length > 0) {
             try {
-              await syncCartToServer(guestCart);
-              window.localStorage.removeItem("af_cart_items");
+              const synced = await syncCartToServer(guestCart, { mergeGuestCart: true });
+              if (synced !== false) {
+                window.localStorage.removeItem("af_cart_items");
+                window.localStorage.removeItem("af_cart_provenance");
+              }
             } catch {
               // keep the session active even if the background sync fails
             }
@@ -80,11 +83,14 @@ function AuthPage() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data?.ok === true && data?.token) {
           setAuthToken(data.token);
-          const guestCart = readStoredCart();
+          const guestCart = isGuestCart() ? readStoredCart() : [];
           if (guestCart.length > 0) {
             try {
-              await syncCartToServer(guestCart);
-              window.localStorage.removeItem("af_cart_items");
+              const synced = await syncCartToServer(guestCart, { mergeGuestCart: true });
+              if (synced !== false) {
+                window.localStorage.removeItem("af_cart_items");
+                window.localStorage.removeItem("af_cart_provenance");
+              }
             } catch {
               // keep the session active even if the background sync fails
             }

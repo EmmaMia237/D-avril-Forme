@@ -2,10 +2,8 @@ import { Heart, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import type { Product } from "@/lib/shop-data";
-import { useCart } from "@/lib/cart";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { apiFetch } from "@/lib/api-client";
 import { formatPrice } from "@/lib/currency";
@@ -36,7 +34,6 @@ export function Stars({ rating, reviews }: { rating: number; reviews?: number })
 
 export function ProductCard({ product }: { product: Product }) {
   const formatEur = formatPrice;
-  const { addItem, closeCart } = useCart();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -48,11 +45,6 @@ export function ProductCard({ product }: { product: Product }) {
       (product.previewPaths && product.previewPaths[0]) ||
       "",
   );
-  const shortDescription = product.description
-    ? String(product.description).slice(0, 80) +
-      (String(product.description).length > 80 ? "…" : "")
-    : product.options || "";
-
   const productId = String(product.id || product._id || "");
 
   useEffect(() => {
@@ -61,7 +53,8 @@ export function ProductCard({ product }: { product: Product }) {
     apiFetch("/api/favorites")
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (active && Array.isArray(data?.productIds)) setLiked(data.productIds.includes(productId));
+        if (active && Array.isArray(data?.productIds))
+          setLiked(data.productIds.includes(productId));
       })
       .catch((error) => console.error("Failed to load favorite state", error));
     return () => {
@@ -79,7 +72,9 @@ export function ProductCard({ product }: { product: Product }) {
     if (favoriteLoading) return;
     setFavoriteLoading(true);
     try {
-      const response = await apiFetch(`/api/favorites/${encodeURIComponent(productId)}`, { method: "POST" });
+      const response = await apiFetch(`/api/favorites/${encodeURIComponent(productId)}`, {
+        method: "POST",
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         toast.error(data?.error || "Unable to update wishlist");
@@ -102,28 +97,33 @@ export function ProductCard({ product }: { product: Product }) {
       return;
     }
     try {
-      navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
+      if (isConfigurable) {
+        navigate({ to: "/configure", search: { id: String(pid) } });
+      } else {
+        navigate({ to: `/product/${encodeURIComponent(String(pid))}` });
+      }
     } catch (error) {
-      window.location.href = `/product/${encodeURIComponent(String(pid))}`;
+      window.location.href = isConfigurable
+        ? `/configure?id=${encodeURIComponent(String(pid))}`
+        : `/product/${encodeURIComponent(String(pid))}`;
     }
   };
 
   return (
-    <article className="group flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] active:translate-y-0">
-      <div
-        className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        onClick={openProductDetails}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openProductDetails();
-          }
-        }}
-        role="link"
-        tabIndex={0}
-        aria-label={`View details for ${product.name}`}
-      >
-        <div className="relative h-32 w-full overflow-hidden bg-nude sm:h-40">
+    <article
+      className="group flex min-h-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      onClick={openProductDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openProductDetails();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={`${isConfigurable ? "Configure" : "View details for"} ${product.name}`}
+    >
+      <div className="relative h-32 w-full overflow-hidden bg-nude sm:h-40">
         <button
           type="button"
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
@@ -153,61 +153,21 @@ export function ProductCard({ product }: { product: Product }) {
             {product.badge}
           </span>
         )}
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-1 p-4">
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
-          {product.category}
-        </p>
+        {isConfigurable && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-background/90 px-2 py-1 text-[10px] font-semibold tracking-wide text-primary uppercase shadow-sm">
+            Configure
+          </span>
+        )}
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1 p-3">
         <h3 className="text-base leading-snug font-semibold">{product.name}</h3>
-        <Stars rating={product.rating ?? 0} reviews={product.reviewCount ?? product.reviews ?? 0} />
-        <p className="text-sm text-muted-foreground">{shortDescription}</p>
-
-        <div className="flex min-w-0 items-center justify-between gap-3 pt-2">
+        <div className="flex min-w-0 items-center justify-between gap-3 pt-1">
           <div className="min-w-0 flex-1">
             <span className="font-display text-xl font-semibold text-primary">
               {formatEur(Number(product.price || 0))}
             </span>
           </div>
-
         </div>
-        </div>
-      </div>
-      <div className="flex min-w-0 flex-col items-stretch justify-end gap-2 p-4 pt-0 sm:flex-row sm:items-center">
-        {isConfigurable ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full min-w-0 sm:w-auto"
-            onClick={(event) => {
-              event.stopPropagation();
-              const pid = product.id || product._id;
-              if (!pid) {
-                toast.error("Product details not available");
-                return;
-              }
-              try {
-                navigate({ to: "/configure", search: { id: pid } });
-              } catch (error) {
-                window.location.href = `/configure?id=${encodeURIComponent(pid)}`;
-              }
-            }}
-          >
-            Configure
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            className="w-full min-w-0 sm:w-auto"
-            onClick={(event) => {
-              event.stopPropagation();
-              addItem(product);
-              closeCart();
-              toast.success("Added to cart");
-            }}
-          >
-            Add to Cart
-          </Button>
-        )}
       </div>
     </article>
   );

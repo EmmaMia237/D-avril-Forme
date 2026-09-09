@@ -3,9 +3,13 @@ import type { Product } from "./shop-data";
 import { apiFetch, getAuthToken } from "./api-client";
 
 const CART_STORAGE_KEY = "af_cart_items";
+const CART_PROVENANCE_KEY = "af_cart_provenance";
+const GUEST_CART_PROVENANCE = "guest";
+const AUTHENTICATED_CART_PROVENANCE = "authenticated";
 const ORDER_STORAGE_KEY = "af_admin_order_snapshots";
 const MAX_DATA_URL_LENGTH = 120000;
 const MAX_CUSTOMIZATION_TEXT = 12000;
+const MAX_CART_QUANTITY = 99;
 
 function sanitizeDataUrl(value?: string) {
   if (!value || typeof value !== "string") return undefined;
@@ -121,13 +125,13 @@ const CartContext = createContext<CartContextType | null>(null);
 
 function normalizeCartItem(item: Partial<CartItem> | null | undefined): CartItem | null {
   if (!item || !item.productId) return null;
-  const quantity = Number(item.quantity || 1);
+  const quantity = Number(item.quantity);
   return {
     cartId: String(item.cartId || `${item.productId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
     productId: String(item.productId),
     name: String(item.name || "Custom item"),
     price: Number(item.price || 0),
-    quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    quantity: Number.isFinite(quantity) && quantity > 0 ? Math.min(MAX_CART_QUANTITY, quantity) : 1,
     currency: item.currency || "gbp",
     image: item.image || "",
     customization: item.customization ?? undefined,
@@ -156,7 +160,7 @@ function mergeCartItems(existing: CartItem[], incoming: CartItem[]) {
 
   return Array.from(map.values()).map((item) => ({
     ...item,
-    quantity: Math.max(1, Number(item.quantity) || 1),
+    quantity: Math.min(MAX_CART_QUANTITY, Math.max(1, Number(item.quantity) || 1)),
   }));
 }
 
@@ -172,13 +176,16 @@ export async function fetchServerCart(): Promise<CartItem[]> {
   }
 }
 
-export async function syncCartToServer(nextItems: CartItem[]) {
+export async function syncCartToServer(nextItems: CartItem[], options: { mergeGuestCart?: boolean } = {}) {
   if (!getAuthToken()) return false;
   try {
     const response = await apiFetch("/api/cart/sync", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ items: nextItems.map((item) => normalizeCartItem(item)).filter(Boolean) }),
+      body: JSON.stringify({
+        items: nextItems.map((item) => normalizeCartItem(item)).filter(Boolean),
+        mergeGuestCart: options.mergeGuestCart === true,
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -200,6 +207,11 @@ export function readStoredCart(): CartItem[] {
   } catch {
     return [];
   }
+}
+
+export function isGuestCart() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(CART_PROVENANCE_KEY) === GUEST_CART_PROVENANCE;
 }
 
 export function readStoredOrders(): any[] {
@@ -230,6 +242,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const compacted = items.map(compactCartItem);
       storeJsonSafely(CART_STORAGE_KEY, compacted, 10);
+      if (items.length === 0) {
+        window.localStorage.removeItem(CART_PROVENANCE_KEY);
+      } else if (getAuthToken()) {
+        window.localStorage.setItem(CART_PROVENANCE_KEY, AUTHENTICATED_CART_PROVENANCE);
+      }
     }
   }, [items]);
 
@@ -242,8 +259,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const serverItems = await fetchServerCart();
       if (!active) return;
       const localItems = readStoredCart();
-      const merged = mergeCartItems(serverItems, localItems);
-      setItems(merged);
+      setItems(serverItems.length > 0 ? serverItems : isGuestCart() ? mergeCartItems([], localItems) : []);
+      if (serverItems.length > 0) {
+        window.localStorage.setItem(CART_PROVENANCE_KEY, AUTHENTICATED_CART_PROVENANCE);
+      }
       hydratedFromServer.current = true;
     })();
 
@@ -261,6 +280,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const closeCart = () => setOpen(false);
 
   const addItem = (p: Product, qty = 1, customization?: any) => {
+    if (!getAuthToken() && typeof window !== "undefined") {
+      window.localStorage.setItem(CART_PROVENANCE_KEY, GUEST_CART_PROVENANCE);
+    }
     setItems((prev) => {
       if (!customization) {
         const idx = prev.findIndex((it) => !it.customization && it.productId === p.id);
@@ -315,7 +337,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const clear = () => setItems([]);
+  const clear = () => {
+    setItems([]);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+      window.localStorage.removeItem(CART_PROVENANCE_KEY);
+    }
+  };
 
   const totalAmount = () => items.reduce((s, it) => s + it.price * it.quantity, 0);
 
