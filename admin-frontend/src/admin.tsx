@@ -25,6 +25,70 @@ import {
 } from "lucide-react";
 import { Input } from "./components/ui/input";
 
+type SearchResult = {
+  id: string;
+  title: string;
+  subtitle: string;
+};
+
+type SearchResults = {
+  products: SearchResult[];
+  orders: SearchResult[];
+  customers: SearchResult[];
+};
+
+const EMPTY_SEARCH_RESULTS: SearchResults = { products: [], orders: [], customers: [] };
+
+function AdminSearchDropdown({
+  query,
+  results,
+  loading,
+  onSelect,
+}: {
+  query: string;
+  results: SearchResults;
+  loading: boolean;
+  onSelect: (type: keyof SearchResults, result: SearchResult) => void;
+}) {
+  if (!query.trim()) return null;
+
+  const groups = [
+    ["products", "Products"],
+    ["orders", "Orders"],
+    ["customers", "Customers"],
+  ] as const;
+  const hasResults = groups.some(([type]) => results[type].length > 0);
+
+  return (
+    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-card p-2 shadow-lg">
+      {loading ? (
+        <p className="px-3 py-2 text-sm text-muted-foreground">Searching...</p>
+      ) : !hasResults ? (
+        <p className="px-3 py-2 text-sm text-muted-foreground">No results found</p>
+      ) : (
+        groups.map(([type, label]) =>
+          results[type].length > 0 ? (
+            <div key={type} className="py-1">
+              <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+              {results[type].map((result) => (
+                <button
+                  key={`${type}-${result.id}`}
+                  type="button"
+                  onClick={() => onSelect(type, result)}
+                  className="block w-full rounded-md px-3 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <span className="block truncate text-sm font-medium text-foreground">{result.title}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{result.subtitle}</span>
+                </button>
+              ))}
+            </div>
+          ) : null
+        )
+      )}
+    </div>
+  );
+}
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,6 +99,9 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchResults, setSearchResults] = React.useState<SearchResults>(EMPTY_SEARCH_RESULTS);
+  const [searchLoading, setSearchLoading] = React.useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
   const dispatchAdminSearch = React.useCallback((value: string) => {
     const next = value ?? "";
@@ -45,6 +112,93 @@ export default function AdminLayout() {
       console.warn("admin search dispatch failed", error);
     }
   }, []);
+
+  React.useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setSearchResults(EMPTY_SEARCH_RESULTS);
+      setSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const [productsResponse, ordersResponse, customersResponse] = await Promise.all([
+          apiFetch(`/api/products?limit=200&summary=1`, { signal: controller.signal }),
+          apiFetch("/api/admin/orders", { signal: controller.signal }),
+          apiFetch("/api/admin/customers", { signal: controller.signal }),
+        ]);
+        const [productsData, ordersData, customersData] = await Promise.all([
+          productsResponse.json().catch(() => ({})),
+          ordersResponse.json().catch(() => ({})),
+          customersResponse.json().catch(() => ({})),
+        ]);
+        const normalizedQuery = query.toLowerCase();
+        const matches = (value: unknown) => String(value || "").toLowerCase().includes(normalizedQuery);
+        const products = (Array.isArray(productsData?.products) ? productsData.products : [])
+          .filter((product: any) => [product.name, product.sku, product.category, product._id, product.id].some(matches))
+          .slice(0, 5)
+          .map((product: any) => ({
+            id: String(product._id || product.id || product.sku || product.name),
+            title: product.name || product.sku || "Product",
+            subtitle: product.sku ? `SKU ${product.sku}` : product.category || "Product",
+          }));
+        const orders = (Array.isArray(ordersData?.orders) ? ordersData.orders : [])
+          .filter((order: any) => [order.id, order.customer, order.email, order.items].some(matches))
+          .slice(0, 5)
+          .map((order: any) => ({
+            id: String(order.id),
+            title: `Order ${order.id}`,
+            subtitle: order.customer || order.email || "Order",
+          }));
+        const customers = (Array.isArray(customersData?.customers) ? customersData.customers : [])
+          .filter((customer: any) => [customer.name, customer.email].some(matches))
+          .slice(0, 5)
+          .map((customer: any) => ({
+            id: String(customer.id || customer.email || customer.name),
+            title: customer.name || customer.email || "Customer",
+            subtitle: customer.email || "Customer",
+          }));
+
+        if (!controller.signal.aborted) setSearchResults({ products, orders, customers });
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Admin search failed", error);
+          setSearchResults(EMPTY_SEARCH_RESULTS);
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!searchContainerRef.current?.contains(event.target as Node)) {
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const handleSearchSelect = React.useCallback(
+    (type: keyof SearchResults, result: SearchResult) => {
+      setSearchQuery("");
+      setMobileSearchOpen(false);
+      const params = new URLSearchParams({ search: type === "products" ? result.title : result.id });
+      if (type === "products") params.set("highlight", result.id);
+      navigate(`/admin/${type === "products" ? "designs" : type}?${params.toString()}`);
+    },
+    [navigate],
+  );
 
   const items = [
     { to: "/admin", label: "Dashboard Overview", icon: LayoutDashboard },
@@ -215,7 +369,7 @@ export default function AdminLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border bg-card">
+        <header ref={searchContainerRef} className="sticky top-0 z-30 border-b border-border bg-card">
           <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
@@ -244,6 +398,7 @@ export default function AdminLayout() {
                   aria-label="Search admin"
                 />
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <AdminSearchDropdown query={searchQuery} results={searchResults} loading={searchLoading} onSelect={handleSearchSelect} />
               </div>
             </div>
 
@@ -284,6 +439,7 @@ export default function AdminLayout() {
                   autoFocus
                   aria-label="Search admin mobile"
                 />
+                <AdminSearchDropdown query={searchQuery} results={searchResults} loading={searchLoading} onSelect={handleSearchSelect} />
               </div>
             </div>
           )}

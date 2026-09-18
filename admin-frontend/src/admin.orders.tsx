@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import { PageTitle, Panel, StatusPill } from "./components/admin-ui";
@@ -26,9 +26,15 @@ function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const searchParam = searchParams.get("search");
+    if (searchParam) setQuery(searchParam);
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;

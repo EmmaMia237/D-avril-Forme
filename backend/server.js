@@ -754,7 +754,7 @@ app.get('/api/products', async (req, res) => {
         // If caller requests a lightweight summary, return the fields needed by admin editing quickly
         const summary = req.query && (String(req.query.summary) === '1' || String(req.query.summary).toLowerCase() === 'true');
         if (summary) {
-          const products = await addReviewStats(await Product.find(q).select('name sku category description price images previewPaths stock status theme createdAt productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
+          const products = await addReviewStats(await Product.find(q).select('name sku category description price salePrice images previewPaths stock status theme createdAt productType is_customizable material colors requiresSizes').limit(limit).sort({ createdAt: -1 }).lean());
           products.forEach(p => {
             p.customizable = p.is_customizable === true;
             p.configurable = p.is_customizable === true;
@@ -762,7 +762,7 @@ app.get('/api/products', async (req, res) => {
           return res.json({ ok: true, products, truncated: products.length >= limit });
         }
 
-        let products = await addReviewStats(await Product.find(q).select('name sku category description price images stock status theme createdAt previewPaths productType is_customizable material colors').limit(limit).sort({ createdAt: -1 }).lean());
+        let products = await addReviewStats(await Product.find(q).select('name sku category description price salePrice images stock status theme createdAt previewPaths productType is_customizable material colors requiresSizes').limit(limit).sort({ createdAt: -1 }).lean());
         // Strip large data URLs from image previews to keep list responses small
         products = products.map(p => {
           if (Array.isArray(p.images)) {

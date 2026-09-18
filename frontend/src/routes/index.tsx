@@ -45,16 +45,26 @@ function HomePage() {
   const [productsList, setProductsList] = useState<any[]>([]);
   const [threeDPrints, setThreeDPrints] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(fallbackCategories || []);
+  const [curatedProductIds, setCuratedProductIds] = useState<string[]>([]);
+  const [categoryImageSelections, setCategoryImageSelections] = useState<Record<string, string>>(
+    {},
+  );
   // Prefer the user-supplied public hero image so it replaces the bundled mockups immediately
   const [heroSrc, setHeroSrc] = useState<string>("/images/hero-image.png");
 
   const categoryImageBySlug = useMemo(() => {
     const images: Record<string, string> = {};
     categoriesList.forEach((category) => {
-      const categoryName = String(category.name || "").trim().toLowerCase();
-      const categorySlug = String(category.slug || "").trim().toLowerCase();
+      const categoryName = String(category.name || "")
+        .trim()
+        .toLowerCase();
+      const categorySlug = String(category.slug || "")
+        .trim()
+        .toLowerCase();
       const products = productsList.filter((product) => {
-        const productCategory = String(product.category || "").trim().toLowerCase();
+        const productCategory = String(product.category || "")
+          .trim()
+          .toLowerCase();
         const image =
           (product.images && product.images[0]?.url) ||
           product.image ||
@@ -65,17 +75,83 @@ function HomePage() {
           image.trim().length > 0
         );
       });
-      const product = products.length > 0 ? products[Math.floor(Math.random() * products.length)] : null;
+      const product = products.find((item) => {
+        const image =
+          (item.images && item.images[0]?.url) ||
+          item.image ||
+          (item.previewPaths && item.previewPaths[0]);
+        return typeof image === "string" && image.trim().length > 0;
+      });
       const productImage =
         product &&
         ((product.images && product.images[0]?.url) ||
           product.image ||
           (product.previewPaths && product.previewPaths[0]));
-      images[category.slug || category.name] = getOptimizedImageUrl(
-        productImage || category.image || "/images/printing-image.png",
-      );
+      const categoryKey = category.slug || category.name;
+      images[categoryKey] =
+        categoryImageSelections[categoryKey] ||
+        getOptimizedImageUrl(productImage || category.image || "/images/printing-image.png");
     });
     return images;
+  }, [categoriesList, categoryImageSelections, productsList]);
+
+  useEffect(() => {
+    setCuratedProductIds((previousIds) => {
+      const currentIds = productsList.map((product) => String(product.id || product._id || ""));
+      const availableIds = new Set(currentIds);
+      const retainedIds = previousIds.filter((id) => availableIds.has(id));
+      const newIds = currentIds.filter((id) => id && !retainedIds.includes(id));
+
+      if (retainedIds.length === 0 && newIds.length > 1) {
+        return [...newIds].sort(() => 0.5 - Math.random()).slice(0, 12);
+      }
+
+      return [...retainedIds, ...newIds].slice(0, 12);
+    });
+  }, [productsList]);
+
+  useEffect(() => {
+    setCategoryImageSelections((previousSelections) => {
+      const nextSelections = { ...previousSelections };
+
+      categoriesList.forEach((category) => {
+        const categoryKey = category.slug || category.name;
+        if (nextSelections[categoryKey]) return;
+
+        const categoryProducts = productsList.filter((product) => {
+          const categoryName = String(category.name || "")
+            .trim()
+            .toLowerCase();
+          const categorySlug = String(category.slug || "")
+            .trim()
+            .toLowerCase();
+          const productCategory = String(product.category || "")
+            .trim()
+            .toLowerCase();
+          const image =
+            (product.images && product.images[0]?.url) ||
+            product.image ||
+            (product.previewPaths && product.previewPaths[0]);
+          return (
+            (productCategory === categoryName || productCategory === categorySlug) &&
+            typeof image === "string" &&
+            image.trim().length > 0
+          );
+        });
+        const randomProduct = categoryProducts[Math.floor(Math.random() * categoryProducts.length)];
+        const image =
+          randomProduct &&
+          ((randomProduct.images && randomProduct.images[0]?.url) ||
+            randomProduct.image ||
+            (randomProduct.previewPaths && randomProduct.previewPaths[0]));
+        if (!image && productsList.length === 0) return;
+        nextSelections[categoryKey] = getOptimizedImageUrl(
+          image || category.image || "/images/printing-image.png",
+        );
+      });
+
+      return nextSelections;
+    });
   }, [categoriesList, productsList]);
 
   useEffect(() => {
@@ -150,7 +226,9 @@ function HomePage() {
     let active = true;
     async function loadThreeDPrints() {
       try {
-        const res = await apiFetch(`/api/products?category=${encodeURIComponent("3D-Prints")}&limit=1000`);
+        const res = await apiFetch(
+          `/api/products?category=${encodeURIComponent("3D-Prints")}&limit=1000`,
+        );
         const data = await res.json().catch(() => ({}));
         if (active && res.ok) {
           setThreeDPrints(
@@ -263,16 +341,8 @@ function HomePage() {
           {cols.map((pair, idx) => (
             <div key={idx} className="w-[calc((100vw-3rem)/2)] max-w-64 shrink-0">
               <div className="flex flex-col gap-4">
-                {pair[0] ? (
-                  <ProductCard product={pair[0]} />
-                ) : (
-                  <div className="h-64" />
-                )}
-                {pair[1] ? (
-                  <ProductCard product={pair[1]} />
-                ) : (
-                  <div className="h-64" />
-                )}
+                {pair[0] ? <ProductCard product={pair[0]} /> : <div className="h-64" />}
+                {pair[1] ? <ProductCard product={pair[1]} /> : <div className="h-64" />}
               </div>
             </div>
           ))}
@@ -339,8 +409,9 @@ function HomePage() {
     themesMap[t].push(p);
   });
 
-  // pick a small random selection for the first two-row horizontal area
-  const shuffled = [...productsList].sort(() => 0.5 - Math.random()).slice(0, 12);
+  const curatedProducts = curatedProductIds
+    .map((id) => productsList.find((product) => String(product.id || product._id || "") === id))
+    .filter(Boolean);
 
   return (
     <StoreLayout>
@@ -376,7 +447,10 @@ function HomePage() {
               deep-pigment ink, packed with care, shipped fast.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <motion.div whileHover={prefersReducedMotion ? {} : { scale: 1.02 }} whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}>
+              <motion.div
+                whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+              >
                 <Button
                   asChild
                   size="lg"
@@ -388,7 +462,10 @@ function HomePage() {
                   </Link>
                 </Button>
               </motion.div>
-              <motion.div whileHover={prefersReducedMotion ? {} : { scale: 1.02 }} whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}>
+              <motion.div
+                whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+              >
                 <Button
                   asChild
                   size="lg"
@@ -481,7 +558,9 @@ function HomePage() {
                   return p.category && (p.category === catName || p.category === cat.slug);
                 }).length;
 
-                const imgSrc = categoryImageBySlug[cat.slug || cat.name] || getOptimizedImageUrl(cat.image || heroImage);
+                const imgSrc =
+                  categoryImageBySlug[cat.slug || cat.name] ||
+                  getOptimizedImageUrl(cat.image || heroImage);
 
                 return (
                   <motion.div
@@ -495,7 +574,9 @@ function HomePage() {
                       to={`/categories/${encodeURIComponent(cat.slug || cat.name)}`}
                       className={`group block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[var(--shadow-lift)] ${featured ? "lg:col-span-2" : ""}`}
                     >
-                      <div className={`overflow-hidden bg-nude ${featured ? "aspect-[1.4/1]" : "aspect-4/3"}`}>
+                      <div
+                        className={`overflow-hidden bg-nude ${featured ? "aspect-[1.4/1]" : "aspect-4/3"}`}
+                      >
                         <img
                           src={imgSrc}
                           alt={`${cat.name} printing mockup`}
@@ -531,7 +612,7 @@ function HomePage() {
         transition={{ duration: 0.45, ease: "easeOut" }}
       >
         <SectionHead eyebrow="Featured" title="Curated picks" />
-        <TwoRowCarousel items={shuffled} />
+        <TwoRowCarousel items={curatedProducts} />
       </motion.div>
 
       <motion.section
@@ -585,7 +666,17 @@ function HomePage() {
             <motion.div
               whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
-              animate={prefersReducedMotion ? {} : { boxShadow: ["0 0 0 rgba(255,255,255,0)", "0 0 18px rgba(255,255,255,0.12)", "0 0 0 rgba(255,255,255,0)"] }}
+              animate={
+                prefersReducedMotion
+                  ? {}
+                  : {
+                      boxShadow: [
+                        "0 0 0 rgba(255,255,255,0)",
+                        "0 0 18px rgba(255,255,255,0.12)",
+                        "0 0 0 rgba(255,255,255,0)",
+                      ],
+                    }
+              }
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             >
               <Button asChild size="lg" variant="secondary" className="relative overflow-hidden">
@@ -602,7 +693,11 @@ function HomePage() {
           .map((t, idx) => (
             <motion.div
               key={t}
-              className={idx % 2 === 0 ? "rounded-[1.5rem] bg-background/80 py-2" : "rounded-[1.5rem] bg-nude/40 py-2"}
+              className={
+                idx % 2 === 0
+                  ? "rounded-[1.5rem] bg-background/80 py-2"
+                  : "rounded-[1.5rem] bg-nude/40 py-2"
+              }
               initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
               whileInView={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}

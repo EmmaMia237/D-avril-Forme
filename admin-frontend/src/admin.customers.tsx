@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { PageTitle, Panel } from "./components/admin-ui";
 import AdminDataTable from "./components/admin-data-table";
@@ -19,6 +20,13 @@ function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    const searchParam = searchParams.get("search");
+    if (searchParam) setQuery(searchParam);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadCustomers() {
@@ -56,7 +64,10 @@ function CustomersPage() {
               { key: 'spend', title: 'Lifetime spend', render: (c:any) => <div className="font-semibold text-primary">{formatPrice(Number(c.spend || 0))}</div> },
               { key: 'since', title: 'Customer since', render: (c:any) => c.since },
             ]}
-            rows={customers}
+            rows={customers.filter((customer) =>
+              !query ||
+              `${customer.name || ""} ${customer.email || ""}`.toLowerCase().includes(query.toLowerCase())
+            )}
             loading={loading}
             onView={(c:any) => { window.location.href = `/admin/customers/${encodeURIComponent(c.email)}` }}
             selectable={false}

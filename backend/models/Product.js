@@ -21,6 +21,8 @@ const productSchema = new mongoose.Schema(
     is_customizable: { type: Boolean, default: false },
     material: { type: String, trim: true, default: '' },
     colors: { type: [String], default: [] },
+    // Whether this product requires size selection (e.g. apparel vs mugs, phone cases, etc.)
+    requiresSizes: { type: Boolean, default: false },
     // Theme slug for Collections (kids, halloween, autumn, anime)
     theme: {
       type: String,

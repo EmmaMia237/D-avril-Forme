@@ -96,6 +96,7 @@ export type Product = {
   material: string;
   colors: string[];
   price: number;
+  salePrice?: number;
   rating?: number;
   reviews?: number;
   reviewCount?: number;
@@ -105,6 +106,7 @@ export type Product = {
   imageByColor?: Record<string, string>;
   productType?: "pre-designed" | "blank";
   sizes?: string[];
+  requiresSizes?: boolean;
   theme?: string;
 };
 

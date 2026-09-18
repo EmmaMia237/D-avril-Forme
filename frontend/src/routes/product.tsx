@@ -326,8 +326,18 @@ function ProductPage() {
 
   const sizeOptions = currentProduct?.sizes?.length ? currentProduct.sizes : ["S", "M", "L", "XL", "XXL"];
   const colorOptions = currentProduct?.colors?.length ? currentProduct.colors : ["Cream", "Maroon", "Charcoal"];
-  const listPrice = Number(currentProduct?.price || 0) * 1.4;
-  const discountValue = Math.max(10, Math.round(((listPrice - Number(currentProduct?.price || 0)) / listPrice) * 100));
+
+  const regularPrice = Number(currentProduct?.price || 0);
+  const salePrice = Number(currentProduct?.salePrice);
+  const hasSalePrice =
+    Number.isFinite(salePrice) &&
+    salePrice > 0 &&
+    salePrice < regularPrice;
+  const discountValue = hasSalePrice
+    ? Math.round(((regularPrice - salePrice) / regularPrice) * 100)
+    : 0;
+  const displayPrice = hasSalePrice ? salePrice : regularPrice;
+  const originalPrice = hasSalePrice ? regularPrice : null;
   const similarProducts = useMemo(() => getSimilarProducts(currentProduct, allProducts), [currentProduct, allProducts]);
   const mainImage = currentProduct ? activeImage || getProductImage(currentProduct, selectedColor) || currentProduct.image : "";
   const existingReview = reviews.find((review) => review.isMine);
@@ -505,13 +515,18 @@ function ProductPage() {
             </div>
 
             <div className="flex items-end gap-3">
-              <span className="text-3xl font-bold text-black">{formatEur(Number(currentProduct.price || 0))}</span>
-              <span className="text-lg text-slate-400 line-through">{formatEur(Number(listPrice || currentProduct.price || 0))}</span>
-              <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-semibold text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
-                Save {discountValue}%
-              </span>
+              <span className="text-3xl font-bold text-black">{formatEur(displayPrice)}</span>
+              {originalPrice !== null && (
+                <>
+                  <span className="text-lg text-slate-400 line-through">{formatEur(originalPrice)}</span>
+                  <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-semibold text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
+                    Save {discountValue}%
+                  </span>
+                </>
+              )}
             </div>
 
+            {currentProduct.requiresSizes === true && (
             <div className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
               <div>
                 <div className="mb-2 flex items-center justify-between">
@@ -565,6 +580,7 @@ function ProductPage() {
                 </div>
               </div>
             </div>
+            )}
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button

@@ -5,6 +5,7 @@ import { apiFetch } from "./lib/api-client";
 import { PageTitle, Panel, StatusPill, KpiCard } from "./components/admin-ui";
 import AdminDataTable from "./components/admin-data-table";
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -38,6 +39,7 @@ function isProductSaveTimeout(error: unknown) {
 }
 
 function DesignsPage() {
+  const [searchParams] = useSearchParams();
   const [productsList, setProductsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -54,6 +56,11 @@ function DesignsPage() {
   // undo hint for deletes
   const [undoItem, setUndoItem] = useState<any>(null);
   const [undoTimeout, setUndoTimeout] = useState<number | null>(null);
+
+  useEffect(() => {
+    const searchParam = searchParams.get("search");
+    if (searchParam) setSearch(searchParam);
+  }, [searchParams]);
 
   const statusOptions = ["All", "Published", "Draft", "Out of Stock"];
   const categoryOptions = useMemo(
@@ -134,6 +141,7 @@ function DesignsPage() {
    productType: "pre-designed",
    theme: "",
    description: "",
+   requiresSizes: false,
    images: [] as Array<{ id: string; url: string; role?: string }>,
   });
 
@@ -196,6 +204,7 @@ function DesignsPage() {
       productType: "pre-designed",
       theme: "",
       description: "",
+      requiresSizes: false,
       images: [],
     });
     setOpenDialog(true);
@@ -216,6 +225,7 @@ function DesignsPage() {
       productType: p.productType || "pre-designed",
       theme: normalizeThemeValue(p.theme),
       description: p.description || "",
+      requiresSizes: p.requiresSizes || false,
       images: (p.images || p.previewPaths || []).map((u: any, i: number) => ({
         id: String(i) + '-' + Date.now(),
         url: typeof u === 'string' ? u : u.url,
@@ -289,6 +299,7 @@ function DesignsPage() {
         status: 'Published',
         productType: form.productType || 'pre-designed',
         theme: form.theme ? normalizeThemeValue(form.theme) : undefined,
+        requiresSizes: form.requiresSizes === true,
         images: images.map((im: any) => ({ url: im.url, role: im.role, variantLabel: im.variantLabel })),
       };
 
@@ -787,6 +798,17 @@ function DesignsPage() {
                     <option value="pre-designed">Pre-designed</option>
                     <option value="blank">Blank / Customizable Template</option>
                   </select>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="requiresSizes"
+                    checked={form.requiresSizes === true}
+                    onChange={(e) => setForm((s:any) => ({ ...s, requiresSizes: (e.target as HTMLInputElement).checked }))}
+                    className="h-4 w-4 cursor-pointer rounded border border-slate-300"
+                  />
+                  <Label htmlFor="requiresSizes" className="cursor-pointer">Requires sizes (e.g. for apparel)</Label>
                 </div>
 
               </div>
