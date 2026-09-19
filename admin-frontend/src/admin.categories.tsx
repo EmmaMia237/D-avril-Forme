@@ -122,18 +122,18 @@ export default function CategoriesAdminPage() {
             ) : (
               <div className="space-y-3">
                 {categories.map((c) => (
-                  <div key={c._id || c.id} className="flex items-center justify-between rounded-md border border-border bg-nude p-3">
-                    <div className="flex items-center gap-4">
+                  <div key={c._id || c.id} className="flex flex-col gap-3 rounded-md border border-border bg-nude p-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex min-w-0 items-center gap-4">
                       <div className="h-16 w-24 overflow-hidden rounded bg-muted">
                         {c.imageUrl ? <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover" /> : <div className="h-full w-full" />}
                       </div>
-                      <div>
-                        <p className="font-semibold">{c.name}</p>
-                        <p className="text-xs text-muted-foreground">{c.slug} · {c.items || 0} products</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{c.name}</p>
+                        <p className="break-words text-xs text-muted-foreground">{c.slug} · {c.items || 0} products</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
                       <Switch checked={!!c.isPublished} onCheckedChange={async (v:any) => {
                         try {
                           const res = await apiFetch(`/api/admin/categories/${c._id || c.id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ isPublished: !!v }) });

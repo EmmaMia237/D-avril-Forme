@@ -532,8 +532,8 @@ function DesignsPage() {
         </div>
 
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-card dark:border-slate-800">
-          <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-2 md:gap-3">
-            <div className="relative w-[170px] shrink-0 sm:w-[200px] md:w-[220px] xl:w-[240px]">
+          <div className="flex min-w-0 flex-col gap-2 px-3 py-2 md:flex-row md:items-center md:justify-between md:gap-3">
+            <div className="relative w-full sm:w-[200px] md:w-[220px] xl:w-[240px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={search}
@@ -543,7 +543,7 @@ function DesignsPage() {
               />
             </div>
 
-            <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-x-auto md:gap-2">
+            <div className="flex min-w-0 w-full items-center justify-start gap-1.5 overflow-x-auto md:flex-1 md:justify-center md:gap-2">
               {statusOptions.map((option) => (
                 <button
                   key={option}
@@ -560,7 +560,7 @@ function DesignsPage() {
               ))}
             </div>
 
-            <div className="ml-auto flex shrink-0 items-center gap-2">
+            <div className="ml-auto flex w-full shrink-0 justify-end gap-2 md:w-auto md:items-center">
               <Button type="button" variant="outline" size="sm" onClick={handleRefresh} className="inline-flex items-center gap-2 whitespace-nowrap">
                 <RotateCw className="h-4 w-4" />
                 Refresh
