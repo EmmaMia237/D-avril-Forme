@@ -293,6 +293,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      const cartImage = customization?.mockupUrl || customization?.image || p.image;
       const cartId = `${p.id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
       const nextItem = {
         cartId,
@@ -301,8 +302,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         price: p.price,
         quantity: qty,
         currency: "gbp",
-        image: customization?.image || p.image,
+        image: cartImage,
         customization,
+        size: p.size,
+        color: p.color,
       };
 
       if (customization) {
@@ -315,7 +318,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           payment: "Pending",
           createdAt: new Date().toISOString(),
           items: `${p.name} x${qty}`,
-          previewImage: customization.image || p.image,
+          previewImage: cartImage,
           customization,
           productName: p.name,
         };

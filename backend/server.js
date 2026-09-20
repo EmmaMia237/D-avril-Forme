@@ -729,7 +729,19 @@ app.get('/api/products', async (req, res) => {
     const q = {};
     // Allow filtering by theme slug: ?theme=kids
     if (req.query && req.query.theme) {
-      q.theme = String(req.query.theme);
+      const themeAliases = {
+        kids: ['kids', 'Kids Collection'],
+        halloween: ['halloween', 'Halloween Collection'],
+        autumn: ['autumn', 'Autumn', 'Fall / Autumn Collection', 'Fall Collection', 'Autumn / Fall Collection'],
+        anime: ['anime', 'Anime Collection'],
+      };
+      const requestedTheme = String(req.query.theme).trim().toLowerCase();
+      const matchingThemes = themeAliases[requestedTheme];
+      if (matchingThemes) {
+        q.theme = { $in: matchingThemes };
+      } else {
+        q.theme = '__unknown_theme__';
+      }
     }
     // Match category names/slugs case-insensitively, treating spaces and hyphens as equivalent.
     if (req.query && req.query.category) {
@@ -1501,6 +1513,23 @@ app.get('/api/admin/orders', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ ok: false, error: 'Unable to load admin orders' });
+  }
+});
+
+app.get('/api/admin/orders/:id', async (req, res) => {
+  try {
+    const admin = await getAdminFromToken(req);
+    if (!admin) return res.status(401).json({ ok: false, error: 'Admin access required' });
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid order id' });
+    }
+    await connectDb();
+    const order = await Order.findById(req.params.id).lean();
+    if (!order) return res.status(404).json({ ok: false, error: 'Order not found' });
+    return res.json({ ok: true, order: { ...order, id: String(order._id) } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ ok: false, error: 'Unable to load admin order' });
   }
 });
 

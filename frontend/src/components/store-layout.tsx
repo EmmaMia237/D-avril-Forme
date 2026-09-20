@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useCart } from "@/lib/cart";
 import { CartDrawer } from "@/components/cart-drawer";
 import { apiFetch, setAuthToken } from "@/lib/api-client";
+import { themes } from "@/lib/shop-data";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -27,13 +28,6 @@ const nav = [
   { to: "/offers", label: "Offers" },
   { to: "/about", label: "About Us" },
   { to: "/contact", label: "Contact / Help" },
-] as const;
-
-const themes = [
-  { name: "Kids Collection", slug: "kids" },
-  { name: "Halloween Collection", slug: "halloween" },
-  { name: "Fall / Autumn Collection", slug: "autumn" },
-  { name: "Anime Collection", slug: "anime" },
 ] as const;
 
 export function StoreHeader() {

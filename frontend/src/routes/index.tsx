@@ -5,7 +5,7 @@ import { BadgeCheck, Boxes, Truck, UploadCloud, ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/product-card";
 import { StoreLayout } from "@/components/store-layout";
 import { Button } from "@/components/ui/button";
-import { categories as fallbackCategories } from "@/lib/shop-data";
+import { categories as fallbackCategories, normalizeThemeSlug, themes } from "@/lib/shop-data";
 const heroImage = "/images/hero-image.png";
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
@@ -404,7 +404,7 @@ function HomePage() {
   // group products by theme
   const themesMap: Record<string, any[]> = {};
   productsList.forEach((p) => {
-    const t = p.theme || "other";
+    const t = normalizeThemeSlug(p.theme) || "other";
     themesMap[t] = themesMap[t] || [];
     themesMap[t].push(p);
   });
@@ -704,7 +704,7 @@ function HomePage() {
               transition={{ duration: 0.45, ease: "easeOut" }}
             >
               <SimpleCarousel
-                title={t.charAt(0).toUpperCase() + t.slice(1)}
+                title={themes.find((theme) => theme.slug === t)?.name || t}
                 products={themesMap[t]}
                 themeSlug={t}
               />

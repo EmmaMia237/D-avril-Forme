@@ -11,6 +11,37 @@ const corporate = printing;
 
 export const categoryImages = { apparel, drinkware, cases, stationery, corporate };
 
+export type ThemeDefinition = {
+  name: string;
+  slug: string;
+  description: string;
+};
+
+export const themes: ThemeDefinition[] = [
+  { name: "Kids Collection", slug: "kids", description: "Playful prints for kids and families." },
+  { name: "Halloween Collection", slug: "halloween", description: "Spooky seasonal designs and gifts." },
+  { name: "Fall / Autumn Collection", slug: "autumn", description: "Warm autumn-inspired prints and colors." },
+  { name: "Anime Collection", slug: "anime", description: "Anime-inspired designs for fans." },
+];
+
+const themeAliases: Record<string, string> = {
+  kids: "kids",
+  "kids collection": "kids",
+  halloween: "halloween",
+  "halloween collection": "halloween",
+  autumn: "autumn",
+  "fall collection": "autumn",
+  "fall / autumn collection": "autumn",
+  "autumn / fall collection": "autumn",
+  anime: "anime",
+  "anime collection": "anime",
+};
+
+export function normalizeThemeSlug(value: unknown): string {
+  const normalized = String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  return themeAliases[normalized] || "";
+}
+
 export type Category = {
   slug: string;
   name: string;
@@ -101,6 +132,8 @@ export type Product = {
   reviews?: number;
   reviewCount?: number;
   options: string;
+  size?: string;
+  color?: string;
   image: string;
   badge?: string;
   imageByColor?: Record<string, string>;
